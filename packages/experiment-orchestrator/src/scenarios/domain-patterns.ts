@@ -26,7 +26,7 @@ export const DOMAIN_PATTERNS: AllDomainPatterns = {
       {
         patternType: 'multi_layered_variance_analysis',
         example:
-          "Your company had the following quarterly performance with market context: Q1 Budget: $100K, Q1 Actual: $85K, Industry Growth: 8%; Q2 Budget: $110K, Q2 Actual: $125K, Industry Growth: 12%; Q3 Budget: $120K, Q3 Actual: $140K, Industry Growth: 10%. Calculate budget variance percentages, compare to industry performance, and identify strategic insights.",
+          'Your company had the following quarterly performance with market context: Q1 Budget: $100K, Q1 Actual: $85K, Industry Growth: 8%; Q2 Budget: $110K, Q2 Actual: $125K, Industry Growth: 12%; Q3 Budget: $120K, Q3 Actual: $140K, Industry Growth: 10%. Calculate budget variance percentages, compare to industry performance, and identify strategic insights.',
         expectedInsight:
           'Q1: -15% vs budget but -7% vs industry (market slowdown). Q2: +13.6% vs budget, +1.6% vs industry (outperforming). Q3: +16.7% vs budget, +6.7% vs industry (accelerating growth). Shows improving execution and market capture.',
         calculation: '((Actual - Budget) / Budget) * 100 and industry comparison analysis',
@@ -68,7 +68,11 @@ export const DOMAIN_PATTERNS: AllDomainPatterns = {
           'Mixed strategy optimal: Primary Supplier B (60%, premium for reliability), Secondary Supplier A (30%, cost balance), Buffer Supplier C (10%, cost minimum). Total cost $571K vs single-source $624K. Risk mitigation through diversification. Inventory target: 1.2 months (seasonal buffer).',
         calculation: 'Multi-criteria optimization with risk-adjusted total cost of ownership',
         embeddedData: true,
-        acpaCognitiveDemands: ['complexity_handling', 'processing_efficiency', 'construct_validity'],
+        acpaCognitiveDemands: [
+          'complexity_handling',
+          'processing_efficiency',
+          'construct_validity',
+        ],
         memoryIntegrationOpportunity: 'Supply chain risk-return optimization synthesis',
       },
       // Pattern 5: Financial ratio analysis
@@ -81,7 +85,8 @@ export const DOMAIN_PATTERNS: AllDomainPatterns = {
         calculation: 'Multi-year ratio trend analysis with industry benchmarking',
         embeddedData: true,
         acpaCognitiveDemands: ['complexity_handling', 'content_quality', 'memory_integration'],
-        memoryIntegrationOpportunity: 'Financial trend analysis requiring historical pattern synthesis',
+        memoryIntegrationOpportunity:
+          'Financial trend analysis requiring historical pattern synthesis',
       },
     ],
     testPatterns: [
@@ -155,7 +160,7 @@ export const DOMAIN_PATTERNS: AllDomainPatterns = {
       {
         patternType: 'workforce_development_planning',
         example:
-          "3-year talent development strategy: Current state - 450 employees, 25% senior level, 35% mid-level, 40% junior level, Skill gaps: Data analytics (60% need training), Cloud computing (45% need training), Leadership (30% promotion-ready). Attrition: Senior 8%/year, Mid 12%/year, Junior 22%/year. Growth plan: +15% headcount/year. Training costs: Technical $3K/person, Leadership $8K/person, External hire premium 25%. Develop comprehensive workforce development plan with succession planning and cost optimization.",
+          '3-year talent development strategy: Current state - 450 employees, 25% senior level, 35% mid-level, 40% junior level, Skill gaps: Data analytics (60% need training), Cloud computing (45% need training), Leadership (30% promotion-ready). Attrition: Senior 8%/year, Mid 12%/year, Junior 22%/year. Growth plan: +15% headcount/year. Training costs: Technical $3K/person, Leadership $8K/person, External hire premium 25%. Develop comprehensive workforce development plan with succession planning and cost optimization.',
         expectedInsight:
           'Development strategy: Accelerate internal promotion (reduce external hiring 40%), Implement technical training program (270 people/year), Leadership pipeline development (45 people/year). Results: Succession coverage 85% (vs 55% current), Training investment $1.2M/year, External hiring savings $2.1M/year, Net ROI 175%. Timeline: Year 1 infrastructure, Year 2 scale programs, Year 3 full capability.',
         calculation: 'Workforce planning with skill gap analysis and development ROI modeling',
@@ -288,7 +293,11 @@ export const DOMAIN_PATTERNS: AllDomainPatterns = {
           'Weighted analysis: A = 0.7×20 + 0.6×25 + 0.85×30 + 0.9×15 + 0.7×10 = 76.5. B = 0.5×20 + 0.8×25 + 0.95×30 + 0.6×15 + 0.9×10 = 77.5. C = 0.9×20 + 0.4×25 + 0.75×30 + 0.3×15 + 0.3×10 = 65.5. Recommendation: Option B (highest score) despite higher cost, due to superior features and implementation speed. Risk mitigation: Vendor stability assessment and backup plan.',
         calculation: 'Multi-criteria decision analysis with weighted scoring and risk assessment',
         embeddedData: true,
-        acpaCognitiveDemands: ['complexity_handling', 'processing_efficiency', 'construct_validity'],
+        acpaCognitiveDemands: [
+          'complexity_handling',
+          'processing_efficiency',
+          'construct_validity',
+        ],
         memoryIntegrationOpportunity:
           'Multi-dimensional evaluation requiring systematic decision framework synthesis',
       },
@@ -298,7 +307,7 @@ export const DOMAIN_PATTERNS: AllDomainPatterns = {
         example:
           'Develop solution for urban delivery optimization challenge: Constraints - Traffic congestion (average 35% time increase during peak), Environmental regulations (emission limits in city center), Cost pressures (fuel costs up 40%, labor costs up 25%), Customer expectations (2-hour delivery windows). Available technologies: Electric vehicles (50% higher cost, 60% emission reduction), Route optimization AI (15% efficiency gain, $200K implementation), Drone delivery (regulatory approval pending, 70% cost reduction for <2kg packages), Micro-fulfillment centers (40% faster delivery, $2M setup cost). Design integrated solution.',
         expectedInsight:
-          "Hybrid solution: Phase 1 - Route optimization AI + electric vehicle pilot (immediate 15% efficiency, gradual emission compliance), Phase 2 - Micro-fulfillment center in high-density area (40% delivery time reduction), Phase 3 - Drone integration for suitable packages (pending regulation). Expected outcomes: 45% emission reduction, 25% delivery time improvement, 15% cost reduction after 18-month implementation.",
+          'Hybrid solution: Phase 1 - Route optimization AI + electric vehicle pilot (immediate 15% efficiency, gradual emission compliance), Phase 2 - Micro-fulfillment center in high-density area (40% delivery time reduction), Phase 3 - Drone integration for suitable packages (pending regulation). Expected outcomes: 45% emission reduction, 25% delivery time improvement, 15% cost reduction after 18-month implementation.',
         method:
           'Technology synthesis with constraint optimization and phased implementation planning',
         embeddedData: true,
@@ -316,7 +325,11 @@ export const DOMAIN_PATTERNS: AllDomainPatterns = {
         method:
           'Process mapping, bottleneck analysis, automation opportunity assessment, implementation planning',
         embeddedData: true,
-        acpaCognitiveDemands: ['complexity_handling', 'processing_efficiency', 'knowledge_transfer'],
+        acpaCognitiveDemands: [
+          'complexity_handling',
+          'processing_efficiency',
+          'knowledge_transfer',
+        ],
         memoryIntegrationOpportunity:
           'Process design requiring systematic optimization and implementation strategy synthesis',
       },
@@ -326,7 +339,7 @@ export const DOMAIN_PATTERNS: AllDomainPatterns = {
         example:
           'Market entry decision for emerging technology sector: Market scenarios - Rapid adoption (40% probability, $50M opportunity, 18-month window), Gradual adoption (35% probability, $25M opportunity, 36-month window), Market resistance (25% probability, $5M opportunity, technology pivot required). Investment options: Full commitment ($15M investment, high reward/risk), Phased approach ($8M initial, additional $10M if successful), Partnership strategy ($5M investment, shared returns), Wait-and-see ($2M market monitoring, delayed entry). Stakeholder risk tolerance: Moderate. Analyze options and recommend strategy.',
         expectedInsight:
-          "Expected value analysis: Full commitment $16.25M, Phased approach $14.8M, Partnership $12.5M, Wait-and-see $8.2M. Recommendation: Phased approach optimal given moderate risk tolerance. Phase 1: $8M investment targeting gradual adoption scenario. Decision gates: Month 12 market assessment, Month 18 expansion decision. Risk mitigation: Technology partnership for credibility, customer pilot program for validation, competitive monitoring for timing optimization.",
+          'Expected value analysis: Full commitment $16.25M, Phased approach $14.8M, Partnership $12.5M, Wait-and-see $8.2M. Recommendation: Phased approach optimal given moderate risk tolerance. Phase 1: $8M investment targeting gradual adoption scenario. Decision gates: Month 12 market assessment, Month 18 expansion decision. Risk mitigation: Technology partnership for credibility, customer pilot program for validation, competitive monitoring for timing optimization.',
         method:
           'Decision tree analysis with expected value calculation and risk-adjusted strategy selection',
         embeddedData: true,
@@ -353,7 +366,9 @@ export function getPatternForScenario(
   domain: Domain,
   scenarioType: 'control' | 'test',
   patternIndex: number = 0,
-): DomainPattern | { patternType: string; guidance: string; instruction: string; acpaFocus: string } {
+):
+  | DomainPattern
+  | { patternType: string; guidance: string; instruction: string; acpaFocus: string } {
   const patterns = DOMAIN_PATTERNS[domain];
 
   if (!patterns) {
@@ -397,7 +412,12 @@ export const MAAC_USAGE_GUIDANCE = {
  * Cognitive testing framework configuration
  */
 export const COGNITIVE_TESTING_FRAMEWORK = {
-  primaryDimensions: ['complexity_handling', 'memory_integration', 'knowledge_transfer', 'content_quality'],
+  primaryDimensions: [
+    'complexity_handling',
+    'memory_integration',
+    'knowledge_transfer',
+    'content_quality',
+  ],
   secondaryDimensions: ['processing_efficiency', 'tool_execution', 'construct_validity'],
   assessmentFocus: 'Multi-dimensional cognitive architecture evaluation',
 };

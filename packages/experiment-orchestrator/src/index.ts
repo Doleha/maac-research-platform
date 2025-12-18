@@ -3,7 +3,13 @@ import { ExperimentConfig } from '@maac/types';
 /**
  * Experiment Orchestrator
  * Manages experiment execution, scheduling, and coordination
+ *
+ * Extracted from n8n workflows:
+ * - MAAC - Tier 1a - Experiment Processing - Scenario Generation Only.json
  */
+
+// Export scenario generation module
+export * from './scenarios';
 
 export interface ExperimentRun {
   id: string;

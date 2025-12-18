@@ -177,7 +177,8 @@ export const TIER_GUIDELINES = {
     cognitiveComplexity: 'Multi-threaded reasoning with interdependencies',
   },
   complex: {
-    description: 'Strategic/enterprise analysis with uncertainty, multiple stakeholders, and novel approaches',
+    description:
+      'Strategic/enterprise analysis with uncertainty, multiple stakeholders, and novel approaches',
     calculationCount: { min: 5, max: 10 },
     estimatedDuration: '45-60 minutes',
     cognitiveComplexity: 'Complex reasoning with uncertainty and stakeholder considerations',
@@ -191,19 +192,23 @@ export const TIER_GUIDELINES = {
 export const DOMAIN_COGNITIVE_FOCUS = {
   analytical: {
     primaryFocus: ['complexity_handling', 'content_quality', 'hallucination_control'],
-    description: 'Multi-layered financial analysis, market trends, competitive analysis, ROI calculations, customer segmentation',
+    description:
+      'Multi-layered financial analysis, market trends, competitive analysis, ROI calculations, customer segmentation',
   },
   planning: {
     primaryFocus: ['cognitive_load', 'tool_execution', 'processing_efficiency'],
-    description: 'Resource-constrained timelines, strategic roadmaps, capacity planning, risk mitigation, technology implementation',
+    description:
+      'Resource-constrained timelines, strategic roadmaps, capacity planning, risk mitigation, technology implementation',
   },
   communication: {
     primaryFocus: ['content_quality', 'knowledge_transfer', 'construct_validity'],
-    description: 'Multi-audience messaging, executive summaries, crisis communication, cross-cultural proposals, training materials',
+    description:
+      'Multi-audience messaging, executive summaries, crisis communication, cross-cultural proposals, training materials',
   },
   problem_solving: {
     primaryFocus: ['memory_integration', 'complexity_handling', 'knowledge_transfer'],
-    description: 'Multi-variable optimization, root cause analysis, innovation challenges, process improvement, strategic decisions',
+    description:
+      'Multi-variable optimization, root cause analysis, innovation challenges, process improvement, strategic decisions',
   },
 } as const;
 
