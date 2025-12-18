@@ -22,14 +22,14 @@ export class BaseAssessor implements DimensionAssessor {
   readonly dimension: MAACDimension;
   readonly version: string = '4.0';
   readonly methodName: string = 'base_assessor';
-  
+
   protected readonly llmProvider: LLMProvider;
   protected readonly config: Partial<AssessorConfig>;
 
   constructor(
     dimension: MAACDimension,
     llmProvider: LLMProvider,
-    config?: Partial<AssessorConfig>
+    config?: Partial<AssessorConfig>,
   ) {
     this.dimension = dimension;
     this.llmProvider = llmProvider;
@@ -84,9 +84,8 @@ ${context.responseText}`;
       });
 
       // Parse the response
-      const rawScore = typeof response.content === 'string' 
-        ? JSON.parse(response.content) 
-        : response.content;
+      const rawScore =
+        typeof response.content === 'string' ? JSON.parse(response.content) : response.content;
 
       // Validate and transform to MAACScore
       return this.transformToMAACScore(rawScore, context, derived);

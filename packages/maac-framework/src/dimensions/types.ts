@@ -4,7 +4,6 @@
  * Version: 4.0
  */
 
-import { CognitiveResponse } from '@maac/types';
 import { SuccessCriterion, Tier, Domain, ModelId } from '@maac/types';
 
 // ============================================================

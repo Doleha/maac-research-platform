@@ -22,15 +22,15 @@
  * Q6: domain_insight_generation - Domain-specific insights extend beyond basic application
  */
 
-import { BaseDimensionAssessor } from './base-assessor';
-import { MAACDimension, AssessmentContext, DerivedMetrics } from './types';
+import { BaseAssessor } from './base-assessor';
+import { MAACDimension, AssessmentContext, DerivedMetrics, LLMProvider, AssessorConfig } from './types';
 
-export class KnowledgeTransferAssessor extends BaseDimensionAssessor {
-  readonly dimension: MAACDimension = 'knowledge_transfer';
-  readonly version = '4.0';
-  readonly methodName = 'classical_60_domain_adaptation_40';
+export class KnowledgeTransferAssessor extends BaseAssessor {
+  constructor(llmProvider: LLMProvider, config?: Partial<AssessorConfig>) {
+    super(MAACDimension.KNOWLEDGE_TRANSFER, llmProvider, config);
+  }
 
-  generateSystemPrompt(context: AssessmentContext, derived: DerivedMetrics): string {
+  override generateSystemPrompt(context: AssessmentContext, derived: DerivedMetrics): string {
     return `# Knowledge Transfer Assessment - MAAC Dimension 7 Enhanced v4.0
 
 You are a specialized MAAC cognitive assessment agent focused on evaluating KNOWLEDGE TRANSFER. Your role is to analyze AI reasoning traces using rigorous methodology based on cross-domain generalization and pattern application research.
@@ -159,4 +159,3 @@ Return a JSON object with dimension: "knowledge_transfer" following the standard
   }
 }
 
-export const knowledgeTransferAssessor = new KnowledgeTransferAssessor();

@@ -20,15 +20,15 @@
  * Q6: framework_validity - Domain-specific constructs and MAAC framework validity maintained
  */
 
-import { BaseDimensionAssessor } from './base-assessor';
-import { MAACDimension, AssessmentContext, DerivedMetrics } from './types';
+import { BaseAssessor } from './base-assessor';
+import { MAACDimension, AssessmentContext, DerivedMetrics, LLMProvider, AssessorConfig } from './types';
 
-export class ConstructValidityAssessor extends BaseDimensionAssessor {
-  readonly dimension: MAACDimension = 'construct_validity';
-  readonly version = '4.0';
-  readonly methodName = 'theoretical_framework_alignment_plus_model_configuration_validity';
+export class ConstructValidityAssessor extends BaseAssessor {
+  constructor(llmProvider: LLMProvider, config?: Partial<AssessorConfig>) {
+    super(MAACDimension.CONSTRUCT_VALIDITY, llmProvider, config);
+  }
 
-  generateSystemPrompt(context: AssessmentContext, derived: DerivedMetrics): string {
+  override generateSystemPrompt(context: AssessmentContext, derived: DerivedMetrics): string {
     return `# Construct Validity Assessment - MAAC Dimension 9 Enhanced v4.0
 
 You are a specialized MAAC cognitive assessment agent focused on evaluating CONSTRUCT VALIDITY. Your role is to analyze AI reasoning traces using rigorous methodology based on theoretical framework alignment and conceptual coherence research.
@@ -157,4 +157,3 @@ Return a JSON object with dimension: "construct_validity" following the standard
   }
 }
 
-export const constructValidityAssessor = new ConstructValidityAssessor();

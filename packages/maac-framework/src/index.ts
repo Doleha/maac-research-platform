@@ -1,14 +1,14 @@
 /**
  * MAAC Framework - Multi-Agent Adaptive Cognition
- * 
+ *
  * Nine-Dimensional Cognitive Assessment Framework for AI Systems
- * 
+ *
  * This framework provides:
  * - 9 dimension assessors (cognitive load, tool execution, etc.)
  * - Standardized scoring with 6 questions per dimension
  * - Formula-based validation for research consistency
  * - LLM-agnostic assessment using Claude Sonnet 4.5 prompts
- * 
+ *
  * Extracted from n8n workflows:
  * - MAAC - Tier 1 b- Experiment Processing MIMIC Only_Agentic MAAC_v2.json
  */
@@ -23,11 +23,10 @@ export * from './dimensions';
 export {
   MAACDimension,
   type MAACScore,
-  type DimensionAssessment,
+  type DimensionAssessor,
   type ComponentScore,
   type AssessmentContext,
-  type ProcessingContext,
-  type SuccessThresholds,
+  type DerivedMetrics,
   type LLMProvider,
   type AssessorConfig,
 } from './dimensions/types';
@@ -51,9 +50,9 @@ export {
 } from './dimensions';
 
 import { CognitiveEvaluation } from '@maac/types';
-import { 
-  createAllAssessors, 
-  MAACDimension, 
+import {
+  createAllAssessors as createAssessorsFactory,
+  MAACDimension,
   type MAACScore,
   type AssessmentContext,
   type LLMProvider,
@@ -82,7 +81,7 @@ export class MAACFramework {
     confidence: number;
     assessmentTimestamp: Date;
   }> {
-    const assessors = createAllAssessors(this.llmProvider, this.config);
+    const assessors = createAssessorsFactory(this.llmProvider, this.config);
     const dimensions = new Map<MAACDimension, MAACScore>();
 
     // Run all 9 assessments (can be parallelized)
@@ -96,17 +95,17 @@ export class MAACFramework {
     });
 
     const results = await Promise.all(assessmentPromises);
-    
+
     for (const { dimension, score } of results) {
       dimensions.set(dimension, score);
     }
 
     // Calculate overall score (average of 9 dimensions)
-    const scores = Array.from(dimensions.values()).map(d => d.score);
+    const scores = Array.from(dimensions.values()).map((d) => d.dimensionScore);
     const overallScore = scores.reduce((sum, s) => sum + s, 0) / scores.length;
 
     // Calculate overall confidence (average)
-    const confidences = Array.from(dimensions.values()).map(d => d.confidence);
+    const confidences = Array.from(dimensions.values()).map((d) => d.confidence);
     const confidence = confidences.reduce((sum, c) => sum + c, 0) / confidences.length;
 
     return {

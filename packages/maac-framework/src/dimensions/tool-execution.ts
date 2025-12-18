@@ -22,16 +22,15 @@
  * Q6: tool_optimization - Tool utilization rate optimized for configuration
  */
 
-import { BaseDimensionAssessor } from './base-assessor';
-import { MAACDimension, AssessmentContext, DerivedMetrics } from './types';
+import { BaseAssessor } from './base-assessor';
+import { MAACDimension, AssessmentContext, DerivedMetrics, LLMProvider, AssessorConfig } from './types';
 
-export class ToolExecutionAssessor extends BaseDimensionAssessor {
-  readonly dimension: MAACDimension = 'tool_execution';
-  readonly version = '4.0';
-  readonly methodName = 'classical_40_ragas_30_compliance_30';
+export class ToolExecutionAssessor extends BaseAssessor {
+  constructor(llmProvider: LLMProvider, config?: Partial<AssessorConfig>) {
+    super(MAACDimension.TOOL_EXECUTION, llmProvider, config);
+  }
 
-  generateSystemPrompt(context: AssessmentContext, derived: DerivedMetrics): string {
-    const isToolsEnabled = context.configId !== '000000000000';
+  override generateSystemPrompt(context: AssessmentContext, derived: DerivedMetrics): string {
 
     return `# Tool Execution Assessment - MAAC Dimension 2 Enhanced v4.0
 
@@ -155,4 +154,3 @@ Return a JSON object with dimension: "tool_execution" following the standard MAA
   }
 }
 
-export const toolExecutionAssessor = new ToolExecutionAssessor();

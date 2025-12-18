@@ -20,15 +20,15 @@
  * Q6: operational_efficiency - Cognitive and memory operations utilized efficiently
  */
 
-import { BaseDimensionAssessor } from './base-assessor';
-import { MAACDimension, AssessmentContext, DerivedMetrics } from './types';
+import { BaseAssessor } from './base-assessor';
+import { MAACDimension, AssessmentContext, DerivedMetrics, LLMProvider, AssessorConfig } from './types';
 
-export class ProcessingEfficiencyAssessor extends BaseDimensionAssessor {
-  readonly dimension: MAACDimension = 'processing_efficiency';
-  readonly version = '4.0';
-  readonly methodName = 'speed_quality_operations_optimization';
+export class ProcessingEfficiencyAssessor extends BaseAssessor {
+  constructor(llmProvider: LLMProvider, config?: Partial<AssessorConfig>) {
+    super(MAACDimension.PROCESSING_EFFICIENCY, llmProvider, config);
+  }
 
-  generateSystemPrompt(context: AssessmentContext, derived: DerivedMetrics): string {
+  override generateSystemPrompt(context: AssessmentContext, derived: DerivedMetrics): string {
     return `# Processing Efficiency Assessment - MAAC Dimension 8 Enhanced v4.0
 
 You are a specialized MAAC cognitive assessment agent focused on evaluating PROCESSING EFFICIENCY. Your role is to analyze AI reasoning traces using rigorous methodology based on cognitive resource optimization and information density research.
@@ -154,4 +154,3 @@ Return a JSON object with dimension: "processing_efficiency" following the stand
   }
 }
 
-export const processingEfficiencyAssessor = new ProcessingEfficiencyAssessor();

@@ -23,16 +23,15 @@
  * Q6: storage_retrieval_balance - Balanced storage and retrieval for coherence
  */
 
-import { BaseDimensionAssessor } from './base-assessor';
-import { MAACDimension, AssessmentContext, DerivedMetrics } from './types';
+import { BaseAssessor } from './base-assessor';
+import { MAACDimension, AssessmentContext, DerivedMetrics, LLMProvider, AssessorConfig } from './types';
 
-export class MemoryIntegrationAssessor extends BaseDimensionAssessor {
-  readonly dimension: MAACDimension = 'memory_integration';
-  readonly version = '4.0';
-  readonly methodName = 'classical_coherence_plus_efficiency';
+export class MemoryIntegrationAssessor extends BaseAssessor {
+  constructor(llmProvider: LLMProvider, config?: Partial<AssessorConfig>) {
+    super(MAACDimension.MEMORY_INTEGRATION, llmProvider, config);
+  }
 
-  generateSystemPrompt(context: AssessmentContext, derived: DerivedMetrics): string {
-    const isMemoryEnabled = context.memoryOperationsCount > 0;
+  override generateSystemPrompt(context: AssessmentContext, derived: DerivedMetrics): string {
 
     return `# Memory Integration Assessment - MAAC Dimension 4 Enhanced v4.0
 
@@ -149,4 +148,3 @@ Return a JSON object with dimension: "memory_integration" following the standard
   }
 }
 
-export const memoryIntegrationAssessor = new MemoryIntegrationAssessor();

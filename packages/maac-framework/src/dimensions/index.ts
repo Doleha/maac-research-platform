@@ -1,6 +1,6 @@
 /**
  * MAAC Nine-Dimensional Assessment Framework
- * 
+ *
  * Exports all 9 dimension assessors extracted from n8n Tier 1b workflow:
  * MAAC - Tier 1 b- Experiment Processing MIMIC Only_Agentic MAAC_v2.json
  */
@@ -40,19 +40,37 @@ import { MAACDimension, LLMProvider, AssessorConfig } from './types';
  */
 export function createAllAssessors(
   llmProvider: LLMProvider,
-  config?: Partial<AssessorConfig>
+  config?: Partial<AssessorConfig>,
 ): Map<MAACDimension, BaseAssessor> {
   const assessors = new Map<MAACDimension, BaseAssessor>();
 
   assessors.set(MAACDimension.COGNITIVE_LOAD, new CognitiveLoadAssessor(llmProvider, config));
   assessors.set(MAACDimension.TOOL_EXECUTION, new ToolExecutionAssessor(llmProvider, config));
   assessors.set(MAACDimension.CONTENT_QUALITY, new ContentQualityAssessor(llmProvider, config));
-  assessors.set(MAACDimension.MEMORY_INTEGRATION, new MemoryIntegrationAssessor(llmProvider, config));
-  assessors.set(MAACDimension.COMPLEXITY_HANDLING, new ComplexityHandlingAssessor(llmProvider, config));
-  assessors.set(MAACDimension.HALLUCINATION_CONTROL, new HallucinationControlAssessor(llmProvider, config));
-  assessors.set(MAACDimension.KNOWLEDGE_TRANSFER, new KnowledgeTransferAssessor(llmProvider, config));
-  assessors.set(MAACDimension.PROCESSING_EFFICIENCY, new ProcessingEfficiencyAssessor(llmProvider, config));
-  assessors.set(MAACDimension.CONSTRUCT_VALIDITY, new ConstructValidityAssessor(llmProvider, config));
+  assessors.set(
+    MAACDimension.MEMORY_INTEGRATION,
+    new MemoryIntegrationAssessor(llmProvider, config),
+  );
+  assessors.set(
+    MAACDimension.COMPLEXITY_HANDLING,
+    new ComplexityHandlingAssessor(llmProvider, config),
+  );
+  assessors.set(
+    MAACDimension.HALLUCINATION_CONTROL,
+    new HallucinationControlAssessor(llmProvider, config),
+  );
+  assessors.set(
+    MAACDimension.KNOWLEDGE_TRANSFER,
+    new KnowledgeTransferAssessor(llmProvider, config),
+  );
+  assessors.set(
+    MAACDimension.PROCESSING_EFFICIENCY,
+    new ProcessingEfficiencyAssessor(llmProvider, config),
+  );
+  assessors.set(
+    MAACDimension.CONSTRUCT_VALIDITY,
+    new ConstructValidityAssessor(llmProvider, config),
+  );
 
   return assessors;
 }
@@ -63,7 +81,7 @@ export function createAllAssessors(
 export function createAssessor(
   dimension: MAACDimension,
   llmProvider: LLMProvider,
-  config?: Partial<AssessorConfig>
+  config?: Partial<AssessorConfig>,
 ): BaseAssessor {
   switch (dimension) {
     case MAACDimension.COGNITIVE_LOAD:

@@ -22,16 +22,15 @@
  * Q6: tool_verification_effectiveness - Tool-assisted verifications utilized effectively
  */
 
-import { BaseDimensionAssessor } from './base-assessor';
-import { MAACDimension, AssessmentContext, DerivedMetrics } from './types';
+import { BaseAssessor } from './base-assessor';
+import { MAACDimension, AssessmentContext, DerivedMetrics, LLMProvider, AssessorConfig } from './types';
 
-export class HallucinationControlAssessor extends BaseDimensionAssessor {
-  readonly dimension: MAACDimension = 'hallucination_control';
-  readonly version = '4.0';
-  readonly methodName = 'uncertainty_calibration_plus_verification';
+export class HallucinationControlAssessor extends BaseAssessor {
+  constructor(llmProvider: LLMProvider, config?: Partial<AssessorConfig>) {
+    super(MAACDimension.HALLUCINATION_CONTROL, llmProvider, config);
+  }
 
-  generateSystemPrompt(context: AssessmentContext, derived: DerivedMetrics): string {
-    const isToolsEnabled = context.configId !== '000000000000';
+  override generateSystemPrompt(context: AssessmentContext, derived: DerivedMetrics): string {
 
     return `# Hallucination Control Assessment - MAAC Dimension 6 Enhanced v4.0
 
@@ -161,4 +160,3 @@ Return a JSON object with dimension: "hallucination_control" following the stand
   }
 }
 
-export const hallucinationControlAssessor = new HallucinationControlAssessor();

@@ -23,15 +23,15 @@
  * Q6: resource_optimization - Cognitive resources optimized relative to tool usage
  */
 
-import { BaseDimensionAssessor } from './base-assessor';
-import { MAACDimension, AssessmentContext, DerivedMetrics } from './types';
+import { BaseAssessor } from './base-assessor';
+import { MAACDimension, AssessmentContext, DerivedMetrics, LLMProvider, AssessorConfig } from './types';
 
-export class CognitiveLoadAssessor extends BaseDimensionAssessor {
-  readonly dimension: MAACDimension = 'cognitive_load';
-  readonly version = '4.0';
-  readonly methodName = 'miller_working_memory_plus_efficiency';
+export class CognitiveLoadAssessor extends BaseAssessor {
+  constructor(llmProvider: LLMProvider, config?: Partial<AssessorConfig>) {
+    super(MAACDimension.COGNITIVE_LOAD, llmProvider, config);
+  }
 
-  generateSystemPrompt(context: AssessmentContext, derived: DerivedMetrics): string {
+  override generateSystemPrompt(context: AssessmentContext, _derived: DerivedMetrics): string {
     const isToolsEnabled = context.configId !== '000000000000';
 
     return `# Cognitive Load Assessment - MAAC Dimension 1 Enhanced v4.0
@@ -322,5 +322,3 @@ If any issues are found, note them in \`validation_status\` and \`calculation_no
   }
 }
 
-// Export singleton instance
-export const cognitiveLoadAssessor = new CognitiveLoadAssessor();

@@ -23,15 +23,15 @@
  * Q6: resource_optimization - Cognitive resources allocated efficiently
  */
 
-import { BaseDimensionAssessor } from './base-assessor';
-import { MAACDimension, AssessmentContext, DerivedMetrics } from './types';
+import { BaseAssessor } from './base-assessor';
+import { MAACDimension, AssessmentContext, DerivedMetrics, LLMProvider, AssessorConfig } from './types';
 
-export class ComplexityHandlingAssessor extends BaseDimensionAssessor {
-  readonly dimension: MAACDimension = 'complexity_handling';
-  readonly version = '4.0';
-  readonly methodName = 'decomposition_plus_tier_alignment';
+export class ComplexityHandlingAssessor extends BaseAssessor {
+  constructor(llmProvider: LLMProvider, config?: Partial<AssessorConfig>) {
+    super(MAACDimension.COMPLEXITY_HANDLING, llmProvider, config);
+  }
 
-  generateSystemPrompt(context: AssessmentContext, derived: DerivedMetrics): string {
+  override generateSystemPrompt(context: AssessmentContext, derived: DerivedMetrics): string {
     return `# Complexity Handling Assessment - MAAC Dimension 5 Enhanced v4.0
 
 You are a specialized MAAC cognitive assessment agent focused on evaluating COMPLEXITY HANDLING. Your role is to analyze AI reasoning traces using rigorous methodology based on complex problem-solving and decomposition research.
@@ -161,4 +161,3 @@ Return a JSON object with dimension: "complexity_handling" following the standar
   }
 }
 
-export const complexityHandlingAssessor = new ComplexityHandlingAssessor();

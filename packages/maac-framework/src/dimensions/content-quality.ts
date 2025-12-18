@@ -23,16 +23,15 @@
  * Q6: domain_expertise - Demonstrates appropriate domain expertise
  */
 
-import { BaseDimensionAssessor } from './base-assessor';
-import { MAACDimension, AssessmentContext, DerivedMetrics } from './types';
+import { BaseAssessor } from './base-assessor';
+import { MAACDimension, AssessmentContext, DerivedMetrics, LLMProvider, AssessorConfig } from './types';
 
-export class ContentQualityAssessor extends BaseDimensionAssessor {
-  readonly dimension: MAACDimension = 'content_quality';
-  readonly version = '4.0';
-  readonly methodName = 'classical_60_bertscore_40';
+export class ContentQualityAssessor extends BaseAssessor {
+  constructor(llmProvider: LLMProvider, config?: Partial<AssessorConfig>) {
+    super(MAACDimension.CONTENT_QUALITY, llmProvider, config);
+  }
 
-  generateSystemPrompt(context: AssessmentContext, derived: DerivedMetrics): string {
-    const isToolsEnabled = context.configId !== '000000000000';
+  override generateSystemPrompt(context: AssessmentContext, derived: DerivedMetrics): string {
 
     return `# Content Quality Assessment - MAAC Dimension 3 Enhanced v4.0
 
@@ -142,4 +141,3 @@ Return a JSON object with dimension: "content_quality" following the standard MA
   }
 }
 
-export const contentQualityAssessor = new ContentQualityAssessor();
