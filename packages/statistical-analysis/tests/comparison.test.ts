@@ -320,7 +320,8 @@ describe('Statistical Output Validation', () => {
     const scores = dimensionalData['maac_overall_score'];
 
     const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
-    const variance = scores.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / (scores.length - 1);
+    const variance =
+      scores.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / (scores.length - 1);
     const std = Math.sqrt(variance);
 
     expect(std).toBeCloseTo(n8nExpectedStats.descriptive.std, 2);
@@ -391,7 +392,7 @@ describe('Data Grouping', () => {
     const groups = groupByTier(sampleExperiments);
 
     expect(groups.length).toBe(3); // tier1, tier2, tier3
-    
+
     const tier1Group = groups.find((g) => g.groupKey === 'tier1');
     expect(tier1Group).toBeDefined();
     expect(tier1Group!.experiments.length).toBe(2);

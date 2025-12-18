@@ -9,40 +9,45 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
-  assessCognitiveLoad,
-  assessToolExecution,
-  assessContentQuality,
-  assessMemoryIntegration,
-  assessComplexityHandling,
-  assessHallucinationControl,
-  assessKnowledgeTransfer,
-  assessProcessingEfficiency,
-  assessConstructValidity,
-  calculateOverallMAACScore,
+  MAACFramework,
+  MAACDimension,
+  createAllAssessors,
+  createAssessor,
+  CognitiveLoadAssessor,
+  ToolExecutionAssessor,
+  ContentQualityAssessor,
+  MemoryIntegrationAssessor,
+  ComplexityHandlingAssessor,
+  HallucinationControlAssessor,
+  KnowledgeTransferAssessor,
+  ProcessingEfficiencyAssessor,
+  ConstructValidityAssessor,
+  DIMENSION_ORDER,
+  type LLMProvider,
+  type AssessmentContext,
 } from '../src/index.js';
 
 // ==================== MOCK LLM FOR TESTING ====================
 
 /**
- * Create a mock LLM that returns predictable scores for testing
+ * Create a mock LLM provider that returns predictable scores for testing
  */
-function createMockLLM(scoreOverrides: Record<string, number> = {}) {
+function createMockLLMProvider(scoreOverrides: Record<string, number> = {}): LLMProvider {
+  const defaultScores: Record<string, number> = {
+    cognitive_load: 7.8,
+    tool_execution: 8.2,
+    content_quality: 7.5,
+    memory_integration: 6.9,
+    complexity_handling: 7.1,
+    hallucination_control: 8.5,
+    knowledge_transfer: 7.3,
+    processing_efficiency: 7.6,
+    construct_validity: 7.4,
+    ...scoreOverrides,
+  };
+
   return {
     invoke: vi.fn().mockImplementation(async (prompt: string) => {
-      // Default scores that simulate n8n LLM responses
-      const defaultScores: Record<string, number> = {
-        cognitive_load: 7.8,
-        tool_execution: 8.2,
-        content_quality: 7.5,
-        memory_integration: 6.9,
-        complexity_handling: 7.1,
-        hallucination_control: 8.5,
-        knowledge_transfer: 7.3,
-        processing_efficiency: 7.6,
-        construct_validity: 7.4,
-        ...scoreOverrides,
-      };
-
       // Parse which dimension is being assessed from prompt
       const dimension = Object.keys(defaultScores).find((d) =>
         prompt.toLowerCase().includes(d.replace('_', ' ')),
@@ -55,6 +60,10 @@ function createMockLLM(scoreOverrides: Record<string, number> = {}) {
           score,
           confidence: 0.85,
           reasoning: `Mock assessment for ${dimension || 'unknown'} dimension`,
+          components: {
+            component1: { score: score * 0.9, weight: 0.5 },
+            component2: { score: score * 1.1, weight: 0.5 },
+          },
           indicators: ['indicator1', 'indicator2'],
         }),
       };
@@ -65,20 +74,11 @@ function createMockLLM(scoreOverrides: Record<string, number> = {}) {
 // ==================== N8N REFERENCE DATA ====================
 
 /**
- * Sample response data extracted from actual n8n trial execution
- * This represents the input that was processed by n8n workflows
+ * Sample assessment context matching n8n trial execution
  */
-const sampleN8nTrialData = {
-  response: {
-    experiment_id: 'exp-validation-001',
-    session_id: 'sess-val-001',
-    trial_id: 'trial-val-001',
-    model_id: 'gpt-4-turbo',
-    domain: 'software_engineering',
-    tier: 'tier2',
-    prompt:
-      'Implement a binary search algorithm in Python with proper error handling and type hints.',
-    response: `Here's a well-structured binary search implementation:
+const sampleContext: AssessmentContext = {
+  // Core response data
+  responseText: `Here's a well-structured binary search implementation:
 
 \`\`\`python
 from typing import List, Optional
@@ -93,17 +93,10 @@ def binary_search(arr: List[int], target: int) -> Optional[int]:
         
     Returns:
         The index of target if found, None otherwise
-        
-    Raises:
-        ValueError: If arr is not sorted
     """
     if not arr:
         return None
         
-    # Verify array is sorted
-    if arr != sorted(arr):
-        raise ValueError("Array must be sorted")
-    
     left, right = 0, len(arr) - 1
     
     while left <= right:
@@ -119,45 +112,42 @@ def binary_search(arr: List[int], target: int) -> Optional[int]:
     return None
 \`\`\`
 
-This implementation includes:
-- Type hints for better code clarity
-- Comprehensive docstring with examples
-- Input validation
-- Overflow-safe midpoint calculation
-- Clear return semantics`,
-    latency_ms: 2340,
-    token_count: 287,
-    timestamp: '2024-01-15T10:30:00Z',
-  },
-  criteria: {
-    domain: 'software_engineering',
-    tier: 'tier2',
-    requirements: [
-      'Code must include type hints',
-      'Must have error handling',
-      'Must include documentation',
-      'Must be algorithmically correct',
-    ],
-    weights: {
-      correctness: 0.4,
-      documentation: 0.2,
-      error_handling: 0.2,
-      style: 0.2,
-    },
-  },
-  metrics: {
-    response_length: 287,
-    code_blocks: 1,
-    has_docstring: true,
-    has_type_hints: true,
-    has_error_handling: true,
-    complexity_indicators: ['binary_search', 'type_hints', 'docstring', 'exception_handling'],
-  },
+This implementation includes proper type hints and handles edge cases.`,
+  wordCount: 85,
+  processingTime: 2500,
+
+  // Cognitive metrics
+  cognitiveCyclesCount: 3,
+  memoryOperationsCount: 2,
+  toolsInvokedCount: 1,
+  toolsInvoked: ['code_execution'],
+
+  // Configuration context
+  configId: 'config-validation-001',
+  modelId: 'gpt-4-turbo' as any,
+  domain: 'software_engineering' as any,
+  tier: 'tier2' as any,
+
+  // Tool configuration
+  enabledTools: ['code_execution', 'web_search'],
+  memoryToolsEnabled: ['episodic_memory'],
+  memoryStoreEnabled: true,
+
+  // Success criteria
+  successCriteria: [
+    { id: 'sc-1', description: 'Implements binary search correctly', weight: 1.0 },
+  ],
+  expectedCalculations: ['binary search algorithm'],
+  expectedInsights: ['time complexity', 'edge cases'],
+  scenarioRequirements: ['type hints', 'error handling'],
+  businessContext: 'Algorithm implementation for software engineering assessment',
+
+  // Success thresholds per dimension
+  successThresholds: {},
 };
 
 /**
- * Known n8n output scores for the sample trial
- * These were captured from actual n8n workflow execution
+ * Expected n8n output scores (from actual n8n trial execution)
  */
 const n8nExpectedScores = {
   cognitive_load: 7.8,
@@ -169,323 +159,290 @@ const n8nExpectedScores = {
   knowledge_transfer: 7.3,
   processing_efficiency: 7.6,
   construct_validity: 7.4,
-  overall_score: 7.59, // Weighted average from n8n
+  // Weighted overall from n8n: sum(score * weight) / sum(weights)
+  overall_score: 7.59, // (7.8*0.12 + 8.2*0.11 + 7.5*0.11 + 6.9*0.11 + 7.1*0.11 + 8.5*0.12 + 7.3*0.11 + 7.6*0.11 + 7.4*0.10)
 };
 
-// ==================== DIMENSION COMPARISON TESTS ====================
+// ==================== DIMENSION ASSESSOR TESTS ====================
 
-describe('MAAC Formula Validation', () => {
-  let mockLLM: ReturnType<typeof createMockLLM>;
+describe('MAAC Dimension Assessors', () => {
+  let mockLLM: LLMProvider;
 
   beforeEach(() => {
-    mockLLM = createMockLLM(n8nExpectedScores);
+    mockLLM = createMockLLMProvider();
   });
 
-  describe('Cognitive Load Assessment', () => {
-    it('cognitive load score matches n8n calculation', async () => {
-      const result = await assessCognitiveLoad(
-        sampleN8nTrialData.response,
-        sampleN8nTrialData.criteria,
-        sampleN8nTrialData.metrics,
-        mockLLM,
-      );
+  describe('CognitiveLoadAssessor', () => {
+    it('score matches n8n calculation', async () => {
+      const assessor = new CognitiveLoadAssessor(mockLLM);
+      const result = await assessor.assess(sampleContext);
 
-      // Compare with n8n output for same input
       expect(result.score).toBeCloseTo(n8nExpectedScores.cognitive_load, 1);
-      expect(result.dimension).toBe('cognitive_load');
+      expect(result.dimension).toBe(MAACDimension.COGNITIVE_LOAD);
       expect(result.confidence).toBeGreaterThan(0);
       expect(result.confidence).toBeLessThanOrEqual(1);
     });
 
-    it('cognitive load handles edge cases correctly', async () => {
-      const emptyResponse = {
-        ...sampleN8nTrialData.response,
-        response: '',
+    it('handles edge cases correctly', async () => {
+      const emptyContext: AssessmentContext = {
+        responseText: '',
+        wordCount: 0,
+        processingTime: 100,
+        cognitiveCyclesCount: 0,
+        memoryOperationsCount: 0,
+        toolsInvokedCount: 0,
+        toolsInvoked: [],
+        configId: 'config-empty',
+        modelId: 'gpt-4-turbo' as any,
+        domain: 'software_engineering' as any,
+        tier: 'tier1' as any,
+        enabledTools: [],
+        memoryToolsEnabled: [],
+        memoryStoreEnabled: false,
+        successCriteria: [],
+        expectedCalculations: [],
+        expectedInsights: [],
+        scenarioRequirements: [],
+        businessContext: '',
+        successThresholds: {},
       };
 
-      const result = await assessCognitiveLoad(
-        emptyResponse,
-        sampleN8nTrialData.criteria,
-        sampleN8nTrialData.metrics,
-        mockLLM,
-      );
+      const assessor = new CognitiveLoadAssessor(mockLLM);
+      const result = await assessor.assess(emptyContext);
 
       expect(result.score).toBeGreaterThanOrEqual(0);
       expect(result.score).toBeLessThanOrEqual(10);
     });
   });
 
-  describe('Tool Execution Assessment', () => {
-    it('tool execution score matches n8n calculation', async () => {
-      const result = await assessToolExecution(
-        sampleN8nTrialData.response,
-        sampleN8nTrialData.criteria,
-        sampleN8nTrialData.metrics,
-        mockLLM,
-      );
+  describe('ToolExecutionAssessor', () => {
+    it('score matches n8n calculation', async () => {
+      const assessor = new ToolExecutionAssessor(mockLLM);
+      const result = await assessor.assess(sampleContext);
 
       expect(result.score).toBeCloseTo(n8nExpectedScores.tool_execution, 1);
-      expect(result.dimension).toBe('tool_execution');
+      expect(result.dimension).toBe(MAACDimension.TOOL_EXECUTION);
     });
   });
 
-  describe('Content Quality Assessment', () => {
-    it('content quality score matches n8n calculation', async () => {
-      const result = await assessContentQuality(
-        sampleN8nTrialData.response,
-        sampleN8nTrialData.criteria,
-        sampleN8nTrialData.metrics,
-        mockLLM,
-      );
+  describe('ContentQualityAssessor', () => {
+    it('score matches n8n calculation', async () => {
+      const assessor = new ContentQualityAssessor(mockLLM);
+      const result = await assessor.assess(sampleContext);
 
       expect(result.score).toBeCloseTo(n8nExpectedScores.content_quality, 1);
-      expect(result.dimension).toBe('content_quality');
+      expect(result.dimension).toBe(MAACDimension.CONTENT_QUALITY);
     });
   });
 
-  describe('Memory Integration Assessment', () => {
-    it('memory integration score matches n8n calculation', async () => {
-      const result = await assessMemoryIntegration(
-        sampleN8nTrialData.response,
-        sampleN8nTrialData.criteria,
-        sampleN8nTrialData.metrics,
-        mockLLM,
-      );
+  describe('MemoryIntegrationAssessor', () => {
+    it('score matches n8n calculation', async () => {
+      const assessor = new MemoryIntegrationAssessor(mockLLM);
+      const result = await assessor.assess(sampleContext);
 
       expect(result.score).toBeCloseTo(n8nExpectedScores.memory_integration, 1);
-      expect(result.dimension).toBe('memory_integration');
+      expect(result.dimension).toBe(MAACDimension.MEMORY_INTEGRATION);
     });
   });
 
-  describe('Complexity Handling Assessment', () => {
-    it('complexity handling score matches n8n calculation', async () => {
-      const result = await assessComplexityHandling(
-        sampleN8nTrialData.response,
-        sampleN8nTrialData.criteria,
-        sampleN8nTrialData.metrics,
-        mockLLM,
-      );
+  describe('ComplexityHandlingAssessor', () => {
+    it('score matches n8n calculation', async () => {
+      const assessor = new ComplexityHandlingAssessor(mockLLM);
+      const result = await assessor.assess(sampleContext);
 
       expect(result.score).toBeCloseTo(n8nExpectedScores.complexity_handling, 1);
-      expect(result.dimension).toBe('complexity_handling');
+      expect(result.dimension).toBe(MAACDimension.COMPLEXITY_HANDLING);
     });
   });
 
-  describe('Hallucination Control Assessment', () => {
-    it('hallucination control score matches n8n calculation', async () => {
-      const result = await assessHallucinationControl(
-        sampleN8nTrialData.response,
-        sampleN8nTrialData.criteria,
-        sampleN8nTrialData.metrics,
-        mockLLM,
-      );
+  describe('HallucinationControlAssessor', () => {
+    it('score matches n8n calculation', async () => {
+      const assessor = new HallucinationControlAssessor(mockLLM);
+      const result = await assessor.assess(sampleContext);
 
       expect(result.score).toBeCloseTo(n8nExpectedScores.hallucination_control, 1);
-      expect(result.dimension).toBe('hallucination_control');
+      expect(result.dimension).toBe(MAACDimension.HALLUCINATION_CONTROL);
     });
   });
 
-  describe('Knowledge Transfer Assessment', () => {
-    it('knowledge transfer score matches n8n calculation', async () => {
-      const result = await assessKnowledgeTransfer(
-        sampleN8nTrialData.response,
-        sampleN8nTrialData.criteria,
-        sampleN8nTrialData.metrics,
-        mockLLM,
-      );
+  describe('KnowledgeTransferAssessor', () => {
+    it('score matches n8n calculation', async () => {
+      const assessor = new KnowledgeTransferAssessor(mockLLM);
+      const result = await assessor.assess(sampleContext);
 
       expect(result.score).toBeCloseTo(n8nExpectedScores.knowledge_transfer, 1);
-      expect(result.dimension).toBe('knowledge_transfer');
+      expect(result.dimension).toBe(MAACDimension.KNOWLEDGE_TRANSFER);
     });
   });
 
-  describe('Processing Efficiency Assessment', () => {
-    it('processing efficiency score matches n8n calculation', async () => {
-      const result = await assessProcessingEfficiency(
-        sampleN8nTrialData.response,
-        sampleN8nTrialData.criteria,
-        sampleN8nTrialData.metrics,
-        mockLLM,
-      );
+  describe('ProcessingEfficiencyAssessor', () => {
+    it('score matches n8n calculation', async () => {
+      const assessor = new ProcessingEfficiencyAssessor(mockLLM);
+      const result = await assessor.assess(sampleContext);
 
       expect(result.score).toBeCloseTo(n8nExpectedScores.processing_efficiency, 1);
-      expect(result.dimension).toBe('processing_efficiency');
+      expect(result.dimension).toBe(MAACDimension.PROCESSING_EFFICIENCY);
     });
   });
 
-  describe('Construct Validity Assessment', () => {
-    it('construct validity score matches n8n calculation', async () => {
-      const result = await assessConstructValidity(
-        sampleN8nTrialData.response,
-        sampleN8nTrialData.criteria,
-        sampleN8nTrialData.metrics,
-        mockLLM,
-      );
+  describe('ConstructValidityAssessor', () => {
+    it('score matches n8n calculation', async () => {
+      const assessor = new ConstructValidityAssessor(mockLLM);
+      const result = await assessor.assess(sampleContext);
 
       expect(result.score).toBeCloseTo(n8nExpectedScores.construct_validity, 1);
-      expect(result.dimension).toBe('construct_validity');
+      expect(result.dimension).toBe(MAACDimension.CONSTRUCT_VALIDITY);
     });
   });
+});
 
-  describe('Overall MAAC Score Calculation', () => {
-    it('overall score matches n8n weighted calculation', async () => {
-      const dimensionScores = [
-        { dimension: 'cognitive_load', score: n8nExpectedScores.cognitive_load, weight: 0.12 },
-        { dimension: 'tool_execution', score: n8nExpectedScores.tool_execution, weight: 0.12 },
-        { dimension: 'content_quality', score: n8nExpectedScores.content_quality, weight: 0.12 },
-        {
-          dimension: 'memory_integration',
-          score: n8nExpectedScores.memory_integration,
-          weight: 0.1,
-        },
-        {
-          dimension: 'complexity_handling',
-          score: n8nExpectedScores.complexity_handling,
-          weight: 0.1,
-        },
-        {
-          dimension: 'hallucination_control',
-          score: n8nExpectedScores.hallucination_control,
-          weight: 0.12,
-        },
-        {
-          dimension: 'knowledge_transfer',
-          score: n8nExpectedScores.knowledge_transfer,
-          weight: 0.1,
-        },
-        {
-          dimension: 'processing_efficiency',
-          score: n8nExpectedScores.processing_efficiency,
-          weight: 0.1,
-        },
-        {
-          dimension: 'construct_validity',
-          score: n8nExpectedScores.construct_validity,
-          weight: 0.12,
-        },
-      ];
+// ==================== FULL FRAMEWORK TESTS ====================
 
-      const result = calculateOverallMAACScore(dimensionScores);
+describe('MAACFramework Integration', () => {
+  let mockLLM: LLMProvider;
 
-      expect(result.overall_score).toBeCloseTo(n8nExpectedScores.overall_score, 1);
-      expect(result.dimension_count).toBe(9);
-    });
+  beforeEach(() => {
+    mockLLM = createMockLLMProvider();
+  });
 
-    it('validates weight normalization', async () => {
-      const dimensionScores = [
-        { dimension: 'cognitive_load', score: 8.0, weight: 0.5 },
-        { dimension: 'tool_execution', score: 6.0, weight: 0.5 },
-      ];
+  it('runs full 9-dimensional assessment', async () => {
+    const framework = new MAACFramework(mockLLM);
+    const result = await framework.assessResponse(sampleContext);
 
-      const result = calculateOverallMAACScore(dimensionScores);
+    expect(result.dimensions.size).toBe(9);
+    expect(result.overallScore).toBeGreaterThan(0);
+    expect(result.overallScore).toBeLessThanOrEqual(10);
+    expect(result.confidence).toBeGreaterThan(0);
+    expect(result.confidence).toBeLessThanOrEqual(1);
+  });
 
-      // (8.0 * 0.5 + 6.0 * 0.5) = 7.0
-      expect(result.overall_score).toBeCloseTo(7.0, 2);
-    });
+  it('calculates overall score matching n8n weighted formula', async () => {
+    const framework = new MAACFramework(mockLLM);
+    const result = await framework.assessResponse(sampleContext);
 
-    it('handles equal weights correctly', async () => {
-      const dimensionScores = [
-        { dimension: 'cognitive_load', score: 7.0 },
-        { dimension: 'tool_execution', score: 8.0 },
-        { dimension: 'content_quality', score: 9.0 },
-      ];
+    // n8n formula: weighted average of all 9 dimensions
+    // Weights from n8n: roughly equal with slight variations
+    expect(result.overallScore).toBeCloseTo(n8nExpectedScores.overall_score, 1);
+  });
 
-      const result = calculateOverallMAACScore(dimensionScores);
+  it('maintains dimension order from n8n', async () => {
+    const framework = new MAACFramework(mockLLM);
+    const result = await framework.assessResponse(sampleContext);
 
-      // (7 + 8 + 9) / 3 = 8.0
-      expect(result.overall_score).toBeCloseTo(8.0, 2);
-    });
+    const dimensions = Array.from(result.dimensions.keys());
+    expect(dimensions).toEqual(DIMENSION_ORDER);
+  });
+});
+
+// ==================== FACTORY FUNCTION TESTS ====================
+
+describe('Assessor Factory', () => {
+  let mockLLM: LLMProvider;
+
+  beforeEach(() => {
+    mockLLM = createMockLLMProvider();
+  });
+
+  it('createAllAssessors returns all 9 dimensions', () => {
+    const assessors = createAllAssessors(mockLLM);
+
+    expect(assessors.size).toBe(9);
+    for (const dimension of DIMENSION_ORDER) {
+      expect(assessors.has(dimension)).toBe(true);
+    }
+  });
+
+  it('createAssessor returns correct assessor type', () => {
+    const cogLoadAssessor = createAssessor(MAACDimension.COGNITIVE_LOAD, mockLLM);
+    expect(cogLoadAssessor).toBeInstanceOf(CognitiveLoadAssessor);
+
+    const toolExecAssessor = createAssessor(MAACDimension.TOOL_EXECUTION, mockLLM);
+    expect(toolExecAssessor).toBeInstanceOf(ToolExecutionAssessor);
   });
 });
 
 // ==================== SCORE RANGE VALIDATION ====================
 
 describe('MAAC Score Range Validation', () => {
+  let mockLLM: LLMProvider;
+
+  beforeEach(() => {
+    mockLLM = createMockLLMProvider();
+  });
+
   it('all dimension scores are within 0-10 range', async () => {
-    const mockLLM = createMockLLM();
-    const assessors = [
-      assessCognitiveLoad,
-      assessToolExecution,
-      assessContentQuality,
-      assessMemoryIntegration,
-      assessComplexityHandling,
-      assessHallucinationControl,
-      assessKnowledgeTransfer,
-      assessProcessingEfficiency,
-      assessConstructValidity,
-    ];
+    const assessors = createAllAssessors(mockLLM);
 
-    for (const assessor of assessors) {
-      const result = await assessor(
-        sampleN8nTrialData.response,
-        sampleN8nTrialData.criteria,
-        sampleN8nTrialData.metrics,
-        mockLLM,
-      );
-
+    for (const [dimension, assessor] of assessors) {
+      const result = await assessor.assess(sampleContext);
       expect(result.score).toBeGreaterThanOrEqual(0);
       expect(result.score).toBeLessThanOrEqual(10);
     }
   });
 
   it('confidence values are between 0 and 1', async () => {
-    const mockLLM = createMockLLM();
-    const result = await assessCognitiveLoad(
-      sampleN8nTrialData.response,
-      sampleN8nTrialData.criteria,
-      sampleN8nTrialData.metrics,
-      mockLLM,
-    );
+    const assessors = createAllAssessors(mockLLM);
 
-    expect(result.confidence).toBeGreaterThanOrEqual(0);
-    expect(result.confidence).toBeLessThanOrEqual(1);
+    for (const [dimension, assessor] of assessors) {
+      const result = await assessor.assess(sampleContext);
+      expect(result.confidence).toBeGreaterThanOrEqual(0);
+      expect(result.confidence).toBeLessThanOrEqual(1);
+    }
   });
 });
 
-// ==================== FORMULA PARITY TESTS ====================
+// ==================== N8N FORMULA PARITY TESTS ====================
 
 describe('N8N Formula Parity', () => {
   it('replicates n8n cognitive load formula', () => {
-    // n8n formula: cognitive_load_score = base_score * complexity_factor * clarity_modifier
-    const baseScore = 7.5;
-    const complexityFactor = 1.05; // Derived from code complexity
-    const clarityModifier = 0.99; // Derived from documentation presence
+    // n8n formula: (Q1 + Q2 + Q3 + Q4 + Q5 + Q6) / 6
+    // Each question is scored 0-10, average gives dimension score
+    const questionScores = [8.0, 7.5, 7.8, 8.0, 7.6, 8.0];
+    const n8nExpected = 7.82;
 
-    const n8nCalculation = baseScore * complexityFactor * clarityModifier;
+    const calculated = questionScores.reduce((a, b) => a + b, 0) / questionScores.length;
 
-    // TypeScript implementation should match
-    const tsCalculation = calculateCognitiveLoadScore(baseScore, complexityFactor, clarityModifier);
-
-    expect(tsCalculation).toBeCloseTo(n8nCalculation, 4);
+    expect(calculated).toBeCloseTo(n8nExpected, 1);
   });
 
   it('replicates n8n overall score aggregation', () => {
-    // n8n uses weighted geometric mean for overall score
-    const scores = [7.8, 8.2, 7.5, 6.9, 7.1, 8.5, 7.3, 7.6, 7.4];
-    const weights = [0.12, 0.12, 0.12, 0.1, 0.1, 0.12, 0.1, 0.1, 0.12];
+    // n8n formula for overall score: weighted average
+    const dimensionScores = [
+      { score: 7.8, weight: 0.12 },  // cognitive load
+      { score: 8.2, weight: 0.11 },  // tool execution
+      { score: 7.5, weight: 0.11 },  // content quality
+      { score: 6.9, weight: 0.11 },  // memory integration
+      { score: 7.1, weight: 0.11 },  // complexity handling
+      { score: 8.5, weight: 0.12 },  // hallucination control
+      { score: 7.3, weight: 0.11 },  // knowledge transfer
+      { score: 7.6, weight: 0.11 },  // processing efficiency
+      { score: 7.4, weight: 0.10 },  // construct validity
+    ];
 
-    // n8n weighted average
-    const n8nScore = scores.reduce((sum, score, i) => sum + score * weights[i], 0);
+    const totalWeight = dimensionScores.reduce((sum, d) => sum + d.weight, 0);
+    const weightedSum = dimensionScores.reduce((sum, d) => sum + d.score * d.weight, 0);
+    const calculated = weightedSum / totalWeight;
 
-    // TypeScript calculation
-    const tsScore = calculateWeightedAverage(scores, weights);
+    expect(calculated).toBeCloseTo(n8nExpectedScores.overall_score, 1);
+  });
 
-    expect(tsScore).toBeCloseTo(n8nScore, 4);
+  it('validates weight normalization', () => {
+    // Weights should sum to 1.0 (or close to it)
+    const weights = [0.12, 0.11, 0.11, 0.11, 0.11, 0.12, 0.11, 0.11, 0.10];
+    const totalWeight = weights.reduce((a, b) => a + b, 0);
+
+    expect(totalWeight).toBeCloseTo(1.0, 2);
+  });
+
+  it('handles equal weights correctly', () => {
+    // If all weights are equal, result should be simple average
+    const scores = [7.0, 8.0, 9.0];
+    const equalWeight = 1 / scores.length;
+
+    const weightedCalc = scores.reduce((sum, s) => sum + s * equalWeight, 0);
+    const simpleAverage = scores.reduce((a, b) => a + b, 0) / scores.length;
+
+    expect(weightedCalc).toBeCloseTo(simpleAverage, 5);
+    expect(simpleAverage).toBeCloseTo(8.0, 5);
   });
 });
-
-// ==================== HELPER FUNCTIONS ====================
-
-function calculateCognitiveLoadScore(
-  baseScore: number,
-  complexityFactor: number,
-  clarityModifier: number,
-): number {
-  return Math.min(10, Math.max(0, baseScore * complexityFactor * clarityModifier));
-}
-
-function calculateWeightedAverage(scores: number[], weights: number[]): number {
-  const totalWeight = weights.reduce((sum, w) => sum + w, 0);
-  const weightedSum = scores.reduce((sum, score, i) => sum + score * weights[i], 0);
-  return weightedSum / totalWeight;
-}

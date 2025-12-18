@@ -15,12 +15,7 @@ import {
   generateExperimentMatrix,
   createTrialSequence,
 } from '../src/index.js';
-import type {
-  ExperimentConfig,
-  ScenarioConfig,
-  TrialConfig,
-  DomainConfig,
-} from '../src/types.js';
+import type { ExperimentConfig, ScenarioConfig, TrialConfig, DomainConfig } from '../src/types.js';
 
 // ==================== N8N REFERENCE DATA ====================
 
@@ -226,7 +221,12 @@ describe('Trial Manager Validation', () => {
   describe('createTrialSequence', () => {
     it('generates correct number of trials per scenario', () => {
       const scenarios = [
-        { scenario_id: 'scn-001', domain: 'software_engineering', tier: 'tier1', model_id: 'gpt-4' },
+        {
+          scenario_id: 'scn-001',
+          domain: 'software_engineering',
+          tier: 'tier1',
+          model_id: 'gpt-4',
+        },
         { scenario_id: 'scn-002', domain: 'data_analysis', tier: 'tier2', model_id: 'claude-3' },
       ];
 
@@ -237,7 +237,12 @@ describe('Trial Manager Validation', () => {
 
     it('generates unique trial IDs', () => {
       const scenarios = [
-        { scenario_id: 'scn-001', domain: 'software_engineering', tier: 'tier1', model_id: 'gpt-4' },
+        {
+          scenario_id: 'scn-001',
+          domain: 'software_engineering',
+          tier: 'tier1',
+          model_id: 'gpt-4',
+        },
       ];
 
       const trials = createTrialSequence(scenarios as any, 5);
@@ -249,7 +254,12 @@ describe('Trial Manager Validation', () => {
 
     it('maintains scenario reference in trials', () => {
       const scenarios = [
-        { scenario_id: 'scn-001', domain: 'software_engineering', tier: 'tier1', model_id: 'gpt-4' },
+        {
+          scenario_id: 'scn-001',
+          domain: 'software_engineering',
+          tier: 'tier1',
+          model_id: 'gpt-4',
+        },
       ];
 
       const trials = createTrialSequence(scenarios as any, 3);
@@ -387,7 +397,10 @@ describe('N8N Output Parity', () => {
 
   it('trial sequence generation matches n8n approach', () => {
     const matrix = generateExperimentMatrix(sampleExperimentConfig, sampleDomainConfigs);
-    const trials = createTrialSequence(matrix.scenarios, sampleExperimentConfig.trials_per_scenario);
+    const trials = createTrialSequence(
+      matrix.scenarios,
+      sampleExperimentConfig.trials_per_scenario,
+    );
 
     // Each scenario should have exactly trials_per_scenario trials
     const trialsPerScenario = new Map<string, number>();
