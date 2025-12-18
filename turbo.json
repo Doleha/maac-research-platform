@@ -4,23 +4,24 @@
   "pipeline": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**", "build/**"]
-    },
-    "lint": {
-      "dependsOn": ["^build"]
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**"]
     },
     "test": {
-      "dependsOn": ["^build"],
-      "outputs": ["coverage/**"]
+      "dependsOn": ["build"],
+      "outputs": ["coverage/**"],
+      "cache": false
     },
-    "typecheck": {
+    "lint": {
       "dependsOn": ["^build"]
     },
     "dev": {
       "cache": false,
       "persistent": true
     },
-    "clean": {
+    "db:migrate": {
+      "cache": false
+    },
+    "db:seed": {
       "cache": false
     }
   }
