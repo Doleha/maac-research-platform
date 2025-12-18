@@ -48,3 +48,20 @@ coverage/
 *.local.json
 /notes/
 /scratch/
+
+# Python
+.venv/
+venv/
+env/
+.env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+*.egg
+.eggs/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
