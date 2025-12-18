@@ -25,11 +25,11 @@ export class ExperimentOrchestrator {
     };
 
     this.runs.set(run.id, run);
-    
+
     // Start execution
     run.status = 'running';
     run.startTime = new Date();
-    
+
     return run;
   }
 

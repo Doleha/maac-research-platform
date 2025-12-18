@@ -13,7 +13,7 @@ export class MAACFramework {
       id: crypto.randomUUID(),
       timestamp: new Date(),
       metrics: {
-        coherence: Math.min(0.95, 0.5 + (wordCount * 0.01)),
+        coherence: Math.min(0.95, 0.5 + wordCount * 0.01),
         relevance: 0.92,
       },
     };

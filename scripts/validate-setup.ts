@@ -18,10 +18,10 @@ const checks = [
         'packages/experiment-orchestrator',
         'packages/statistical-analysis',
         'apps/api',
-        'apps/dashboard'
+        'apps/dashboard',
       ];
-      return dirs.every(dir => existsSync(join(process.cwd(), dir)));
-    }
+      return dirs.every((dir) => existsSync(join(process.cwd(), dir)));
+    },
   },
   {
     name: 'Root configuration files exist',
@@ -31,15 +31,15 @@ const checks = [
         'turbo.json',
         'pnpm-workspace.yaml',
         'tsconfig.base.json',
-        'docker-compose.yml'
+        'docker-compose.yml',
       ];
-      return files.every(file => existsSync(join(process.cwd(), file)));
-    }
+      return files.every((file) => existsSync(join(process.cwd(), file)));
+    },
   },
   {
     name: 'Node modules installed',
-    test: () => existsSync(join(process.cwd(), 'node_modules'))
-  }
+    test: () => existsSync(join(process.cwd(), 'node_modules')),
+  },
 ];
 
 console.log('🔍 Validating project setup...\n');
