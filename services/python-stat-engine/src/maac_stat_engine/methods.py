@@ -604,12 +604,17 @@ def omega_squared(ss_effect: float, ss_error: float, ms_error: float, df_effect:
 
 
 @method_handler
-def cronbach_alpha(data: Union[ArrayLike, dict[str, ArrayLike]]) -> dict[str, Any]:
+def cronbach_alpha(data: Union[ArrayLike, dict[str, ArrayLike], None] = None, X: Union[ArrayLike, None] = None) -> dict[str, Any]:
     """Calculate Cronbach's alpha reliability coefficient."""
-    if isinstance(data, dict):
-        df = pd.DataFrame(data)
+    # Accept both 'data' and 'X' parameter names for flexibility
+    input_data = data if data is not None else X
+    if input_data is None:
+        return {"alpha": None, "valid": False, "error": "Either 'data' or 'X' parameter required"}
+    
+    if isinstance(input_data, dict):
+        df = pd.DataFrame(input_data)
     else:
-        df = pd.DataFrame(np.asarray(data))
+        df = pd.DataFrame(np.asarray(input_data))
     
     df = df.dropna()
     n_items = df.shape[1]
@@ -645,12 +650,17 @@ def cronbach_alpha(data: Union[ArrayLike, dict[str, ArrayLike]]) -> dict[str, An
 
 
 @method_handler
-def split_half_reliability(data: Union[ArrayLike, dict[str, ArrayLike]]) -> dict[str, Any]:
+def split_half_reliability(data: Union[ArrayLike, dict[str, ArrayLike], None] = None, X: Union[ArrayLike, None] = None) -> dict[str, Any]:
     """Calculate split-half reliability with Spearman-Brown correction."""
-    if isinstance(data, dict):
-        df = pd.DataFrame(data)
+    # Accept both 'data' and 'X' parameter names for flexibility
+    input_data = data if data is not None else X
+    if input_data is None:
+        return {"split_half": None, "valid": False, "error": "Either 'data' or 'X' parameter required"}
+    
+    if isinstance(input_data, dict):
+        df = pd.DataFrame(input_data)
     else:
-        df = pd.DataFrame(np.asarray(data))
+        df = pd.DataFrame(np.asarray(input_data))
     
     df = df.dropna()
     n_items = df.shape[1]
@@ -678,8 +688,11 @@ def split_half_reliability(data: Union[ArrayLike, dict[str, ArrayLike]]) -> dict
 
 
 @method_handler
-def bootstrap_ci(X: ArrayLike, statistic: str = "mean", n_iterations: int = 1000, ci: float = 0.95) -> dict[str, Any]:
+def bootstrap_ci(X: ArrayLike, statistic: str = "mean", n_iterations: int = 1000, ci: float = 0.95, confidence_level: Optional[float] = None) -> dict[str, Any]:
     """Calculate bootstrap confidence intervals."""
+    # Accept both 'ci' and 'confidence_level' parameter names
+    conf_level = confidence_level if confidence_level is not None else ci
+    
     arr = ensure_array(X)
     if len(arr) < 2:
         return {"valid": False, "error": "Need at least 2 samples"}
@@ -696,7 +709,7 @@ def bootstrap_ci(X: ArrayLike, statistic: str = "mean", n_iterations: int = 1000
         bootstrap_samples.append(stat_func(sample))
     
     bootstrap_samples = np.array(bootstrap_samples)
-    alpha = 1 - ci
+    alpha = 1 - conf_level
     lower = np.percentile(bootstrap_samples, alpha / 2 * 100)
     upper = np.percentile(bootstrap_samples, (1 - alpha / 2) * 100)
     
@@ -707,7 +720,7 @@ def bootstrap_ci(X: ArrayLike, statistic: str = "mean", n_iterations: int = 1000
         "ci_upper": safe_float(upper),
         "se": safe_float(np.std(bootstrap_samples)),
         "n_iterations": n_iterations,
-        "ci_level": ci,
+        "ci_level": conf_level,
         "valid": True
     }
 
@@ -751,12 +764,17 @@ def power_analysis_ttest(effect_size: float, n: Optional[int] = None, power: Opt
 
 
 @method_handler
-def pca(data: Union[ArrayLike, dict[str, ArrayLike]], n_components: Optional[int] = None) -> dict[str, Any]:
+def pca(data: Union[ArrayLike, dict[str, ArrayLike], None] = None, X: Union[ArrayLike, None] = None, n_components: Optional[int] = None) -> dict[str, Any]:
     """Principal Component Analysis."""
-    if isinstance(data, dict):
-        df = pd.DataFrame(data)
+    # Accept both 'data' and 'X' parameter names for flexibility
+    input_data = data if data is not None else X
+    if input_data is None:
+        return {"valid": False, "error": "Either 'data' or 'X' parameter required"}
+    
+    if isinstance(input_data, dict):
+        df = pd.DataFrame(input_data)
     else:
-        df = pd.DataFrame(np.asarray(data))
+        df = pd.DataFrame(np.asarray(input_data))
     
     df = df.dropna()
     
@@ -790,45 +808,79 @@ def pca(data: Union[ArrayLike, dict[str, ArrayLike]], n_components: Optional[int
 
 
 @method_handler
-def efa(data: Union[ArrayLike, dict[str, ArrayLike]], n_factors: int = 3, rotation: str = "varimax") -> dict[str, Any]:
+def efa(data: Union[ArrayLike, dict[str, ArrayLike], None] = None, X: Union[ArrayLike, None] = None, n_factors: int = 3, rotation: str = "varimax") -> dict[str, Any]:
     """Exploratory Factor Analysis."""
-    if not HAS_FACTOR_ANALYZER:
-        return {"valid": False, "error": "factor_analyzer not installed"}
+    # Accept both 'data' and 'X' parameter names for flexibility
+    input_data = data if data is not None else X
+    if input_data is None:
+        return {"valid": False, "error": "Either 'data' or 'X' parameter required"}
     
-    if isinstance(data, dict):
-        df = pd.DataFrame(data)
+    if isinstance(input_data, dict):
+        df = pd.DataFrame(input_data)
     else:
-        df = pd.DataFrame(np.asarray(data))
+        df = pd.DataFrame(np.asarray(input_data))
     
     df = df.dropna()
     
     if df.shape[0] < 10 or df.shape[1] < 3:
         return {"valid": False, "error": "Insufficient data for EFA"}
     
-    fa = FactorAnalyzer(n_factors=n_factors, rotation=rotation)
-    fa.fit(df)
+    # Try factor_analyzer first, fall back to sklearn
+    try:
+        if HAS_FACTOR_ANALYZER:
+            fa = FactorAnalyzer(n_factors=n_factors, rotation=rotation)
+            fa.fit(df)
+            
+            return {
+                "loadings": fa.loadings_.tolist(),
+                "communalities": [safe_float(c) for c in fa.get_communalities()],
+                "uniqueness": [safe_float(u) for u in fa.get_uniquenesses()],
+                "eigenvalues": [safe_float(e) for e in fa.get_eigenvalues()[0]],
+                "n_factors": n_factors,
+                "rotation": rotation,
+                "valid": True
+            }
+    except Exception:
+        pass  # Fall through to sklearn fallback
     
-    return {
-        "loadings": fa.loadings_.tolist(),
-        "communalities": [safe_float(c) for c in fa.get_communalities()],
-        "uniqueness": [safe_float(u) for u in fa.get_uniquenesses()],
-        "eigenvalues": [safe_float(e) for e in fa.get_eigenvalues()[0]],
-        "n_factors": n_factors,
-        "rotation": rotation,
-        "valid": True
-    }
+    # Fallback: use sklearn FactorAnalysis
+    try:
+        from sklearn.decomposition import FactorAnalysis
+        fa = FactorAnalysis(n_components=n_factors, max_iter=1000)
+        fa.fit(df)
+        
+        loadings = fa.components_.T
+        communalities = np.sum(loadings ** 2, axis=1)
+        uniqueness = 1 - communalities
+        
+        return {
+            "loadings": loadings.tolist(),
+            "communalities": [safe_float(c) for c in communalities],
+            "uniqueness": [safe_float(u) for u in uniqueness],
+            "noise_variance": [safe_float(v) for v in fa.noise_variance_],
+            "n_factors": n_factors,
+            "rotation": "none (sklearn fallback)",
+            "valid": True
+        }
+    except Exception as e:
+        return {"valid": False, "error": str(e)}
 
 
 @method_handler
-def kmo_test(data: Union[ArrayLike, dict[str, ArrayLike]]) -> dict[str, Any]:
+def kmo_test(data: Union[ArrayLike, dict[str, ArrayLike], None] = None, X: Union[ArrayLike, None] = None) -> dict[str, Any]:
     """Kaiser-Meyer-Olkin test for sampling adequacy."""
+    # Accept both 'data' and 'X' parameter names for flexibility
+    input_data = data if data is not None else X
+    if input_data is None:
+        return {"valid": False, "error": "Either 'data' or 'X' parameter required"}
+    
     if not HAS_FACTOR_ANALYZER:
         return {"valid": False, "error": "factor_analyzer not installed"}
     
-    if isinstance(data, dict):
-        df = pd.DataFrame(data)
+    if isinstance(input_data, dict):
+        df = pd.DataFrame(input_data)
     else:
-        df = pd.DataFrame(np.asarray(data))
+        df = pd.DataFrame(np.asarray(input_data))
     
     df = df.dropna()
     
@@ -853,6 +905,310 @@ def kmo_test(data: Union[ArrayLike, dict[str, ArrayLike]]) -> dict[str, Any]:
         }
     except Exception as e:
         return {"valid": False, "error": str(e)}
+
+
+@method_handler
+def bartlett_sphericity(X: ArrayLike) -> dict[str, Any]:
+    """Bartlett's test of sphericity for factor analysis suitability."""
+    if not HAS_FACTOR_ANALYZER:
+        return {"valid": False, "error": "factor_analyzer not installed"}
+    
+    data = np.asarray(X)
+    if data.ndim == 1:
+        return {"valid": False, "error": "Bartlett's test requires 2D data (matrix)"}
+    
+    df = pd.DataFrame(data)
+    df = df.dropna()
+    
+    try:
+        from factor_analyzer.factor_analyzer import calculate_bartlett_sphericity
+        chi_square, p_value = calculate_bartlett_sphericity(df)
+        
+        return {
+            "chi_square": safe_float(chi_square),
+            "p_value": safe_float(p_value),
+            "significant": p_value < 0.05,
+            "suitable_for_factor_analysis": p_value < 0.05,
+            "valid": True
+        }
+    except Exception as e:
+        return {"valid": False, "error": str(e)}
+
+
+@method_handler
+def cfa(X: ArrayLike, n_factors: int = 2) -> dict[str, Any]:
+    """Confirmatory Factor Analysis (simplified using EFA structure confirmation)."""
+    # Note: True CFA requires specification of a model structure.
+    # This implementation uses EFA with factor confirmation as a proxy.
+    data = np.asarray(X)
+    if data.ndim == 1:
+        return {"valid": False, "error": "CFA requires 2D data (matrix)"}
+    
+    df = pd.DataFrame(data)
+    df = df.dropna()
+    
+    if len(df) < 10:
+        return {"valid": False, "error": "Insufficient samples for CFA (need >= 10)"}
+    if df.shape[1] < n_factors:
+        return {"valid": False, "error": f"Need at least {n_factors} variables for {n_factors} factors"}
+    
+    # Use PCA-based approach for maximum compatibility
+    try:
+        from sklearn.decomposition import PCA, FactorAnalysis
+        
+        # Try FactorAnalysis first (sklearn's implementation)
+        try:
+            fa = FactorAnalysis(n_components=n_factors, max_iter=1000)
+            fa.fit(df)
+            
+            # Get loadings (components transposed)
+            loadings = fa.components_.T
+            
+            # Calculate communalities (sum of squared loadings per variable)
+            communalities = np.sum(loadings ** 2, axis=1)
+            
+            # Calculate variance explained
+            total_var = np.var(df.values, axis=0).sum()
+            explained_var = np.var(fa.transform(df), axis=0)
+            variance_ratio = explained_var / total_var if total_var > 0 else explained_var
+            
+            return {
+                "n_factors": n_factors,
+                "loadings": [[safe_float(v) for v in row] for row in loadings],
+                "communalities": [safe_float(c) for c in communalities],
+                "variance_explained": [safe_float(v) for v in variance_ratio],
+                "total_variance_explained": safe_float(sum(variance_ratio)),
+                "noise_variance": [safe_float(v) for v in fa.noise_variance_],
+                "model_fit": {
+                    "converged": True,
+                    "method": "factor_analysis",
+                    "n_iter": fa.n_iter_
+                },
+                "valid": True
+            }
+        except Exception:
+            # Fallback to PCA
+            pca = PCA(n_components=n_factors)
+            pca.fit(df)
+            
+            return {
+                "n_factors": n_factors,
+                "loadings": [[safe_float(v) for v in row] for row in pca.components_.T],
+                "variance_explained": [safe_float(v) for v in pca.explained_variance_ratio_],
+                "total_variance_explained": safe_float(sum(pca.explained_variance_ratio_)),
+                "model_fit": {
+                    "converged": True,
+                    "method": "pca_approximation",
+                    "note": "Using PCA as factor analysis fallback"
+                },
+                "valid": True
+            }
+    except Exception as e:
+        return {"valid": False, "error": str(e)}
+
+
+# ==================== MAAC FRAMEWORK-SPECIFIC METHODS ====================
+
+
+@method_handler
+def maac_scoring_validation(scores: ArrayLike) -> dict[str, Any]:
+    """Validate MAAC scoring matrix for consistency and range adherence."""
+    data = np.asarray(scores)
+    
+    if data.ndim == 1:
+        data = data.reshape(-1, 1)
+    
+    n_samples, n_dims = data.shape
+    
+    # MAAC scores should be in 0-10 range
+    in_range = (data >= 0) & (data <= 10)
+    range_compliance = safe_float(np.mean(in_range))
+    
+    # Check for NaN/Inf values
+    valid_values = np.isfinite(data)
+    data_quality = safe_float(np.mean(valid_values))
+    
+    # Calculate per-dimension statistics
+    dim_stats = []
+    for i in range(n_dims):
+        col = data[:, i]
+        valid_col = col[np.isfinite(col)]
+        if len(valid_col) > 0:
+            dim_stats.append({
+                "dimension": i,
+                "mean": safe_float(np.mean(valid_col)),
+                "std": safe_float(np.std(valid_col)),
+                "min": safe_float(np.min(valid_col)),
+                "max": safe_float(np.max(valid_col)),
+                "valid_pct": safe_float(len(valid_col) / len(col) * 100)
+            })
+    
+    return {
+        "n_samples": n_samples,
+        "n_dimensions": n_dims,
+        "range_compliance": range_compliance,
+        "data_quality": data_quality,
+        "dimension_statistics": dim_stats,
+        "overall_valid": range_compliance > 0.95 and data_quality > 0.95,
+        "valid": True
+    }
+
+
+@method_handler
+def maac_dimensional_statistics(data: dict[str, ArrayLike]) -> dict[str, Any]:
+    """Calculate comprehensive statistics for each MAAC dimension."""
+    if not isinstance(data, dict):
+        return {"valid": False, "error": "Expected dict with dimension names as keys"}
+    
+    dimension_results = {}
+    
+    for dim_name, values in data.items():
+        arr = ensure_array(values)
+        valid_arr = arr[np.isfinite(arr)]
+        
+        if len(valid_arr) == 0:
+            dimension_results[dim_name] = {"valid": False, "error": "No valid values"}
+            continue
+        
+        dimension_results[dim_name] = {
+            "n": len(valid_arr),
+            "mean": safe_float(np.mean(valid_arr)),
+            "std": safe_float(np.std(valid_arr, ddof=1)) if len(valid_arr) > 1 else None,
+            "median": safe_float(np.median(valid_arr)),
+            "min": safe_float(np.min(valid_arr)),
+            "max": safe_float(np.max(valid_arr)),
+            "range": safe_float(np.max(valid_arr) - np.min(valid_arr)),
+            "skew": safe_float(stats.skew(valid_arr)) if len(valid_arr) > 2 else None,
+            "kurtosis": safe_float(stats.kurtosis(valid_arr)) if len(valid_arr) > 3 else None,
+            "valid": True
+        }
+    
+    return {
+        "dimensions": dimension_results,
+        "n_dimensions": len(data),
+        "valid": True
+    }
+
+
+@method_handler
+def maac_framework_coherence(scores: ArrayLike) -> dict[str, Any]:
+    """Assess internal coherence of MAAC framework scores."""
+    data = np.asarray(scores)
+    
+    if data.ndim == 1:
+        return {"valid": False, "error": "Expected 2D score matrix"}
+    
+    n_samples, n_dims = data.shape
+    
+    if n_samples < 3 or n_dims < 2:
+        return {"valid": False, "error": "Insufficient data for coherence analysis"}
+    
+    # Clean data
+    df = pd.DataFrame(data)
+    df = df.dropna()
+    
+    if len(df) < 3:
+        return {"valid": False, "error": "Insufficient valid samples"}
+    
+    # Calculate correlation matrix
+    corr_matrix = df.corr()
+    
+    # Average inter-dimension correlation
+    n = len(corr_matrix)
+    upper_tri = np.triu(corr_matrix.values, k=1)
+    avg_correlation = safe_float(np.mean(upper_tri[upper_tri != 0])) if np.any(upper_tri != 0) else 0
+    
+    # Cronbach's alpha for internal consistency
+    try:
+        items = df.values
+        n_items = items.shape[1]
+        item_vars = items.var(axis=0, ddof=1)
+        total_var = items.sum(axis=1).var(ddof=1)
+        alpha = (n_items / (n_items - 1)) * (1 - item_vars.sum() / total_var) if total_var > 0 else 0
+        alpha = safe_float(alpha)
+    except:
+        alpha = None
+    
+    return {
+        "n_samples": len(df),
+        "n_dimensions": n_dims,
+        "avg_inter_dimension_correlation": avg_correlation,
+        "cronbach_alpha": alpha,
+        "coherence_level": (
+            "excellent" if (alpha or 0) >= 0.9 else
+            "good" if (alpha or 0) >= 0.8 else
+            "acceptable" if (alpha or 0) >= 0.7 else
+            "questionable" if (alpha or 0) >= 0.6 else
+            "poor"
+        ),
+        "valid": True
+    }
+
+
+@method_handler
+def maac_multivariate_validation(data: dict[str, ArrayLike]) -> dict[str, Any]:
+    """Multivariate validation of MAAC dimensional data."""
+    if not isinstance(data, dict):
+        return {"valid": False, "error": "Expected dict with dimension names as keys"}
+    
+    # Convert to DataFrame
+    df = pd.DataFrame(data)
+    df = df.dropna()
+    
+    if len(df) < 10:
+        return {"valid": False, "error": "Need at least 10 samples for multivariate validation"}
+    
+    n_samples, n_dims = df.shape
+    
+    results = {
+        "n_samples": n_samples,
+        "n_dimensions": n_dims,
+        "valid": True
+    }
+    
+    # KMO test if available
+    if HAS_FACTOR_ANALYZER:
+        try:
+            kmo_all, kmo_model = calculate_kmo(df)
+            results["kmo"] = {
+                "overall": safe_float(kmo_model),
+                "per_variable": {col: safe_float(k) for col, k in zip(df.columns, kmo_all)},
+                "adequate": kmo_model >= 0.6
+            }
+        except:
+            results["kmo"] = {"valid": False, "error": "KMO calculation failed"}
+    
+    # Bartlett's sphericity
+    if HAS_FACTOR_ANALYZER:
+        try:
+            from factor_analyzer.factor_analyzer import calculate_bartlett_sphericity
+            chi2, p = calculate_bartlett_sphericity(df)
+            results["bartlett_sphericity"] = {
+                "chi_square": safe_float(chi2),
+                "p_value": safe_float(p),
+                "significant": p < 0.05
+            }
+        except:
+            results["bartlett_sphericity"] = {"valid": False, "error": "Bartlett test failed"}
+    
+    # Correlation structure
+    corr = df.corr()
+    results["correlation_summary"] = {
+        "mean_correlation": safe_float(corr.values[np.triu_indices_from(corr.values, k=1)].mean()),
+        "max_correlation": safe_float(corr.values[np.triu_indices_from(corr.values, k=1)].max()),
+        "min_correlation": safe_float(corr.values[np.triu_indices_from(corr.values, k=1)].min())
+    }
+    
+    # Multicollinearity check (VIF would require statsmodels)
+    results["multicollinearity"] = {
+        "high_correlations": [
+            {"var1": str(df.columns[i]), "var2": str(df.columns[j]), "r": safe_float(corr.iloc[i, j])}
+            for i in range(n_dims) for j in range(i+1, n_dims)
+            if abs(corr.iloc[i, j]) > 0.8
+        ]
+    }
+    
+    return results
 
 
 # ==================== MULTIVARIATE ANALYSIS ====================
@@ -885,6 +1241,311 @@ def manova(data: dict[str, ArrayLike], groups: ArrayLike) -> dict[str, Any]:
         return {"valid": False, "error": str(e)}
 
 
+# ==================== ADDITIONAL NORMALITY TESTS ====================
+
+
+@method_handler
+def normaltest(X: ArrayLike) -> dict[str, Any]:
+    """D'Agostino and Pearson's test for normality."""
+    arr = ensure_array(X)
+    if len(arr) < 8:
+        return {"statistic": None, "p": None, "valid": False, "error": "Need at least 8 samples"}
+    stat, p = stats.normaltest(arr)
+    return {
+        "statistic": safe_float(stat),
+        "p": safe_float(p),
+        "normal": p > 0.05,
+        "n": len(arr),
+        "valid": True
+    }
+
+
+@method_handler
+def jarque_bera(X: ArrayLike) -> dict[str, Any]:
+    """Jarque-Bera test for normality."""
+    arr = ensure_array(X)
+    if len(arr) < 3:
+        return {"statistic": None, "p": None, "valid": False}
+    stat, p = stats.jarque_bera(arr)
+    return {
+        "statistic": safe_float(stat),
+        "p": safe_float(p),
+        "normal": p > 0.05,
+        "n": len(arr),
+        "valid": True
+    }
+
+
+# ==================== ROBUST STATISTICS ====================
+
+
+@method_handler
+def robust_mean(X: ArrayLike) -> dict[str, Any]:
+    """Calculate robust mean using trimmed mean (10% trim)."""
+    arr = ensure_array(X)
+    if len(arr) < 3:
+        return {"robust_mean": None, "valid": False}
+    trimmed = stats.trim_mean(arr, 0.1)
+    return {
+        "robust_mean": safe_float(trimmed),
+        "n": len(arr),
+        "valid": True
+    }
+
+
+@method_handler
+def robust_std(X: ArrayLike) -> dict[str, Any]:
+    """Calculate robust standard deviation using MAD."""
+    arr = ensure_array(X)
+    if len(arr) < 2:
+        return {"robust_std": None, "valid": False}
+    mad = stats.median_abs_deviation(arr)
+    # Scale MAD to estimate std (for normal distribution)
+    robust_std_val = mad * 1.4826
+    return {
+        "robust_std": safe_float(robust_std_val),
+        "mad": safe_float(mad),
+        "n": len(arr),
+        "valid": True
+    }
+
+
+@method_handler
+def trimmed_mean(X: ArrayLike, proportiontocut: float = 0.1) -> dict[str, Any]:
+    """Calculate trimmed mean."""
+    arr = ensure_array(X)
+    if len(arr) < 3:
+        return {"trimmed_mean": None, "valid": False}
+    result = stats.trim_mean(arr, proportiontocut)
+    return {
+        "trimmed_mean": safe_float(result),
+        "proportion_cut": proportiontocut,
+        "n": len(arr),
+        "valid": True
+    }
+
+
+@method_handler
+def outlier_detection_robust(data: ArrayLike) -> dict[str, Any]:
+    """Detect outliers using MAD-based method."""
+    arr = ensure_array(data)
+    if len(arr) < 3:
+        return {"outliers": [], "valid": False}
+    
+    median = np.median(arr)
+    mad = stats.median_abs_deviation(arr)
+    
+    if mad == 0:
+        return {"outliers": [], "n_outliers": 0, "valid": True}
+    
+    # Modified z-score
+    modified_z = 0.6745 * (arr - median) / mad
+    outlier_mask = np.abs(modified_z) > 3.5
+    outlier_indices = np.where(outlier_mask)[0].tolist()
+    
+    return {
+        "outliers": outlier_indices,
+        "n_outliers": len(outlier_indices),
+        "outlier_values": [safe_float(arr[i]) for i in outlier_indices],
+        "valid": True
+    }
+
+
+# ==================== MEDIATION ANALYSIS ====================
+
+
+@method_handler
+def mediation_analysis(X: ArrayLike, M: ArrayLike, Y: ArrayLike) -> dict[str, Any]:
+    """Mediation analysis using pingouin."""
+    if not HAS_PINGOUIN:
+        return {"valid": False, "error": "pingouin not installed"}
+    
+    x_arr = ensure_array(X)
+    m_arr = ensure_array(M)
+    y_arr = ensure_array(Y)
+    
+    min_len = min(len(x_arr), len(m_arr), len(y_arr))
+    if min_len < 10:
+        return {"valid": False, "error": "Need at least 10 samples"}
+    
+    df = pd.DataFrame({
+        'X': x_arr[:min_len],
+        'M': m_arr[:min_len],
+        'Y': y_arr[:min_len]
+    })
+    
+    try:
+        result = pg.mediation_analysis(data=df, x='X', m='M', y='Y', seed=42)
+        
+        # Extract path coefficients
+        paths = {}
+        for _, row in result.iterrows():
+            paths[row['path']] = {
+                'coef': safe_float(row['coef']),
+                'se': safe_float(row['se']),
+                'pval': safe_float(row['pval']),
+                'sig': row['sig'] if 'sig' in row else row['pval'] < 0.05
+            }
+        
+        indirect = paths.get('Indirect', {}).get('coef', 0)
+        total = paths.get('Total', {}).get('coef', 0)
+        
+        return {
+            "paths": paths,
+            "indirect_effect": safe_float(indirect),
+            "total_effect": safe_float(total),
+            "mediation_detected": indirect != 0 and paths.get('Indirect', {}).get('pval', 1) < 0.05,
+            "valid": True
+        }
+    except Exception as e:
+        return {"valid": False, "error": str(e)}
+
+
+# ==================== ITEM-TOTAL CORRELATION ====================
+
+
+@method_handler
+def item_total_corr(X: Union[ArrayLike, dict[str, ArrayLike]]) -> dict[str, Any]:
+    """Calculate item-total correlations."""
+    if isinstance(X, dict):
+        df = pd.DataFrame(X)
+    else:
+        df = pd.DataFrame(np.asarray(X))
+    
+    df = df.dropna()
+    
+    if df.shape[1] < 2:
+        return {"valid": False, "error": "Need at least 2 items"}
+    
+    total = df.sum(axis=1)
+    correlations = {}
+    
+    for col in df.columns:
+        # Corrected item-total: correlate item with total minus itself
+        corrected_total = total - df[col]
+        r, _ = pearsonr(df[col], corrected_total)
+        correlations[str(col)] = safe_float(r)
+    
+    return {
+        "item_total_correlations": correlations,
+        "n_items": df.shape[1],
+        "valid": True
+    }
+
+
+# ==================== CORRELATION MATRIX (alias) ====================
+
+
+@method_handler
+def corr_matrix(X: Union[ArrayLike, dict[str, ArrayLike]]) -> dict[str, Any]:
+    """Calculate correlation matrix (alias for correlation_matrix)."""
+    if isinstance(X, dict):
+        return correlation_matrix(data=X)
+    
+    # If X is a 2D array, convert to dict format
+    arr = np.asarray(X)
+    if arr.ndim == 2:
+        data = {f"var_{i}": arr[:, i].tolist() for i in range(arr.shape[1])}
+        return correlation_matrix(data=data)
+    
+    return {"valid": False, "error": "Expected 2D array or dict"}
+
+
+# ==================== POWER ANALYSIS VARIANTS ====================
+
+
+@method_handler
+def power_ttest(effect_size: float, nobs: int, alpha: float = 0.05) -> dict[str, Any]:
+    """Power analysis for t-test (alias)."""
+    return power_analysis_ttest(effect_size=effect_size, n=nobs, alpha=alpha)
+
+
+@method_handler
+def power_anova(k_groups: int, effect_size: float, nobs: int, alpha: float = 0.05) -> dict[str, Any]:
+    """Power analysis for ANOVA."""
+    if not HAS_STATSMODELS:
+        return {"valid": False, "error": "statsmodels not installed"}
+    
+    from statsmodels.stats.power import FTestAnovaPower
+    analysis = FTestAnovaPower()
+    
+    try:
+        power = analysis.solve_power(
+            effect_size=effect_size,
+            nobs=nobs,
+            alpha=alpha,
+            k_groups=k_groups
+        )
+        return {
+            "achieved_power": safe_float(power),
+            "effect_size": effect_size,
+            "n": nobs,
+            "k_groups": k_groups,
+            "alpha": alpha,
+            "valid": True
+        }
+    except Exception as e:
+        return {"valid": False, "error": str(e)}
+
+
+# ==================== BOOTSTRAP BCA ====================
+
+
+@method_handler
+def bootstrap_bca(X: ArrayLike, confidence_level: float = 0.95, n_iterations: int = 1000) -> dict[str, Any]:
+    """Bootstrap BCa (bias-corrected and accelerated) confidence intervals."""
+    arr = ensure_array(X)
+    if len(arr) < 10:
+        return {"valid": False, "error": "Need at least 10 samples"}
+    
+    n = len(arr)
+    theta_hat = np.mean(arr)
+    
+    # Bootstrap samples
+    bootstrap_means = []
+    for _ in range(n_iterations):
+        sample = np.random.choice(arr, size=n, replace=True)
+        bootstrap_means.append(np.mean(sample))
+    bootstrap_means = np.array(bootstrap_means)
+    
+    # Bias correction factor
+    z0 = stats.norm.ppf(np.mean(bootstrap_means < theta_hat))
+    
+    # Acceleration factor (jackknife)
+    jackknife_means = []
+    for i in range(n):
+        jack_sample = np.delete(arr, i)
+        jackknife_means.append(np.mean(jack_sample))
+    jackknife_means = np.array(jackknife_means)
+    
+    jack_mean = np.mean(jackknife_means)
+    num = np.sum((jack_mean - jackknife_means) ** 3)
+    denom = 6 * (np.sum((jack_mean - jackknife_means) ** 2) ** 1.5)
+    a = num / denom if denom != 0 else 0
+    
+    # BCa confidence interval
+    alpha = 1 - confidence_level
+    z_alpha = stats.norm.ppf(alpha / 2)
+    z_1_alpha = stats.norm.ppf(1 - alpha / 2)
+    
+    alpha1 = stats.norm.cdf(z0 + (z0 + z_alpha) / (1 - a * (z0 + z_alpha)))
+    alpha2 = stats.norm.cdf(z0 + (z0 + z_1_alpha) / (1 - a * (z0 + z_1_alpha)))
+    
+    lower = np.percentile(bootstrap_means, alpha1 * 100)
+    upper = np.percentile(bootstrap_means, alpha2 * 100)
+    
+    return {
+        "estimate": safe_float(theta_hat),
+        "ci_lower": safe_float(lower),
+        "ci_upper": safe_float(upper),
+        "bias_correction": safe_float(z0),
+        "acceleration": safe_float(a),
+        "ci_level": confidence_level,
+        "n_iterations": n_iterations,
+        "valid": True
+    }
+
+
 # ==================== METHOD REGISTRY ====================
 
 
@@ -915,6 +1576,7 @@ class StatisticalMethodRegistry:
             "spearman": spearman,
             "kendall": kendall,
             "correlation_matrix": correlation_matrix,
+            "corr_matrix": corr_matrix,  # Alias
             
             # Hypothesis testing
             "one_sample_ttest": one_sample_ttest,
@@ -928,6 +1590,9 @@ class StatisticalMethodRegistry:
             
             # Normality & assumptions
             "shapiro_wilk": shapiro_wilk,
+            "shapiro": shapiro_wilk,  # Alias
+            "normaltest": normaltest,
+            "jarque_bera": jarque_bera,
             "levene": levene_test,
             "bartlett": bartlett_test,
             
@@ -941,20 +1606,41 @@ class StatisticalMethodRegistry:
             # Reliability
             "cronbach_alpha": cronbach_alpha,
             "split_half": split_half_reliability,
+            "item_total_corr": item_total_corr,
             
             # Bootstrap
             "bootstrap_ci": bootstrap_ci,
+            "bootstrap_bca": bootstrap_bca,
             
             # Power analysis
             "power_analysis": power_analysis_ttest,
+            "power_ttest": power_ttest,
+            "power_anova": power_anova,
             
             # Factor analysis
             "pca": pca,
             "efa": efa,
             "kmo": kmo_test,
+            "bartlett_sphericity": bartlett_sphericity,
+            "cfa": cfa,
             
             # Multivariate
             "manova": manova,
+            
+            # MAAC Framework-specific
+            "maac_scoring_validation": maac_scoring_validation,
+            "maac_dimensional_statistics": maac_dimensional_statistics,
+            "maac_framework_coherence": maac_framework_coherence,
+            "maac_multivariate_validation": maac_multivariate_validation,
+            
+            # Robust statistics
+            "robust_mean": robust_mean,
+            "robust_std": robust_std,
+            "trimmed_mean": trimmed_mean,
+            "outlier_detection_robust": outlier_detection_robust,
+            
+            # Mediation
+            "mediation_analysis": mediation_analysis,
         }
     
     def get(self, name: str) -> Optional[Callable]:

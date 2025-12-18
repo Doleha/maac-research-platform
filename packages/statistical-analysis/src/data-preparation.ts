@@ -390,16 +390,16 @@ export function buildBatchPayload(
       id: `cohens_d:${shortId()}`,
       method: 'cohens_d',
       params: {
-        x: primaryData,
-        y: dimensionalData['maac_content_quality'] || primaryData,
+        X: primaryData,
+        Y: dimensionalData['maac_content_quality'] || primaryData,
       },
     },
     {
       id: `hedges_g:${shortId()}`,
       method: 'hedges_g',
       params: {
-        x: primaryData,
-        y: dimensionalData['maac_content_quality'] || primaryData,
+        X: primaryData,
+        Y: dimensionalData['maac_content_quality'] || primaryData,
       },
     },
 
