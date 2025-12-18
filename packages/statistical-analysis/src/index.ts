@@ -1,8 +1,52 @@
 /**
- * Statistical Analysis
- * Statistical pipeline for analyzing experimental data
+ * Statistical Analysis Package
+ * Extracted from: MAAC - Tier 2 - Dataset-Level Advanced Analysis-Python.json
+ * 
+ * Main exports for the statistical analysis package.
+ * Provides comprehensive statistical analysis with Python engine integration
+ * and multi-agent interpretation pipeline.
  */
 
+// ==================== CORE ENGINE ====================
+
+export { 
+  StatisticalAnalysisEngine, 
+  createStatisticalAnalysisEngine 
+} from './engine.js';
+
+// ==================== TYPES ====================
+
+export * from './types.js';
+
+// ==================== DATA PREPARATION ====================
+
+export {
+  buildDataMatrix,
+  buildStandardizedMatrix,
+  groupByDomain,
+  groupByTier,
+  groupByModel,
+  groupByConfig,
+  extractDimensionalData,
+  buildBatchPayload,
+  validateExperimentData,
+  sanitizeForPythonEngine,
+  processInChunks
+} from './data-preparation.js';
+
+// ==================== PYTHON ENGINE CLIENT ====================
+
+export { PythonEngineClient } from './python-engine-client.js';
+
+// ==================== AGENTS ====================
+
+export * from './agents/index.js';
+
+// ==================== LEGACY EXPORTS (backward compatibility) ====================
+
+/**
+ * @deprecated Use types from './types.js' instead
+ */
 export interface StatisticalResult {
   mean: number;
   median: number;
@@ -12,6 +56,10 @@ export interface StatisticalResult {
   count: number;
 }
 
+/**
+ * @deprecated Use StatisticalAnalysisEngine instead
+ * Legacy simple statistics analyzer for backward compatibility
+ */
 export class StatisticalAnalyzer {
   /**
    * Calculate descriptive statistics for a dataset
@@ -66,4 +114,5 @@ export class StatisticalAnalyzer {
   }
 }
 
-export * from '@maac/types';
+// Note: @maac/types re-export removed to avoid conflicts with local types
+// Use explicit imports from @maac/types if needed

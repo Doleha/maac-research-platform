@@ -1,7 +1,7 @@
 /**
  * MAAC Statistical Analysis Types
  * Extracted from: MAAC - Tier 2 - Dataset-Level Advanced Analysis-Python.json
- * 
+ *
  * Defines the comprehensive type system for the statistical analysis pipeline
  * including Python engine integration, multi-agent interpretation, and result structures.
  */
@@ -21,7 +21,7 @@ export interface ExperimentData {
   domain: string;
   tier: string;
   model_id: string;
-  
+
   // Tool configuration (12 individual tool enable flags)
   enable_browser?: boolean;
   enable_calculator?: boolean;
@@ -35,7 +35,7 @@ export interface ExperimentData {
   enable_python?: boolean;
   enable_web_search?: boolean;
   enable_wiki_search?: boolean;
-  
+
   // MAAC Nine-Dimensional Scores
   maac_overall_score: number;
   maac_cognitive_load: number;
@@ -47,7 +47,7 @@ export interface ExperimentData {
   maac_knowledge_transfer: number;
   maac_processing_efficiency: number;
   maac_construct_validity: number;
-  
+
   // Detailed MAAC components (optional, dimension-specific)
   maac_cognitive_load_cycles?: number;
   maac_cognitive_load_depth?: number;
@@ -55,19 +55,19 @@ export interface ExperimentData {
   maac_memory_integration_coherence?: number;
   maac_tool_execution_accuracy?: number;
   maac_tool_execution_efficiency?: number;
-  
+
   // MIMIC Response Data
   word_count?: number;
   cognitive_cycles?: number;
   memory_operations?: number;
   response_time_ms?: number;
-  
+
   // Scenario Context
   control_expectations?: string;
   success_criteria?: string;
   requirements?: string;
   scenario_description?: string;
-  
+
   // Timestamps
   created_at?: string;
   updated_at?: string;
@@ -85,10 +85,28 @@ export const MAAC_DIMENSIONS = [
   'maac_hallucination_control',
   'maac_knowledge_transfer',
   'maac_processing_efficiency',
-  'maac_construct_validity'
+  'maac_construct_validity',
 ] as const;
 
-export type MaacDimension = typeof MAAC_DIMENSIONS[number];
+export type MaacDimension = (typeof MAAC_DIMENSIONS)[number];
+
+// Agent types for multi-agent interpretation
+export type AgentType = 
+  | 'coreStatistical' 
+  | 'advancedStatistical' 
+  | 'businessScenario' 
+  | 'ablationStudy' 
+  | 'cognitiveArchitecture' 
+  | 'experimentalDesign';
+
+export const AGENT_TYPES: AgentType[] = [
+  'coreStatistical',
+  'advancedStatistical',
+  'businessScenario',
+  'ablationStudy',
+  'cognitiveArchitecture',
+  'experimentalDesign'
+];
 
 // ==================== BATCH CONFIGURATION ====================
 
@@ -96,11 +114,11 @@ export type MaacDimension = typeof MAAC_DIMENSIONS[number];
  * Tier 2 batch processing configuration
  */
 export interface Tier2Config {
-  batchSize: number;        // Default: 5
+  batchSize: number; // Default: 5
   analysisThreshold: number; // Default: 3600
-  qualityThreshold: number;  // Default: 0.7
-  parallelAgents: number;    // Default: 6
-  synthesisAgents: number;   // Default: 1
+  qualityThreshold: number; // Default: 0.7
+  parallelAgents: number; // Default: 6
+  synthesisAgents: number; // Default: 1
 }
 
 export const DEFAULT_TIER2_CONFIG: Tier2Config = {
@@ -108,7 +126,7 @@ export const DEFAULT_TIER2_CONFIG: Tier2Config = {
   analysisThreshold: 3600,
   qualityThreshold: 0.7,
   parallelAgents: 6,
-  synthesisAgents: 1
+  synthesisAgents: 1,
 };
 
 // ==================== PYTHON ENGINE TYPES ====================
@@ -345,7 +363,13 @@ export interface MediationAnalysis {
  */
 export interface ReliabilityAnalysis {
   cronbachsAlpha: number;
-  alphaInterpretation: 'excellent' | 'good' | 'acceptable' | 'questionable' | 'poor' | 'unacceptable';
+  alphaInterpretation:
+    | 'excellent'
+    | 'good'
+    | 'acceptable'
+    | 'questionable'
+    | 'poor'
+    | 'unacceptable';
   confidenceInterval: [number, number];
   splitHalf: number;
   guttmanLambda6: number;
@@ -381,12 +405,15 @@ export interface AssumptionTesting {
     pValue: number;
     significant: boolean;
   };
-  shapiroWilk: Record<string, {
-    wStatistic: number;
-    pValue: number;
-    significant: boolean;
-    normalityAssumption: string;
-  }>;
+  shapiroWilk: Record<
+    string,
+    {
+      wStatistic: number;
+      pValue: number;
+      significant: boolean;
+      normalityAssumption: string;
+    }
+  >;
 }
 
 /**
@@ -398,13 +425,13 @@ export interface ComprehensiveAnalysisResults {
   advancedStatisticalMethodsCompleted: boolean;
   newMethodsImplemented: number;
   readyForInterpretation: boolean;
-  
+
   // Execution summary
   executionSummary: ExecutionSummary;
-  
+
   // Data quality
   dataQuality: DataQuality;
-  
+
   // Method results by category
   methodResults: {
     maacCoreMethods: Record<string, StatisticalMethodResult>;
@@ -416,7 +443,7 @@ export interface ComprehensiveAnalysisResults {
     testingProcedures: Record<string, StatisticalMethodResult>;
     specializedAnalyses: Record<string, StatisticalMethodResult>;
   };
-  
+
   // Structured results
   descriptiveStatistics?: DescriptiveStatistics;
   correlationAnalysis?: CorrelationAnalysis;
@@ -428,7 +455,7 @@ export interface ComprehensiveAnalysisResults {
   reliabilityAnalysis?: ReliabilityAnalysis;
   powerAnalysis?: PowerAnalysis;
   assumptionTesting?: AssumptionTesting;
-  
+
   // MAAC-specific results
   maacDimensionalStatistics?: {
     overallMean: number;
@@ -436,14 +463,14 @@ export interface ComprehensiveAnalysisResults {
     profileConsistency: number;
     dimensionalStats: Record<MaacDimension, DescriptiveStatistics>;
   };
-  
+
   // Statistical tables
   statisticalTables?: {
     correlationMatrix: number[][];
     factorAnalysis: FactorAnalysis;
     manovaAnalysis: ManovaResults;
   };
-  
+
   // Integration summary
   integrationSummary?: {
     methodsExecuted: Array<{
@@ -487,7 +514,7 @@ export interface AgentInput {
   grade_level: 'A' | 'B' | 'C' | 'D' | 'F';
   validation_strength: 'strong' | 'moderate' | 'weak' | 'insufficient';
   deployment_readiness: 'ready' | 'conditional' | 'not_ready';
-  
+
   // Agent-specific data sections
   core_statistics: CoreStatisticsInput;
   advanced_statistics: AdvancedStatisticsInput;
@@ -495,7 +522,7 @@ export interface AgentInput {
   ablation_study: AblationStudyInput;
   cognitive_architecture: CognitiveArchitectureInput;
   experimental_design: ExperimentalDesignInput;
-  
+
   // Comprehensive results for reference
   comprehensive_results: ComprehensiveAnalysisResults;
 }
@@ -729,11 +756,14 @@ export interface AdvancedStatisticalInterpretation {
  */
 export interface BusinessScenarioAnalysis {
   domain_effectiveness: {
-    domain_performance: Record<string, {
-      score: number;
-      interpretation: string;
-      business_implications: string;
-    }>;
+    domain_performance: Record<
+      string,
+      {
+        score: number;
+        interpretation: string;
+        business_implications: string;
+      }
+    >;
     cross_domain_patterns: string;
   };
   deployment_assessment: {
@@ -765,10 +795,13 @@ export interface AblationStudyInterpretation {
     variability_assessment: string;
   };
   tool_effectiveness: {
-    tool_contributions: Record<string, {
-      effect_size: number;
-      interpretation: string;
-    }>;
+    tool_contributions: Record<
+      string,
+      {
+        effect_size: number;
+        interpretation: string;
+      }
+    >;
     interaction_effects: string;
   };
   configuration_analysis: {
@@ -789,11 +822,14 @@ export interface AblationStudyInterpretation {
  */
 export interface CognitiveArchitectureInsights {
   dimensional_analysis: {
-    dimension_profiles: Record<MaacDimension, {
-      mean_score: number;
-      interpretation: string;
-      cognitive_implications: string;
-    }>;
+    dimension_profiles: Record<
+      MaacDimension,
+      {
+        mean_score: number;
+        interpretation: string;
+        cognitive_implications: string;
+      }
+    >;
     interdimensional_relationships: string;
   };
   framework_validation: {
@@ -858,7 +894,7 @@ export interface Tier2AnalysisOutput {
   analysis_timestamp: string;
   engine_version: string;
   experiments_analyzed: number;
-  
+
   // Executive summary
   executive_summary: {
     overall_score: number;
@@ -867,10 +903,10 @@ export interface Tier2AnalysisOutput {
     deployment_readiness: string;
     key_findings: string[];
   };
-  
+
   // Raw statistical results
   statistical_results: ComprehensiveAnalysisResults;
-  
+
   // Agent interpretations
   interpretations: {
     core_statistical: CoreStatisticalInterpretation;
@@ -880,7 +916,7 @@ export interface Tier2AnalysisOutput {
     cognitive_architecture: CognitiveArchitectureInsights;
     experimental_design: ExperimentalDesignValidation;
   };
-  
+
   // Quality metrics
   quality_metrics: {
     data_completeness: number;
@@ -888,7 +924,7 @@ export interface Tier2AnalysisOutput {
     publication_readiness: string;
     confidence_level: string;
   };
-  
+
   // Processing metadata
   processing_metadata: {
     processing_time_ms: number;
@@ -907,21 +943,21 @@ export interface StatisticalAnalysisConfig {
   // Python engine connection
   pythonEngineUrl: string;
   pythonEngineTimeout: number;
-  
+
   // LLM configuration for agents
   llmProvider: 'openai' | 'deepseek' | 'anthropic';
   llmModel: string;
   llmApiKey: string;
-  
+
   // Processing options
   enableParallelAgents: boolean;
   maxConcurrentAgents: number;
   enableCaching: boolean;
   cacheDirectory?: string;
-  
+
   // Batch processing
   tier2Config: Tier2Config;
-  
+
   // Logging
   enableDetailedLogging: boolean;
   logLevel: 'debug' | 'info' | 'warn' | 'error';
@@ -936,5 +972,5 @@ export const DEFAULT_ENGINE_CONFIG: Partial<StatisticalAnalysisConfig> = {
   enableCaching: true,
   tier2Config: DEFAULT_TIER2_CONFIG,
   enableDetailedLogging: true,
-  logLevel: 'info'
+  logLevel: 'info',
 };

@@ -1,6 +1,6 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import { MAACFramework } from '@maac/framework';
+import { MAACFramework, LLMProvider } from '@maac/framework';
 import { ExperimentOrchestrator } from '@maac/experiment-orchestrator';
 import { StatisticalAnalyzer } from '@maac/statistical-analysis';
 
@@ -10,8 +10,17 @@ const fastify = Fastify({
 
 const port = parseInt(process.env.API_PORT || '3000', 10);
 
+// Mock LLM provider for API initialization
+const mockLLMProvider: LLMProvider = {
+  name: 'mock',
+  model: 'mock-model',
+  async invoke({ messages }) {
+    return { content: JSON.stringify({ status: 'mock_response', messages_count: messages.length }) };
+  }
+};
+
 // Initialize services
-const framework = new MAACFramework();
+const framework = new MAACFramework(mockLLMProvider);
 const orchestrator = new ExperimentOrchestrator();
 const analyzer = new StatisticalAnalyzer();
 
