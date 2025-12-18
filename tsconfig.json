@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@maac/framework": ["./packages/maac-framework/src"],
+      "@maac/infrastructure": ["./packages/experimental-infrastructure/src"],
+      "@maac/types": ["./packages/shared-types/src"]
+    }
+  },
+  "files": [],
+  "references": [
+    { "path": "./packages/shared-types" },
+    { "path": "./packages/maac-framework" },
+    { "path": "./packages/experimental-infrastructure" },
+    { "path": "./apps/api" },
+    { "path": "./apps/dashboard" }
+  ]
+}
