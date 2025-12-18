@@ -3,7 +3,8 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "module": "commonjs",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "lib": ["ES2022"]
   },
   "include": ["src/**/*"],
@@ -11,6 +12,8 @@
   "references": [
     { "path": "../../packages/shared-types" },
     { "path": "../../packages/maac-framework" },
-    { "path": "../../packages/experimental-infrastructure" }
+    { "path": "../../packages/experimental-infrastructure" },
+    { "path": "../../packages/experiment-orchestrator" },
+    { "path": "../../packages/statistical-analysis" }
   ]
 }
