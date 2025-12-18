@@ -5,6 +5,8 @@
     "paths": {
       "@maac/framework": ["./packages/maac-framework/src"],
       "@maac/infrastructure": ["./packages/experimental-infrastructure/src"],
+      "@maac/experiment-orchestrator": ["./packages/experiment-orchestrator/src"],
+      "@maac/statistical-analysis": ["./packages/statistical-analysis/src"],
       "@maac/types": ["./packages/shared-types/src"]
     }
   },
@@ -13,6 +15,8 @@
     { "path": "./packages/shared-types" },
     { "path": "./packages/maac-framework" },
     { "path": "./packages/experimental-infrastructure" },
+    { "path": "./packages/experiment-orchestrator" },
+    { "path": "./packages/statistical-analysis" },
     { "path": "./apps/api" },
     { "path": "./apps/dashboard" }
   ]
