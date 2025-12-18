@@ -4,35 +4,58 @@
  * Version: 4.0
  */
 
-import { CognitiveResponse, LLMProvider } from '@maac/types';
-import { SuccessCriterion, Tier, Domain, ModelId } from '@maac/types/experiment';
+import { CognitiveResponse } from '@maac/types';
+import { SuccessCriterion, Tier, Domain, ModelId } from '@maac/types';
 
 // ============================================================
 // MAAC DIMENSION IDENTIFIERS
 // ============================================================
 
-export type MAACDimension =
-  | 'cognitive_load'
-  | 'tool_execution'
-  | 'content_quality'
-  | 'memory_integration'
-  | 'complexity_handling'
-  | 'hallucination_control'
-  | 'knowledge_transfer'
-  | 'processing_efficiency'
-  | 'construct_validity';
+export enum MAACDimension {
+  COGNITIVE_LOAD = 'cognitive_load',
+  TOOL_EXECUTION = 'tool_execution',
+  CONTENT_QUALITY = 'content_quality',
+  MEMORY_INTEGRATION = 'memory_integration',
+  COMPLEXITY_HANDLING = 'complexity_handling',
+  HALLUCINATION_CONTROL = 'hallucination_control',
+  KNOWLEDGE_TRANSFER = 'knowledge_transfer',
+  PROCESSING_EFFICIENCY = 'processing_efficiency',
+  CONSTRUCT_VALIDITY = 'construct_validity',
+}
 
 export const MAAC_DIMENSIONS: MAACDimension[] = [
-  'cognitive_load',
-  'tool_execution',
-  'content_quality',
-  'memory_integration',
-  'complexity_handling',
-  'hallucination_control',
-  'knowledge_transfer',
-  'processing_efficiency',
-  'construct_validity',
+  MAACDimension.COGNITIVE_LOAD,
+  MAACDimension.TOOL_EXECUTION,
+  MAACDimension.CONTENT_QUALITY,
+  MAACDimension.MEMORY_INTEGRATION,
+  MAACDimension.COMPLEXITY_HANDLING,
+  MAACDimension.HALLUCINATION_CONTROL,
+  MAACDimension.KNOWLEDGE_TRANSFER,
+  MAACDimension.PROCESSING_EFFICIENCY,
+  MAACDimension.CONSTRUCT_VALIDITY,
 ];
+
+// ============================================================
+// LLM PROVIDER INTERFACE
+// ============================================================
+
+export interface LLMProvider {
+  name: string;
+  model: string;
+  invoke(params: {
+    messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>;
+    responseFormat?: { type: string; schema?: unknown };
+    temperature?: number;
+  }): Promise<{ content: string }>;
+}
+
+export interface AssessorConfig {
+  validateFormulas: boolean;
+  toleranceThreshold: number;
+  throwOnMismatch: boolean;
+  enableCaching: boolean;
+  debugMode: boolean;
+}
 
 // ============================================================
 // ASSESSMENT INPUT CONTEXT

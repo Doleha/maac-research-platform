@@ -3,7 +3,6 @@
  * Provides common functionality for all 9 dimension assessors
  */
 
-import { LLMProvider } from '@maac/types';
 import {
   MAACDimension,
   AssessmentContext,
@@ -11,22 +10,39 @@ import {
   MAACScore,
   ComponentScore,
   DimensionAssessor,
+  LLMProvider,
+  AssessorConfig,
   calculateDimensionScore,
   calculateConfidence,
   calculateDerivedMetrics,
   MAACScoreSchema,
 } from './types';
 
-export abstract class BaseDimensionAssessor implements DimensionAssessor {
-  abstract readonly dimension: MAACDimension;
-  abstract readonly version: string;
-  abstract readonly methodName: string;
+export class BaseAssessor implements DimensionAssessor {
+  readonly dimension: MAACDimension;
+  readonly version: string = '4.0';
+  readonly methodName: string = 'base_assessor';
+  
+  protected readonly llmProvider: LLMProvider;
+  protected readonly config: Partial<AssessorConfig>;
+
+  constructor(
+    dimension: MAACDimension,
+    llmProvider: LLMProvider,
+    config?: Partial<AssessorConfig>
+  ) {
+    this.dimension = dimension;
+    this.llmProvider = llmProvider;
+    this.config = config || {};
+  }
 
   /**
    * Generate the full system prompt for LLM assessment
-   * Must be implemented by each dimension assessor with exact n8n prompts
+   * Override in each dimension assessor with exact n8n prompts
    */
-  abstract generateSystemPrompt(context: AssessmentContext, derived: DerivedMetrics): string;
+  generateSystemPrompt(_context: AssessmentContext, _derived: DerivedMetrics): string {
+    throw new Error('generateSystemPrompt must be implemented by subclass');
+  }
 
   /**
    * Generate the user prompt (response text to assess)
@@ -49,16 +65,18 @@ ${context.responseText}`;
   /**
    * Assess a cognitive response for this dimension
    */
-  async assess(context: AssessmentContext, llm: LLMProvider): Promise<MAACScore> {
+  async assess(context: AssessmentContext): Promise<MAACScore> {
     const derived = calculateDerivedMetrics(context);
     const systemPrompt = this.generateSystemPrompt(context, derived);
     const userPrompt = this.generateUserPrompt(context);
 
     try {
       // Invoke LLM with structured output
-      const response = await llm.invoke({
-        system: systemPrompt,
-        prompt: userPrompt,
+      const response = await this.llmProvider.invoke({
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
         responseFormat: {
           type: 'json_schema',
           schema: MAACScoreSchema,
@@ -66,7 +84,9 @@ ${context.responseText}`;
       });
 
       // Parse the response
-      const rawScore = typeof response === 'string' ? JSON.parse(response) : response;
+      const rawScore = typeof response.content === 'string' 
+        ? JSON.parse(response.content) 
+        : response.content;
 
       // Validate and transform to MAACScore
       return this.transformToMAACScore(rawScore, context, derived);
@@ -82,7 +102,7 @@ ${context.responseText}`;
   protected transformToMAACScore(
     raw: Record<string, unknown>,
     context: AssessmentContext,
-    derived: DerivedMetrics,
+    _derived: DerivedMetrics,
   ): MAACScore {
     const componentScores = (raw.component_scores as Record<string, ComponentScore>) || {};
     const dimensionScore = calculateDimensionScore(componentScores);
