@@ -1,16 +1,32 @@
 {
   "name": "@maac/types",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./cognitive": {
+      "types": "./dist/cognitive.d.ts",
+      "default": "./dist/cognitive.js"
+    },
+    "./experiment": {
+      "types": "./dist/experiment.d.ts",
+      "default": "./dist/experiment.js"
+    },
+    "./database": {
+      "types": "./dist/database.d.ts",
+      "default": "./dist/database.js"
+    }
+  },
   "scripts": {
     "build": "tsc",
-    "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "typescript": "^5.6.3"
+    "typescript": "^5.4.5"
   }
 }
