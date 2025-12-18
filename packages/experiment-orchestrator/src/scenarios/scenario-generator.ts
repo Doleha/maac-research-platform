@@ -125,7 +125,8 @@ export class ScenarioGenerator {
     const scenariosPerDomain = scenariosPerDomainTier * tiers.length;
 
     const domainIndex = Math.floor(index / scenariosPerDomain) % domains.length;
-    const tierIndex = Math.floor((index % scenariosPerDomain) / scenariosPerDomainTier) % tiers.length;
+    const tierIndex =
+      Math.floor((index % scenariosPerDomain) / scenariosPerDomainTier) % tiers.length;
     const repIndex = Math.floor((index % scenariosPerDomainTier) / models.length);
     const modelIndex = index % models.length;
 
@@ -161,13 +162,22 @@ export class ScenarioGenerator {
     const pattern = getPatternForScenario(params.domain, 'control', params.repetition % 5);
 
     // Generate task description and context
-    const task = this.generateTaskFromPattern(params.domain, params.tier, pattern, params.repetition);
+    const task = this.generateTaskFromPattern(
+      params.domain,
+      params.tier,
+      pattern,
+      params.repetition,
+    );
 
     // Generate success criteria (BLIND - not given to LLM)
     const successCriteria = this.generateSuccessCriteria(params.domain, params.tier, pattern);
 
     // Generate control expectations
-    const controlExpectations = this.generateControlExpectations(params.domain, params.tier, pattern);
+    const controlExpectations = this.generateControlExpectations(
+      params.domain,
+      params.tier,
+      pattern,
+    );
 
     // Generate MAAC cognitive requirements
     const maacRequirements = this.generateMAACRequirements(params.domain, params.tier);
@@ -315,21 +325,24 @@ export class ScenarioGenerator {
   private generateBusinessContext(domain: Domain, tier: Tier): string {
     const contexts = {
       analytical: {
-        simple: 'Standard business analytics requiring systematic data analysis and clear reporting.',
+        simple:
+          'Standard business analytics requiring systematic data analysis and clear reporting.',
         moderate:
           'Cross-functional business intelligence requiring integration of multiple data sources and stakeholder perspectives.',
         complex:
           'Strategic enterprise analytics with uncertainty, competitive dynamics, and long-term implications.',
       },
       planning: {
-        simple: 'Straightforward project or resource planning with defined constraints and timelines.',
+        simple:
+          'Straightforward project or resource planning with defined constraints and timelines.',
         moderate:
           'Multi-stakeholder planning requiring trade-off analysis and resource optimization across competing priorities.',
         complex:
           'Strategic planning with uncertainty, multiple scenarios, and long-term organizational impact.',
       },
       communication: {
-        simple: 'Single-audience professional communication with clear objectives and standard format.',
+        simple:
+          'Single-audience professional communication with clear objectives and standard format.',
         moderate:
           'Multi-stakeholder communication requiring audience adaptation and message coordination.',
         complex:
@@ -337,8 +350,7 @@ export class ScenarioGenerator {
       },
       problem_solving: {
         simple: 'Well-defined problem with clear constraints and established solution approaches.',
-        moderate:
-          'Multi-variable problem requiring systematic analysis and trade-off evaluation.',
+        moderate: 'Multi-variable problem requiring systematic analysis and trade-off evaluation.',
         complex:
           'Ambiguous problem with uncertainty, multiple stakeholders, and novel solution requirements.',
       },
@@ -488,9 +500,7 @@ export class ScenarioGenerator {
     const primaryFocusSet = new Set(domainFocus.primaryFocus);
 
     // Get secondary dimensions (those not primary for this domain)
-    const secondaryDimensions = MAAC_DIMENSIONS.filter(
-      (d) => !primaryFocusSet.has(d),
-    ).slice(0, 3);
+    const secondaryDimensions = MAAC_DIMENSIONS.filter((d) => !primaryFocusSet.has(d)).slice(0, 3);
 
     // Use secondaryDimensions for future extensions
     void secondaryDimensions;
@@ -541,7 +551,9 @@ export class ScenarioGenerator {
 
     return {
       dataElements: [],
-      calculationsRequired: [`${tierCalculations.min}-${tierCalculations.max} calculations expected`],
+      calculationsRequired: [
+        `${tierCalculations.min}-${tierCalculations.max} calculations expected`,
+      ],
       industryContext: `${domain.replace('_', ' ')} domain scenario`,
       businessFunction: 'Open-ended analysis',
     };
