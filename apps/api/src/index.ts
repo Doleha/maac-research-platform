@@ -15,8 +15,10 @@ const mockLLMProvider: LLMProvider = {
   name: 'mock',
   model: 'mock-model',
   async invoke({ messages }) {
-    return { content: JSON.stringify({ status: 'mock_response', messages_count: messages.length }) };
-  }
+    return {
+      content: JSON.stringify({ status: 'mock_response', messages_count: messages.length }),
+    };
+  },
 };
 
 // Initialize services

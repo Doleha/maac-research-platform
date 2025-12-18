@@ -1,7 +1,7 @@
 /**
  * Statistical Analysis Package
  * Extracted from: MAAC - Tier 2 - Dataset-Level Advanced Analysis-Python.json
- * 
+ *
  * Main exports for the statistical analysis package.
  * Provides comprehensive statistical analysis with Python engine integration
  * and multi-agent interpretation pipeline.
@@ -9,10 +9,7 @@
 
 // ==================== CORE ENGINE ====================
 
-export { 
-  StatisticalAnalysisEngine, 
-  createStatisticalAnalysisEngine 
-} from './engine.js';
+export { StatisticalAnalysisEngine, createStatisticalAnalysisEngine } from './engine.js';
 
 // ==================== TYPES ====================
 
@@ -31,7 +28,7 @@ export {
   buildBatchPayload,
   validateExperimentData,
   sanitizeForPythonEngine,
-  processInChunks
+  processInChunks,
 } from './data-preparation.js';
 
 // ==================== PYTHON ENGINE CLIENT ====================

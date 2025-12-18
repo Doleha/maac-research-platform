@@ -1,7 +1,7 @@
 /**
  * Interpretation Agent Executor
  * Extracted from: MAAC - Tier 2 - Dataset-Level Advanced Analysis-Python.json
- * 
+ *
  * Executes interpretation agents with LLM providers to analyze statistical results.
  */
 
@@ -14,12 +14,9 @@ import {
   AblationStudyInterpretation,
   CognitiveArchitectureInsights,
   ExperimentalDesignValidation,
-  StatisticalAnalysisConfig
+  StatisticalAnalysisConfig,
 } from '../types.js';
-import {
-  AGENT_PROMPTS,
-  AGENT_OUTPUT_SCHEMAS
-} from './prompts.js';
+import { AGENT_PROMPTS, AGENT_OUTPUT_SCHEMAS } from './prompts.js';
 
 // ==================== AGENT RESULT TYPES ====================
 
@@ -47,14 +44,14 @@ export interface AgentExecutionResult<T> {
  */
 export interface LLMProvider {
   name: string;
-  
+
   /**
    * Execute a prompt and return structured output
    */
   execute<T>(
     systemPrompt: string,
     userMessage: string,
-    outputSchema?: Record<string, unknown>
+    outputSchema?: Record<string, unknown>,
   ): Promise<{
     content: T;
     tokensUsed: number;
@@ -81,39 +78,39 @@ export class DeepSeekProvider implements LLMProvider {
   async execute<T>(
     systemPrompt: string,
     userMessage: string,
-    outputSchema?: Record<string, unknown>
+    outputSchema?: Record<string, unknown>,
   ): Promise<{ content: T; tokensUsed: number }> {
     const response = await fetch(`${this.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`
+        Authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify({
         model: this.model,
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: userMessage }
+          { role: 'user', content: userMessage },
         ],
         response_format: outputSchema ? { type: 'json_object' } : undefined,
         temperature: 0.7,
-        max_tokens: 4096
-      })
+        max_tokens: 4096,
+      }),
     });
 
     if (!response.ok) {
       throw new Error(`DeepSeek API error: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json() as {
+    const data = (await response.json()) as {
       choices: Array<{ message: { content: string } }>;
       usage: { total_tokens: number };
     };
-    
+
     const content = JSON.parse(data.choices[0].message.content) as T;
     return {
       content,
-      tokensUsed: data.usage.total_tokens
+      tokensUsed: data.usage.total_tokens,
     };
   }
 }
@@ -138,39 +135,39 @@ export class OpenAIProvider implements LLMProvider {
   async execute<T>(
     systemPrompt: string,
     userMessage: string,
-    outputSchema?: Record<string, unknown>
+    outputSchema?: Record<string, unknown>,
   ): Promise<{ content: T; tokensUsed: number }> {
     const response = await fetch(`${this.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.apiKey}`
+        Authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify({
         model: this.model,
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: userMessage }
+          { role: 'user', content: userMessage },
         ],
         response_format: outputSchema ? { type: 'json_object' } : undefined,
         temperature: 0.7,
-        max_tokens: 4096
-      })
+        max_tokens: 4096,
+      }),
     });
 
     if (!response.ok) {
       throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json() as {
+    const data = (await response.json()) as {
       choices: Array<{ message: { content: string } }>;
       usage: { total_tokens: number };
     };
-    
+
     const content = JSON.parse(data.choices[0].message.content) as T;
     return {
       content,
-      tokensUsed: data.usage.total_tokens
+      tokensUsed: data.usage.total_tokens,
     };
   }
 }
@@ -195,38 +192,36 @@ export class AnthropicProvider implements LLMProvider {
   async execute<T>(
     systemPrompt: string,
     userMessage: string,
-    _outputSchema?: Record<string, unknown>
+    _outputSchema?: Record<string, unknown>,
   ): Promise<{ content: T; tokensUsed: number }> {
     const response = await fetch(`${this.baseUrl}/messages`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': this.apiKey,
-        'anthropic-version': '2023-06-01'
+        'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
         model: this.model,
         system: systemPrompt,
-        messages: [
-          { role: 'user', content: userMessage }
-        ],
-        max_tokens: 4096
-      })
+        messages: [{ role: 'user', content: userMessage }],
+        max_tokens: 4096,
+      }),
     });
 
     if (!response.ok) {
       throw new Error(`Anthropic API error: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json() as {
+    const data = (await response.json()) as {
       content: Array<{ text: string }>;
       usage: { input_tokens: number; output_tokens: number };
     };
-    
+
     const content = JSON.parse(data.content[0].text) as T;
     return {
       content,
-      tokensUsed: data.usage.input_tokens + data.usage.output_tokens
+      tokensUsed: data.usage.input_tokens + data.usage.output_tokens,
     };
   }
 }
@@ -277,25 +272,22 @@ export class AgentExecutor {
   /**
    * Execute a single agent
    */
-  async executeAgent<T>(
-    agentType: AgentType,
-    input: AgentInput
-  ): Promise<AgentExecutionResult<T>> {
+  async executeAgent<T>(agentType: AgentType, input: AgentInput): Promise<AgentExecutionResult<T>> {
     const startTime = Date.now();
-    
+
     try {
       this.log(`Executing ${agentType} agent...`);
 
       const systemPrompt = AGENT_PROMPTS[agentType];
       const outputSchema = AGENT_OUTPUT_SCHEMAS[agentType];
-      
+
       // Build user message from input
       const userMessage = this.buildUserMessage(agentType, input);
 
       const { content, tokensUsed } = await this.provider.execute<T>(
         systemPrompt,
         userMessage,
-        outputSchema
+        outputSchema,
       );
 
       const executionTimeMs = Date.now() - startTime;
@@ -305,19 +297,18 @@ export class AgentExecutor {
         success: true,
         result: content,
         executionTimeMs,
-        tokensUsed
+        tokensUsed,
       };
-
     } catch (error) {
       const executionTimeMs = Date.now() - startTime;
       const errorMessage = error instanceof Error ? error.message : String(error);
-      
+
       this.log(`${agentType} agent failed: ${errorMessage}`);
 
       return {
         success: false,
         error: errorMessage,
-        executionTimeMs
+        executionTimeMs,
       };
     }
   }
@@ -327,7 +318,7 @@ export class AgentExecutor {
    */
   async executeAllAgents(
     input: AgentInput,
-    maxConcurrent: number = 6
+    maxConcurrent: number = 6,
   ): Promise<{
     results: Partial<AgentResults>;
     summary: {
@@ -344,7 +335,7 @@ export class AgentExecutor {
       'businessScenario',
       'ablationStudy',
       'cognitiveArchitecture',
-      'experimentalDesign'
+      'experimentalDesign',
     ];
 
     this.log(`Executing ${agentTypes.length} agents (max concurrent: ${maxConcurrent})...`);
@@ -356,7 +347,7 @@ export class AgentExecutor {
     // Process in batches
     for (let i = 0; i < agentTypes.length; i += maxConcurrent) {
       const batch = agentTypes.slice(i, i + maxConcurrent);
-      
+
       const batchResults = await Promise.all(
         batch.map(async (agentType) => {
           const result = await this.executeAgent(agentType, input);
@@ -364,17 +355,19 @@ export class AgentExecutor {
             (results as Record<string, unknown>)[agentType] = result.result;
           }
           return result;
-        })
+        }),
       );
-      
+
       executionResults.push(...batchResults);
     }
 
     const totalTimeMs = Date.now() - startTime;
-    const successful = executionResults.filter(r => r.success).length;
+    const successful = executionResults.filter((r) => r.success).length;
     const totalTokens = executionResults.reduce((sum, r) => sum + (r.tokensUsed || 0), 0);
 
-    this.log(`All agents completed: ${successful}/${agentTypes.length} successful, ${totalTimeMs}ms, ${totalTokens} tokens`);
+    this.log(
+      `All agents completed: ${successful}/${agentTypes.length} successful, ${totalTimeMs}ms, ${totalTokens} tokens`,
+    );
 
     return {
       results,
@@ -382,8 +375,8 @@ export class AgentExecutor {
         successful,
         failed: agentTypes.length - successful,
         totalTimeMs,
-        totalTokens
-      }
+        totalTokens,
+      },
     };
   }
 
@@ -458,9 +451,6 @@ Please analyze the provided data and return your interpretation in the structure
 
 // ==================== EXPORTS ====================
 
-export {
-  AGENT_PROMPTS,
-  AGENT_OUTPUT_SCHEMAS
-} from './prompts.js';
+export { AGENT_PROMPTS, AGENT_OUTPUT_SCHEMAS } from './prompts.js';
 
 export type { AgentType } from '../types.js';

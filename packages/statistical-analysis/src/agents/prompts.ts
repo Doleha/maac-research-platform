@@ -1,7 +1,7 @@
 /**
  * Interpretation Agent System Prompts
  * Extracted from: MAAC - Tier 2 - Dataset-Level Advanced Analysis-Python.json
- * 
+ *
  * Contains the complete system prompts for the 6 interpretation agents that
  * analyze statistical results from the Python engine.
  */
@@ -296,171 +296,178 @@ Provide your analysis in structured JSON format following the output schema.`;
 export const CORE_STATISTICAL_OUTPUT_SCHEMA = {
   core_statistical_interpretation: {
     multivariate_findings: {
-      manova_interpretation: "Expert multivariate analysis interpretation with effect sizes or single-configuration limitations",
-      effect_magnitude_assessment: "Practical significance of multivariate differences or baseline characterization",
-      dimensional_breakdown: "Specific dimensions driving effects with individual statistics"
+      manova_interpretation:
+        'Expert multivariate analysis interpretation with effect sizes or single-configuration limitations',
+      effect_magnitude_assessment:
+        'Practical significance of multivariate differences or baseline characterization',
+      dimensional_breakdown: 'Specific dimensions driving effects with individual statistics',
     },
     effect_size_synthesis: {
-      comprehensive_effect_analysis: "Cohen's d, Hedges' g, Glass's Delta interpretation with confidence intervals",
-      practical_significance_evaluation: "Real-world importance beyond statistical significance with deployment implications",
-      confidence_interval_interpretation: "Precision and uncertainty analysis with practical implications"
+      comprehensive_effect_analysis:
+        "Cohen's d, Hedges' g, Glass's Delta interpretation with confidence intervals",
+      practical_significance_evaluation:
+        'Real-world importance beyond statistical significance with deployment implications',
+      confidence_interval_interpretation:
+        'Precision and uncertainty analysis with practical implications',
     },
     bayesian_evidence: {
-      evidence_strength_assessment: "Bayes factor interpretation and evidence quality rating",
-      credible_interval_analysis: "Probability statements about effect magnitude with practical interpretation",
-      convergent_evidence: "Agreement between Bayesian and frequentist approaches"
+      evidence_strength_assessment: 'Bayes factor interpretation and evidence quality rating',
+      credible_interval_analysis:
+        'Probability statements about effect magnitude with practical interpretation',
+      convergent_evidence: 'Agreement between Bayesian and frequentist approaches',
     },
     power_adequacy: {
-      statistical_power_assessment: "Adequacy for detecting meaningful cognitive effects",
-      sample_size_evaluation: "Current and recommended sample sizes for future studies",
-      conclusion_validity: "Confidence in statistical decision-making"
+      statistical_power_assessment: 'Adequacy for detecting meaningful cognitive effects',
+      sample_size_evaluation: 'Current and recommended sample sizes for future studies',
+      conclusion_validity: 'Confidence in statistical decision-making',
     },
     framework_validation: {
       reliability_assessment: "Cronbach's alpha and internal consistency evaluation",
-      factor_analysis_results: "Nine-dimensional structure validation",
-      construct_validity_evidence: "Support for theoretical framework",
-      data_quality_evaluation: "Statistical adequacy and completeness assessment"
+      factor_analysis_results: 'Nine-dimensional structure validation',
+      construct_validity_evidence: 'Support for theoretical framework',
+      data_quality_evaluation: 'Statistical adequacy and completeness assessment',
     },
     methodological_rigor: {
-      assumption_validation_results: "Statistical assumption checking and violation assessment",
-      robust_method_implementation: "Procedures used to address assumption violations",
-      multiple_comparison_control: "Family-wise error rate control methods applied",
-      outlier_influence_analysis: "Assessment and handling of influential observations",
-      single_configuration_handling: "Appropriate statistical methods for baseline-only analysis",
-      publication_ready_reporting: "APA-formatted statistical results with comprehensive documentation"
-    }
-  }
+      assumption_validation_results: 'Statistical assumption checking and violation assessment',
+      robust_method_implementation: 'Procedures used to address assumption violations',
+      multiple_comparison_control: 'Family-wise error rate control methods applied',
+      outlier_influence_analysis: 'Assessment and handling of influential observations',
+      single_configuration_handling: 'Appropriate statistical methods for baseline-only analysis',
+      publication_ready_reporting:
+        'APA-formatted statistical results with comprehensive documentation',
+    },
+  },
 };
 
 export const ADVANCED_STATISTICAL_OUTPUT_SCHEMA = {
   advanced_statistical_interpretation: {
     discriminant_analysis: {
-      classification_interpretation: "Classification accuracy and group separation quality",
-      canonical_functions: "Interpretation of discriminant functions",
-      variable_importance: "Key variables driving discrimination"
+      classification_interpretation: 'Classification accuracy and group separation quality',
+      canonical_functions: 'Interpretation of discriminant functions',
+      variable_importance: 'Key variables driving discrimination',
     },
     mediation_moderation: {
-      mediation_findings: "Indirect effect interpretation with bootstrap CIs",
-      moderation_findings: "Interaction effect interpretation",
-      pathway_analysis: "Cognitive pathway insights"
+      mediation_findings: 'Indirect effect interpretation with bootstrap CIs',
+      moderation_findings: 'Interaction effect interpretation',
+      pathway_analysis: 'Cognitive pathway insights',
     },
     factor_analysis: {
-      cfa_interpretation: "Model fit and factor structure validation",
-      measurement_invariance: "Cross-group stability assessment",
-      loading_patterns: "Factor loading interpretation"
+      cfa_interpretation: 'Model fit and factor structure validation',
+      measurement_invariance: 'Cross-group stability assessment',
+      loading_patterns: 'Factor loading interpretation',
     },
     equivalence_testing: {
-      tost_results: "Equivalence test conclusions",
-      practical_equivalence: "Practical significance of equivalence"
+      tost_results: 'Equivalence test conclusions',
+      practical_equivalence: 'Practical significance of equivalence',
     },
     bootstrap_methods: {
-      confidence_intervals: "BCa interval interpretation",
-      robustness_assessment: "Bootstrap validation of estimates"
-    }
-  }
+      confidence_intervals: 'BCa interval interpretation',
+      robustness_assessment: 'Bootstrap validation of estimates',
+    },
+  },
 };
 
 export const BUSINESS_SCENARIO_OUTPUT_SCHEMA = {
   business_scenario_analysis: {
     validation_assessment: {
-      sample_adequacy: "Business decision-making readiness",
-      effect_translation: "Statistical to business metric conversion",
-      predictive_validity: "Deployment outcome prediction"
+      sample_adequacy: 'Business decision-making readiness',
+      effect_translation: 'Statistical to business metric conversion',
+      predictive_validity: 'Deployment outcome prediction',
     },
     domain_effectiveness: {
-      analytical_performance: "Analytical domain benchmarks",
-      planning_effectiveness: "Planning domain metrics",
-      communication_clarity: "Communication domain assessment",
-      problem_solving_quality: "Problem-solving domain evaluation"
+      analytical_performance: 'Analytical domain benchmarks',
+      planning_effectiveness: 'Planning domain metrics',
+      communication_clarity: 'Communication domain assessment',
+      problem_solving_quality: 'Problem-solving domain evaluation',
     },
     enterprise_risk: {
-      consistency_evaluation: "Performance variability assessment",
-      reliability_impact: "Business reliability implications",
-      risk_adjusted_scores: "Risk-adjusted deployment confidence"
+      consistency_evaluation: 'Performance variability assessment',
+      reliability_impact: 'Business reliability implications',
+      risk_adjusted_scores: 'Risk-adjusted deployment confidence',
     },
     deployment_readiness: {
-      statistical_criteria_met: "Power, effect size, significance thresholds",
-      implementation_confidence: "Deployment confidence level",
-      recommendations: "Domain-specific deployment guidance"
-    }
-  }
+      statistical_criteria_met: 'Power, effect size, significance thresholds',
+      implementation_confidence: 'Deployment confidence level',
+      recommendations: 'Domain-specific deployment guidance',
+    },
+  },
 };
 
 export const ABLATION_STUDY_OUTPUT_SCHEMA = {
   ablation_study_insights: {
     baseline_characterization: {
-      cognitive_foundation: "Natural model capabilities assessment",
-      dimensional_patterns: "Baseline variability analysis",
-      inherent_strengths_weaknesses: "Per-dimension baseline evaluation"
+      cognitive_foundation: 'Natural model capabilities assessment',
+      dimensional_patterns: 'Baseline variability analysis',
+      inherent_strengths_weaknesses: 'Per-dimension baseline evaluation',
     },
     tool_effectiveness: {
-      enhancement_opportunities: "Ranked enhancement potential",
-      gap_analysis: "Baseline vs enhanced comparison",
-      diminishing_returns: "Threshold identification"
+      enhancement_opportunities: 'Ranked enhancement potential',
+      gap_analysis: 'Baseline vs enhanced comparison',
+      diminishing_returns: 'Threshold identification',
     },
     configuration_analysis: {
-      design_space_mapping: "Configuration space coverage",
-      optimal_configurations: "Per-domain optimal setups",
-      pareto_frontier: "Multi-objective optimization results"
+      design_space_mapping: 'Configuration space coverage',
+      optimal_configurations: 'Per-domain optimal setups',
+      pareto_frontier: 'Multi-objective optimization results',
     },
     emergent_behavior: {
-      natural_emergence: "Baseline emergent patterns",
-      complexity_handling: "Baseline complexity processing",
-      self_correction: "Unassisted error correction patterns"
-    }
-  }
+      natural_emergence: 'Baseline emergent patterns',
+      complexity_handling: 'Baseline complexity processing',
+      self_correction: 'Unassisted error correction patterns',
+    },
+  },
 };
 
 export const COGNITIVE_ARCHITECTURE_OUTPUT_SCHEMA = {
   cognitive_architecture_insights: {
     dimensional_patterns: {
-      correlation_structure: "Inter-dimensional relationships",
-      clustering_hierarchy: "Dimensional groupings",
-      trade_offs: "Dimensional trade-off patterns",
-      synergies: "Synergistic combinations"
+      correlation_structure: 'Inter-dimensional relationships',
+      clustering_hierarchy: 'Dimensional groupings',
+      trade_offs: 'Dimensional trade-off patterns',
+      synergies: 'Synergistic combinations',
     },
     framework_validation: {
-      psychometric_validation: "MAAC construct validation",
-      factor_confirmation: "Factor structure support",
-      cross_domain_stability: "Domain generalization evidence"
+      psychometric_validation: 'MAAC construct validation',
+      factor_confirmation: 'Factor structure support',
+      cross_domain_stability: 'Domain generalization evidence',
     },
     theoretical_contributions: {
-      novel_findings: "New cognitive science insights",
-      theory_extensions: "Existing theory refinements",
-      generalizability: "Model-agnostic conclusions"
+      novel_findings: 'New cognitive science insights',
+      theory_extensions: 'Existing theory refinements',
+      generalizability: 'Model-agnostic conclusions',
     },
     emergent_behavior: {
-      genuine_emergence: "True emergent behavior identification",
-      tool_interactions: "Synergistic and antagonistic patterns",
-      architectural_implications: "Design recommendations"
-    }
-  }
+      genuine_emergence: 'True emergent behavior identification',
+      tool_interactions: 'Synergistic and antagonistic patterns',
+      architectural_implications: 'Design recommendations',
+    },
+  },
 };
 
 export const EXPERIMENTAL_DESIGN_OUTPUT_SCHEMA = {
   experimental_design_validation: {
     diversity_assessment: {
-      diversity_metrics: "LDS, TCD, CLPS, DCI, SCC, SPA, CDI scores",
-      coverage_evaluation: "Experimental space coverage",
-      balance_assessment: "Design balance evaluation"
+      diversity_metrics: 'LDS, TCD, CLPS, DCI, SCC, SPA, CDI scores',
+      coverage_evaluation: 'Experimental space coverage',
+      balance_assessment: 'Design balance evaluation',
     },
     power_analysis: {
-      achieved_power: "Post-hoc power analysis results",
-      required_sample_size: "Target power sample requirements",
-      detectability_thresholds: "Minimum detectable effects"
+      achieved_power: 'Post-hoc power analysis results',
+      required_sample_size: 'Target power sample requirements',
+      detectability_thresholds: 'Minimum detectable effects',
     },
     publication_compliance: {
-      apa_compliance: "APA 7th Edition adherence",
-      transparency_guidelines: "TOP Guidelines compliance",
-      reproducibility: "Reproducibility checklist status"
+      apa_compliance: 'APA 7th Edition adherence',
+      transparency_guidelines: 'TOP Guidelines compliance',
+      reproducibility: 'Reproducibility checklist status',
     },
     validity_assessment: {
-      internal_validity: "Threat mitigation assessment",
-      external_validity: "Generalizability evaluation",
-      construct_validity: "Measurement quality assessment",
-      statistical_conclusion_validity: "Conclusion reliability"
-    }
-  }
+      internal_validity: 'Threat mitigation assessment',
+      external_validity: 'Generalizability evaluation',
+      construct_validity: 'Measurement quality assessment',
+      statistical_conclusion_validity: 'Conclusion reliability',
+    },
+  },
 };
 
 // ==================== AGENT REGISTRY ====================
@@ -471,7 +478,7 @@ export const AGENT_PROMPTS = {
   businessScenario: BUSINESS_SCENARIO_ANALYSIS_PROMPT,
   ablationStudy: ABLATION_STUDY_INTERPRETER_PROMPT,
   cognitiveArchitecture: COGNITIVE_ARCHITECTURE_INSIGHTS_PROMPT,
-  experimentalDesign: EXPERIMENTAL_DESIGN_VALIDATION_PROMPT
+  experimentalDesign: EXPERIMENTAL_DESIGN_VALIDATION_PROMPT,
 } as const;
 
 export const AGENT_OUTPUT_SCHEMAS = {
@@ -480,7 +487,7 @@ export const AGENT_OUTPUT_SCHEMAS = {
   businessScenario: BUSINESS_SCENARIO_OUTPUT_SCHEMA,
   ablationStudy: ABLATION_STUDY_OUTPUT_SCHEMA,
   cognitiveArchitecture: COGNITIVE_ARCHITECTURE_OUTPUT_SCHEMA,
-  experimentalDesign: EXPERIMENTAL_DESIGN_OUTPUT_SCHEMA
+  experimentalDesign: EXPERIMENTAL_DESIGN_OUTPUT_SCHEMA,
 } as const;
 
 // Re-export AgentType from types for convenience

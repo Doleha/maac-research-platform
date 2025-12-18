@@ -91,12 +91,12 @@ export const MAAC_DIMENSIONS = [
 export type MaacDimension = (typeof MAAC_DIMENSIONS)[number];
 
 // Agent types for multi-agent interpretation
-export type AgentType = 
-  | 'coreStatistical' 
-  | 'advancedStatistical' 
-  | 'businessScenario' 
-  | 'ablationStudy' 
-  | 'cognitiveArchitecture' 
+export type AgentType =
+  | 'coreStatistical'
+  | 'advancedStatistical'
+  | 'businessScenario'
+  | 'ablationStudy'
+  | 'cognitiveArchitecture'
   | 'experimentalDesign';
 
 export const AGENT_TYPES: AgentType[] = [
@@ -105,7 +105,7 @@ export const AGENT_TYPES: AgentType[] = [
   'businessScenario',
   'ablationStudy',
   'cognitiveArchitecture',
-  'experimentalDesign'
+  'experimentalDesign',
 ];
 
 // ==================== BATCH CONFIGURATION ====================
