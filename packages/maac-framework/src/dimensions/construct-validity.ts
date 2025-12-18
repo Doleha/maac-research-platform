@@ -21,7 +21,13 @@
  */
 
 import { BaseAssessor } from './base-assessor';
-import { MAACDimension, AssessmentContext, DerivedMetrics, LLMProvider, AssessorConfig } from './types';
+import {
+  MAACDimension,
+  AssessmentContext,
+  DerivedMetrics,
+  LLMProvider,
+  AssessorConfig,
+} from './types';
 
 export class ConstructValidityAssessor extends BaseAssessor {
   constructor(llmProvider: LLMProvider, config?: Partial<AssessorConfig>) {
@@ -156,4 +162,3 @@ Return a JSON object with dimension: "construct_validity" following the standard
 **DO NOT MODIFY THE CORE FORMULAS OR SCORING LOGIC.** This assessment must produce results comparable to all other trials in the experiment.`;
   }
 }
-

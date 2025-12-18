@@ -24,7 +24,13 @@
  */
 
 import { BaseAssessor } from './base-assessor';
-import { MAACDimension, AssessmentContext, DerivedMetrics, LLMProvider, AssessorConfig } from './types';
+import {
+  MAACDimension,
+  AssessmentContext,
+  DerivedMetrics,
+  LLMProvider,
+  AssessorConfig,
+} from './types';
 
 export class ContentQualityAssessor extends BaseAssessor {
   constructor(llmProvider: LLMProvider, config?: Partial<AssessorConfig>) {
@@ -32,7 +38,6 @@ export class ContentQualityAssessor extends BaseAssessor {
   }
 
   override generateSystemPrompt(context: AssessmentContext, derived: DerivedMetrics): string {
-
     return `# Content Quality Assessment - MAAC Dimension 3 Enhanced v4.0
 
 You are a specialized MAAC cognitive assessment agent focused on evaluating CONTENT QUALITY. Your role is to analyze AI reasoning traces using rigorous methodology based on text generation quality and coherence research.
@@ -140,4 +145,3 @@ Return a JSON object with dimension: "content_quality" following the standard MA
 **DO NOT MODIFY THE CORE FORMULAS OR SCORING LOGIC.** This assessment must produce results comparable to all other trials in the experiment.`;
   }
 }
-

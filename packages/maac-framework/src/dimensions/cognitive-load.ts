@@ -24,7 +24,13 @@
  */
 
 import { BaseAssessor } from './base-assessor';
-import { MAACDimension, AssessmentContext, DerivedMetrics, LLMProvider, AssessorConfig } from './types';
+import {
+  MAACDimension,
+  AssessmentContext,
+  DerivedMetrics,
+  LLMProvider,
+  AssessorConfig,
+} from './types';
 
 export class CognitiveLoadAssessor extends BaseAssessor {
   constructor(llmProvider: LLMProvider, config?: Partial<AssessorConfig>) {
@@ -321,4 +327,3 @@ If any issues are found, note them in \`validation_status\` and \`calculation_no
     return calculatedScore;
   }
 }
-
