@@ -3,9 +3,6 @@ import cors from '@fastify/cors';
 import { MAACFramework } from '@maac/framework';
 import { ExperimentOrchestrator } from '@maac/experiment-orchestrator';
 import { StatisticalAnalyzer } from '@maac/statistical-analysis';
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 const fastify = Fastify({
   logger: true,

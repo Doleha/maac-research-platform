@@ -9,7 +9,7 @@ export class ExperimentOrchestrator {
   private experiments: Map<string, ExperimentConfig> = new Map();
 
   registerExperiment(config: ExperimentConfig): void {
-    this.experiments.set(config.id, config);
+    this.experiments.set(config.experimentId, config);
   }
 
   getExperiment(id: string): ExperimentConfig | undefined {

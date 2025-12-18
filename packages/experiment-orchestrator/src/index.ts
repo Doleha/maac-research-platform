@@ -20,7 +20,7 @@ export class ExperimentOrchestrator {
   async startExperiment(config: ExperimentConfig): Promise<ExperimentRun> {
     const run: ExperimentRun = {
       id: crypto.randomUUID(),
-      configId: config.id,
+      configId: config.experimentId,
       status: 'pending',
     };
 

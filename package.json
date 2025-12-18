@@ -11,12 +11,15 @@
     "clean": "turbo run clean && rm -rf node_modules",
     "db:migrate": "pnpm --filter @maac/api db:migrate",
     "db:seed": "pnpm --filter @maac/api db:seed",
-    "db:studio": "pnpm --filter @maac/api db:studio"
+    "db:studio": "pnpm --filter @maac/api db:studio",
+    "validate": "tsx scripts/validate-setup.ts"
   },
   "devDependencies": {
     "prettier": "^3.2.5",
     "turbo": "^2.0.0",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "tsx": "^4.7.1",
+    "@types/node": "^20.12.7"
   },
   "packageManager": "pnpm@8.15.0",
   "engines": {
