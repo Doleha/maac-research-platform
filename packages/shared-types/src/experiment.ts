@@ -1,16 +1,104 @@
-// Experiment configuration types
+export type Domain = 'analytical' | 'planning' | 'communication' | 'problem_solving';
+export type Tier = 'simple' | 'moderate' | 'complex';
+export type ModelId = 'deepseek_v3' | 'sonnet_37' | 'gpt_4o' | 'llama_maverick';
+
 export interface ExperimentConfig {
-  id: string;
+  experimentId: string;
   name: string;
   description: string;
-  providers: Array<{
-    name: string;
-    apiKey: string;
-    baseUrl?: string;
-  }>;
-  parameters?: Record<string, unknown>;
+
+  // Scenario configuration
+  domains: Domain[];
+  tiers: Tier[];
+  repetitionsPerDomainTier: number;
+
+  // Model configuration
+  models: ModelId[];
+
+  // Tool configuration blocks
+  toolConfigs: ToolConfigBlock[];
+
+  // Execution settings
+  parallelism: number; // How many trials to run concurrently
+  timeout: number; // Milliseconds before trial fails
 }
 
+export interface ToolConfigBlock {
+  configId: string;
+  name: string;
+  description: string;
+  toolConfiguration: import('./cognitive').ToolConfiguration;
+  scenarioCount: number;
+}
+
+export interface Scenario {
+  scenarioId: string;
+  experimentId: string;
+  domain: Domain;
+  tier: Tier;
+  repetition: number;
+
+  // Task definition
+  taskTitle: string;
+  taskDescription: string;
+  businessContext: string;
+
+  // Success criteria (BLIND - not given to LLM)
+  successCriteria: SuccessCriterion[];
+  expectedCalculations: string[];
+  expectedInsights: string[];
+  scenarioRequirements: string[];
+  dataElements?: string[];
+
+  // Configuration
+  configId: string;
+  modelId: ModelId;
+}
+
+export interface SuccessCriterion {
+  criterion: string;
+  weight: number;
+  category: 'accuracy' | 'completeness' | 'reasoning' | 'efficiency';
+}
+
+export interface Trial {
+  trialId: string;
+  experimentId: string;
+  scenarioId: string;
+  configId: string;
+  modelId: ModelId;
+
+  // Execution
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  startedAt?: Date;
+  completedAt?: Date;
+  error?: string;
+
+  // Results
+  cognitiveResponse?: import('./cognitive').CognitiveResponse;
+  maacScores?: MAACAssessment;
+}
+
+export interface MAACAssessment {
+  // 9 dimensional scores
+  cognitivLoad: number; // 0-10
+  toolExecution: number;
+  contentQuality: number;
+  memoryIntegration: number;
+  complexityHandling: number;
+  hallucinationControl: number;
+  knowledgeTransfer: number;
+  processingEfficiency: number;
+  constructValidity: number;
+
+  // Metadata
+  overallScore: number; // 0-10
+  confidence: number; // 0-1
+  assessmentReasoning: string;
+  dimensionReasonings: Record<string, string>;
+}
+
+// Legacy types for backward compatibility
 export interface ExperimentRun {
   id: string;
   configId: string;
