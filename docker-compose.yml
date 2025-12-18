@@ -1,4 +1,4 @@
-version: "3.8"
+version: '3.8'
 
 services:
   postgres:
@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_DB: maac_research
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: password
     ports:
       - "5432:5432"
     volumes:
@@ -25,31 +25,12 @@ services:
       NEO4J_AUTH: neo4j/password
       NEO4J_PLUGINS: '["apoc"]'
     ports:
-      - "7474:7474" # Browser
-      - "7687:7687" # Bolt
+      - "7474:7474"
+      - "7687:7687"
     volumes:
       - neo4j_data:/data
-
-  # Optional: n8n for side-by-side validation
-  n8n:
-    image: n8nio/n8n:latest
-    ports:
-      - "5678:5678"
-    environment:
-      - N8N_BASIC_AUTH_ACTIVE=false
-      - DB_TYPE=postgresdb
-      - DB_POSTGRESDB_DATABASE=maac_research
-      - DB_POSTGRESDB_HOST=postgres
-      - DB_POSTGRESDB_PORT=5432
-      - DB_POSTGRESDB_USER=postgres
-      - DB_POSTGRESDB_PASSWORD=postgres
-    volumes:
-      - n8n_data:/home/node/.n8n
-    depends_on:
-      - postgres
 
 volumes:
   postgres_data:
   redis_data:
   neo4j_data:
-  n8n_data:
