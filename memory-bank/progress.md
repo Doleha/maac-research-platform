@@ -2,17 +2,19 @@
 
 ## Done
 
-- Tier 2 statistical analysis fully working (6/6 agents)
-- Python engine numpy serialization fix deployed
-- API routes created for Tier 2 analysis
-- Tier 1 integration test file created (24 tests)
-- Updated all MAAC scoring from 0-10 to 1-5 Likert scale across entire codebase
+- Tier 2 statistical analysis implementation
+- Likert scale extraction and fixes
+- Tier 1a LLM-based scenario generator matching EXACT n8n production workflow
+- Complete schema validation - all fields present (task_id, requirements, success_criteria, domain_specific_data, control_expectations with expected_calculations, MAAC_cognitive_requirements, metadata)
+- Domain pattern integration - generates from 5 patterns per domain
+- Production test verified: problem_solving-simple-rep1 generated with 12 expected_calculations, 5 insights, 4 trends, 6 success_thresholds, complete MAAC requirements
 
 ## Doing
 
-- Commit and push the 1-5 Likert scale changes
+
 
 ## Next
 
-- Complete Tier 3 Publication workflow implementation
-- End-to-end integration testing with real LLM calls
+- Database storage integration for generated scenarios
+- Batch generation script for 1800 baseline scenarios (4 domains × 3 tiers × 150 reps)
+- API endpoint for scenario generation with SSE progress streaming

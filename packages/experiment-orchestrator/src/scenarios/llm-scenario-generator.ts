@@ -115,7 +115,8 @@ export interface GeneratedLLMScenario extends LLMScenarioOutput {
 }
 
 // ============================================================================
-// SYSTEM PROMPT - Extracted verbatim from n8n Task Generator Agent
+// SYSTEM PROMPT - EXACT copy from n8n Task Generator Agent
+// Node: "Task Generator Agent" (69d9a8bd-3f05-456e-b7bc-e38e094405ee)
 // ============================================================================
 
 const TASK_GENERATOR_SYSTEM_PROMPT = `PRIMARY FUNCTION: Generate domain-specific business scenarios for MAAC-enhanced MIMIC testing with comprehensive cognitive assessment requirements.
@@ -187,6 +188,129 @@ MAAC WORKFLOW APPROACH:
 4. Generate scenario with embedded necessary data and integrated MAAC cognitive challenges
 5. For ALL scenarios: Perform calculations directly and populate expected_calculations with exact numerical results
 6. Ensure scenario aligns with complexity level, experimental requirements, and MAAC assessment objectives
+
+COMPLETE EXAMPLE SCENARIO (problem_solving domain, simple tier):
+
+{
+  "task_id": "problem_solving-simple-111111111111-rep31",
+  "task_title": "Enterprise Software Selection Decision Analysis",
+  "task_description": "Evaluate three enterprise software options using weighted criteria analysis: Option A costs $150K with 6-month implementation, 85% feature match, high vendor stability, good scalability, and 24/7 support. Option B costs $200K with 4-month implementation, 95% feature match, medium vendor stability, excellent scalability, and business hours support. Option C costs $100K with 8-month implementation, 75% feature match, low vendor stability, limited scalability, and email-only support. Calculate weighted scores using criteria weights: Cost (20%), Implementation Speed (25%), Features (30%), Vendor Stability (15%), Scalability (10%).",
+  "business_context": "Technology company requiring enterprise software selection for critical business operations with systematic decision-making framework and risk assessment.",
+  "scenario_type": "control",
+  "scenario_number": 31,
+  "requirements": [
+    "Calculate weighted scores for each software option using the specified criteria weights",
+    "Analyze the trade-offs between cost, speed, features, stability, and scalability",
+    "Provide a clear recommendation with justification based on the quantitative analysis",
+    "Consider risk factors and long-term implications of each option",
+    "Ensure calculations are precise and methodology is clearly documented"
+  ],
+  "success_criteria": [
+    "Accurate calculation of Option A weighted score: 75.0",
+    "Accurate calculation of Option B weighted score: 76.5", 
+    "Accurate calculation of Option C weighted score: 58.0",
+    "Clear recommendation of Option B as optimal choice with justification",
+    "Demonstration of systematic decision-making process with risk consideration"
+  ],
+  "complexity_level": "simple",
+  "estimated_duration": "15-20 minutes",
+  "domain_specific_data": {
+    "data_elements": [
+      "Option A: Cost $150K, Implementation 6 months, Features 85% match, Vendor stability High, Scalability Good, Support 24/7",
+      "Option B: Cost $200K, Implementation 4 months, Features 95% match, Vendor stability Medium, Scalability Excellent, Support Business hours",
+      "Option C: Cost $100K, Implementation 8 months, Features 75% match, Vendor stability Low, Scalability Limited, Support Email only",
+      "Criteria weights: Cost 20%, Implementation Speed 25%, Features 30%, Vendor Stability 15%, Scalability 10%",
+      "Scoring scale: Cost (lower=better), Speed (faster=better), Features (higher=better), Stability (higher=better), Scalability (better=higher)"
+    ],
+    "calculations_required": [
+      "Weighted score calculation for Option A using all criteria",
+      "Weighted score calculation for Option B using all criteria", 
+      "Weighted score calculation for Option C using all criteria",
+      "Comparative analysis of scores and trade-offs",
+      "Risk assessment based on vendor stability and scalability factors"
+    ],
+    "industry_context": "Technology sector enterprise software selection requiring balanced decision-making",
+    "business_function": "Strategic Technology Procurement and Decision Analysis"
+  },
+  "control_expectations": {
+    "expected_calculations": {
+      "option_a_weighted_score": "75.0",
+      "option_b_weighted_score": "76.5",
+      "option_c_weighted_score": "58.0",
+      "cost_component_a": "30.0 points (150K normalized)",
+      "cost_component_b": "20.0 points (200K normalized)",
+      "cost_component_c": "40.0 points (100K normalized)",
+      "implementation_speed_a": "18.75 points (6 months)",
+      "implementation_speed_b": "25.0 points (4 months)",
+      "implementation_speed_c": "12.5 points (8 months)",
+      "features_score_a": "25.5 points (85% × 30%)",
+      "features_score_b": "28.5 points (95% × 30%)",
+      "features_score_c": "22.5 points (75% × 30%)"
+    },
+    "expected_insights": [
+      "Option B achieves the highest weighted score (76.5) despite higher cost, due to superior features and faster implementation",
+      "Option A provides good balance at lower cost but sacrifices some features and speed",
+      "Option C has lowest cost but significantly underperforms on critical features, stability, and scalability",
+      "The 30% weight on features makes Option B's 95% match particularly valuable",
+      "Vendor stability and scalability considerations favor Options A and B over C"
+    ],
+    "expected_trends": [
+      "Higher cost options provide better overall value when considering all weighted criteria",
+      "Feature completeness and implementation speed are more valuable than initial cost savings", 
+      "Vendor stability and scalability become increasingly important for long-term enterprise success"
+    ],
+    "success_thresholds": {
+      "calculation_accuracy": "±0.1 points for all weighted scores",
+      "recommendation_quality": "must identify Option B as optimal with clear justification",
+      "methodology_clarity": "must show weighted calculation process step-by-step",
+      "risk_assessment": "must address vendor stability and scalability implications",
+      "trade_off_analysis": "must discuss cost vs. feature vs. speed trade-offs"
+    }
+  },
+  "MAAC_cognitive_requirements": {
+    "primary_dimensions_tested": [
+      "cognitive_load",
+      "complexity_handling",
+      "content_quality", 
+      "processing_efficiency"
+    ],
+    "cognitive_complexity_level": "simple",
+    "memory_integration_opportunities": [
+      "Integration of multiple criteria across three options simultaneously",
+      "Synthesis of quantitative scores with qualitative risk assessment",
+      "Connection between weighted calculations and strategic recommendation",
+      "Tool configuration impact on systematic decision-making approach"
+    ],
+    "knowledge_transfer_elements": [
+      "Application of multi-criteria decision analysis to technology procurement",
+      "Translation of weighted scores into business recommendations",
+      "Cross-domain integration of financial analysis with technology assessment",
+      "Adaptation of systematic evaluation framework to enterprise context"
+    ],
+    "expected_tool_usage_patterns": [
+      "Think tool for systematic problem decomposition and analysis planning",
+      "Goal Engine for objective clarification and criteria alignment",
+      "Planning Engine for structured evaluation methodology",
+      "Validation Engine for calculation accuracy verification",
+      "Calculator tool for precise weighted score computations"
+    ]
+  },
+  "metadata": {
+    "source_agent": "task_generator",
+    "scenario_number": 31,
+    "experiment_id": "5573db81-c80b-4ea8-94dc-88b698777395",
+    "business_domain": "problem_solving",
+    "condition_id": "111111111111",
+    "task_id": "problem_solving-simple-111111111111-rep31",
+    "timestamp": "2024-01-15T14:30:00.000Z",
+    "complexity_justification": "Simple multi-criteria decision analysis requiring weighted calculations, trade-off assessment, and systematic evaluation framework",
+    "complexity_level": "simple",
+    "MAAC_framework_version": "nine_dimensional_v1.0",
+    "cognitive_assessment_focus": "Nine-dimensional cognitive architecture evaluation under tool configuration 111111111111 (12/12 tools enabled)"
+  }
+}
+
+Access experiment metadata: business_domain, condition_id, scenario_number, scenario_type, complexity_level from MAAC loop iteration. Use UUIDs for experiment_id. Always respond with valid JSON matching this exact schema with MAAC enhancements.
 
 VALIDATION CHECK: Before outputting JSON, verify expected_calculations and success_thresholds contain actual data, not empty objects {}.`;
 
@@ -430,9 +554,133 @@ export class LLMScenarioGenerator {
   }
 
   /**
-   * Call DeepSeek API
+   * Call DeepSeek API with function calling for schema enforcement
+   * This matches how n8n's Structured Output Parser works
    */
   private async callDeepSeekAPI(userMessage: string): Promise<string> {
+    // Define the function (tool) that enforces our exact schema
+    // This is how LangChain's Structured Output Parser works
+    const scenarioFunction = {
+      type: 'function' as const,
+      function: {
+        name: 'generate_maac_scenario',
+        description: 'Generate a MAAC-enhanced business scenario with all required fields',
+        parameters: {
+          type: 'object',
+          required: [
+            'task_id',
+            'task_title',
+            'task_description',
+            'business_context',
+            'scenario_type',
+            'scenario_number',
+            'requirements',
+            'success_criteria',
+            'complexity_level',
+            'estimated_duration',
+            'domain_specific_data',
+            'control_expectations',
+            'MAAC_cognitive_requirements',
+            'metadata',
+          ],
+          properties: {
+            task_id: { type: 'string', description: 'Unique task identifier' },
+            task_title: { type: 'string', description: 'Descriptive title for the scenario' },
+            task_description: { type: 'string', description: 'Full scenario description with embedded data' },
+            business_context: { type: 'string', description: 'Business context for the scenario' },
+            scenario_type: { type: 'string', enum: ['control', 'test'] },
+            scenario_number: { type: 'integer', description: 'Scenario number in sequence' },
+            requirements: { 
+              type: 'array', 
+              items: { type: 'string' },
+              description: 'List of requirements for completing the task' 
+            },
+            success_criteria: { 
+              type: 'array', 
+              items: { type: 'string' },
+              description: 'Criteria for evaluating success' 
+            },
+            complexity_level: { type: 'string', enum: ['simple', 'moderate', 'complex'] },
+            estimated_duration: { type: 'string', description: 'Estimated time to complete' },
+            domain_specific_data: {
+              type: 'object',
+              required: ['data_elements', 'calculations_required', 'industry_context', 'business_function'],
+              properties: {
+                data_elements: { type: 'array', items: { type: 'string' } },
+                calculations_required: { type: 'array', items: { type: 'string' } },
+                industry_context: { type: 'string' },
+                business_function: { type: 'string' },
+              },
+            },
+            control_expectations: {
+              type: 'object',
+              required: ['expected_calculations', 'expected_insights', 'expected_trends', 'success_thresholds'],
+              properties: {
+                expected_calculations: { 
+                  type: 'object', 
+                  additionalProperties: { type: 'string' },
+                  description: 'Key-value pairs of expected calculation results - MUST NOT BE EMPTY' 
+                },
+                expected_insights: { type: 'array', items: { type: 'string' } },
+                expected_trends: { type: 'array', items: { type: 'string' } },
+                success_thresholds: { 
+                  type: 'object', 
+                  additionalProperties: { type: 'string' },
+                  description: 'Key-value pairs of success thresholds - MUST NOT BE EMPTY' 
+                },
+              },
+            },
+            MAAC_cognitive_requirements: {
+              type: 'object',
+              required: [
+                'primary_dimensions_tested',
+                'cognitive_complexity_level',
+                'memory_integration_opportunities',
+                'knowledge_transfer_elements',
+                'expected_tool_usage_patterns',
+              ],
+              properties: {
+                primary_dimensions_tested: { type: 'array', items: { type: 'string' } },
+                cognitive_complexity_level: { type: 'string', enum: ['simple', 'moderate', 'complex'] },
+                memory_integration_opportunities: { type: 'array', items: { type: 'string' } },
+                knowledge_transfer_elements: { type: 'array', items: { type: 'string' } },
+                expected_tool_usage_patterns: { type: 'array', items: { type: 'string' } },
+              },
+            },
+            metadata: {
+              type: 'object',
+              required: [
+                'source_agent',
+                'scenario_number',
+                'experiment_id',
+                'business_domain',
+                'condition_id',
+                'task_id',
+                'timestamp',
+                'complexity_justification',
+                'complexity_level',
+                'MAAC_framework_version',
+                'cognitive_assessment_focus',
+              ],
+              properties: {
+                source_agent: { type: 'string' },
+                scenario_number: { type: 'integer' },
+                experiment_id: { type: 'string' },
+                business_domain: { type: 'string' },
+                condition_id: { type: 'string' },
+                task_id: { type: 'string' },
+                timestamp: { type: 'string' },
+                complexity_justification: { type: 'string' },
+                complexity_level: { type: 'string' },
+                MAAC_framework_version: { type: 'string' },
+                cognitive_assessment_focus: { type: 'string' },
+              },
+            },
+          },
+        },
+      },
+    };
+
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -453,7 +701,8 @@ export class LLMScenarioGenerator {
         ],
         temperature: 0.7,
         max_tokens: 4000,
-        response_format: { type: 'json_object' },
+        tools: [scenarioFunction],
+        tool_choice: { type: 'function', function: { name: 'generate_maac_scenario' } },
       }),
     });
 
@@ -463,17 +712,44 @@ export class LLMScenarioGenerator {
     }
 
     const data = (await response.json()) as {
-      choices: Array<{ message?: { content?: string } }>;
+      choices: Array<{
+        message?: {
+          content?: string;
+          tool_calls?: Array<{
+            function?: { arguments?: string };
+          }>;
+        };
+      }>;
     };
-    return data.choices[0]?.message?.content || '';
+
+    // Extract the function call arguments (this is our structured output)
+    const toolCall = data.choices[0]?.message?.tool_calls?.[0];
+    if (toolCall?.function?.arguments) {
+      console.log('Got structured output via function calling');
+      return toolCall.function.arguments;
+    }
+
+    // Fallback to content if no tool call (shouldn't happen with tool_choice)
+    const content = data.choices[0]?.message?.content || '';
+    console.log('Fallback to content:', content.substring(0, 200));
+    return content;
   }
 
   /**
    * Parse and validate LLM response
    */
   private parseAndValidateResponse(response: string): LLMScenarioOutput {
+    // Log raw response for debugging
+    console.log('Raw LLM response length:', response.length);
+    console.log('Raw LLM response preview:', response.substring(0, 500));
+    
     // Extract JSON from response (handle potential markdown code blocks)
     let jsonStr = response.trim();
+
+    // If empty response, throw error
+    if (!jsonStr) {
+      throw new Error('Empty response from LLM API');
+    }
 
     // Remove markdown code blocks if present
     if (jsonStr.startsWith('```json')) {
@@ -491,12 +767,16 @@ export class LLMScenarioGenerator {
     try {
       parsed = JSON.parse(jsonStr);
     } catch (parseError) {
+      console.error('JSON parse error. Raw content:', jsonStr.substring(0, 200));
       throw new Error(`Failed to parse JSON response: ${parseError}`);
     }
+
+    console.log('Parsed JSON keys:', Object.keys(parsed as Record<string, unknown>));
 
     // Validate against schema
     const result = LLMScenarioOutputSchema.safeParse(parsed);
     if (!result.success) {
+      console.error('Schema validation failed. Parsed object:', JSON.stringify(parsed, null, 2).substring(0, 500));
       throw new Error(`Schema validation failed: ${result.error.message}`);
     }
 
