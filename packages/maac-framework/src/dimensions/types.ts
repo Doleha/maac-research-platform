@@ -4,6 +4,7 @@
  * Version: 4.0
  */
 
+import { z } from 'zod';
 import { SuccessCriterion, Tier, Domain, ModelId } from '@maac/types';
 
 // ============================================================
@@ -39,13 +40,18 @@ export const MAAC_DIMENSIONS: MAACDimension[] = [
 // ============================================================
 
 export interface LLMProvider {
-  name: string;
-  model: string;
-  invoke(params: {
-    messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>;
-    responseFormat?: { type: string; schema?: unknown };
+  modelName: string;
+
+  /**
+   * Invoke LLM with optional structured output using Zod schema
+   */
+  invoke<T = string>(params: {
+    systemPrompt: string;
+    userMessage?: string;
+    responseSchema?: z.ZodSchema<T>;
     temperature?: number;
-  }): Promise<{ content: string }>;
+    maxTokens?: number;
+  }): Promise<T>;
 }
 
 export interface AssessorConfig {
@@ -348,43 +354,28 @@ export function calculateDerivedMetrics(context: AssessmentContext): DerivedMetr
 }
 
 // ============================================================
-// MAAC SCORE JSON SCHEMA (for structured LLM output)
+// MAAC SCORE ZOD SCHEMA (for structured LLM output)
 // ============================================================
 
-export const MAACScoreSchema = {
-  type: 'object',
-  properties: {
-    dimension: { type: 'string', enum: MAAC_DIMENSIONS },
-    assessment_context: {
-      type: 'object',
-      properties: {
-        model: { type: 'string' },
-        configuration: { type: 'string' },
-        complexity: { type: 'string' },
-        processing_time_ms: { type: 'number' },
-        validation_status: { type: 'string', enum: ['complete', 'partial', 'error'] },
-        missing_variables: { type: 'array', items: { type: 'string' } },
-        calculation_notes: { type: 'array', items: { type: 'string' } },
-      },
-      required: ['model', 'configuration', 'complexity', 'validation_status'],
-    },
-    component_scores: { type: 'object' },
-    dimension_score: { type: 'number', minimum: 1, maximum: 5 },
-    confidence: { type: 'number', minimum: 0, maximum: 1 },
-    key_observations: { type: 'array', items: { type: 'string' } },
-    statistical_metadata: { type: 'object' },
-    cognitive_emergence_indicators: { type: 'object' },
-    processing_metadata: { type: 'object' },
-    readiness_flags: { type: 'object' },
-    assessment_criteria: { type: 'object' },
-    experimental_design: { type: 'object' },
-  },
-  required: [
-    'dimension',
-    'assessment_context',
-    'component_scores',
-    'dimension_score',
-    'confidence',
-    'key_observations',
-  ],
-};
+/**
+ * Component Score Schema - for individual question/component scores
+ */
+const ComponentScoreZodSchema = z.object({
+  score: z.number().min(1).max(5).describe('Likert score from 1-5'),
+  reasoning: z.string().describe('Reasoning for the score'),
+  evidence: z.string().optional().describe('Supporting evidence from the response'),
+});
+
+/**
+ * LLM Response Schema - what we expect from the LLM
+ * This is a simplified schema that gets transformed to MAACScore
+ */
+export const MAACScoreSchema = z.object({
+  dimension_score: z.number().min(1).max(5).describe('Overall dimension score from 1-5 Likert'),
+  confidence: z.number().min(0).max(1).describe('Confidence in the assessment from 0-1'),
+  component_scores: z.record(ComponentScoreZodSchema).describe('Individual question scores'),
+  key_observations: z.array(z.string()).describe('Key observations from the assessment'),
+  reasoning: z.string().optional().describe('Overall assessment reasoning'),
+});
+
+export type LLMScoreResponse = z.infer<typeof MAACScoreSchema>;

@@ -1,4 +1,5 @@
 import { defineConfig } from 'vitest/config';
+import path from 'path';
 
 export default defineConfig({
   test: {
@@ -7,6 +8,10 @@ export default defineConfig({
     include: ['tests/**/*.test.ts'],
     coverage: {
       reporter: ['text', 'json', 'html'],
+    },
+    // Load .env from workspace root
+    env: {
+      ...require('dotenv').config({ path: path.resolve(__dirname, '../../.env') }).parsed,
     },
   },
 });

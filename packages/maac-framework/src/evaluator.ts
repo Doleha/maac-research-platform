@@ -644,7 +644,7 @@ export function createMAACEvaluator(
     formulaValidation: true,
     statisticalMode: false,
     llmProvider,
-    model: llmProvider.model || 'claude-sonnet-4-5',
+    model: llmProvider.modelName || 'claude-sonnet-4-5',
   };
 
   return new MAACEvaluator({
@@ -667,7 +667,7 @@ export function createResearchMAACEvaluator(
     formulaValidation: true,
     statisticalMode: true,
     llmProvider,
-    model: llmProvider.model || 'claude-sonnet-4-5',
+    model: llmProvider.modelName || 'claude-sonnet-4-5',
     assessorConfig: {
       validateFormulas: true,
       toleranceThreshold: 0.05,

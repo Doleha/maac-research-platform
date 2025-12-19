@@ -72,20 +72,11 @@ ${context.responseText}`;
 
     try {
       // Invoke LLM with structured output
-      const response = await this.llmProvider.invoke({
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        responseFormat: {
-          type: 'json_schema',
-          schema: MAACScoreSchema,
-        },
+      const rawScore = await this.llmProvider.invoke({
+        systemPrompt,
+        userMessage: userPrompt,
+        responseSchema: MAACScoreSchema,
       });
-
-      // Parse the response
-      const rawScore =
-        typeof response.content === 'string' ? JSON.parse(response.content) : response.content;
 
       // Validate and transform to MAACScore
       return this.transformToMAACScore(rawScore, context, derived);

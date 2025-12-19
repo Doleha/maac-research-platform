@@ -184,6 +184,9 @@ importers:
       '@ai-sdk/anthropic':
         specifier: ^0.0.20
         version: 0.0.20(zod@3.25.76)
+      '@ai-sdk/openai':
+        specifier: ^0.0.24
+        version: 0.0.24(zod@3.25.76)
       '@types/node':
         specifier: ^20.12.7
         version: 20.19.27
@@ -262,7 +265,6 @@ packages:
       '@ai-sdk/provider': 0.0.10
       '@ai-sdk/provider-utils': 0.0.13(zod@3.25.76)
       zod: 3.25.76
-    dev: false
 
   /@ai-sdk/provider-utils@0.0.13(zod@3.25.76):
     resolution: {integrity: sha512-cB2dPm9flj+yin5sjBLFcXdW8sZtAXLE/OLKgz9uHpHM55s7mnwZrDGfO6ot/ukHTxDDJunZLW7qSjgK/u0F1g==}
@@ -278,7 +280,6 @@ packages:
       nanoid: 3.3.6
       secure-json-parse: 2.7.0
       zod: 3.25.76
-    dev: false
 
   /@ai-sdk/provider-utils@0.0.14(zod@3.25.76):
     resolution: {integrity: sha512-PCQFN3MlC6DShS/81IFU9NVvt9OekQGiZTEowRc2AwAwWrDsv7er3UkcMswFAL/Z7xZKjgu0dZTNH1z9oUlo7A==}

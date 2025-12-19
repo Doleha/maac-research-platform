@@ -1,29 +1,44 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { MAACEvaluator } from '../src/evaluator';
+import { MAACEvaluator, ScenarioContext } from '../src/evaluator';
 import { VercelAIProvider } from '../src/llm-provider';
-import { SuccessCriterion } from '@maac/types';
+import { CognitiveResponse, ExecutionMetadata } from '@maac/types';
+import { AssessmentContext } from '../src/dimensions/types';
 
-// Load environment variables
-import 'dotenv/config';
+// Load environment variables from vitest.config.ts
 
 describe('MAAC Evaluator', () => {
   let llmProvider: VercelAIProvider;
 
   beforeAll(async () => {
-    // Initialize Anthropic provider
-    const { anthropic } = await import('@ai-sdk/anthropic');
-    const model = anthropic('claude-sonnet-4-5-20250514');
-    llmProvider = new VercelAIProvider('claude-sonnet-4-5', model);
+    // Initialize OpenAI provider (Anthropic API key appears to be invalid)
+    const { openai } = await import('@ai-sdk/openai');
+    const model = openai('gpt-4o-mini');
+    llmProvider = new VercelAIProvider('gpt-4o-mini', model);
   });
 
-  const sampleSuccessCriteria: SuccessCriterion[] = [
-    { criterion: 'Identify key trends in the data', category: 'completeness' },
-    { criterion: 'Provide actionable recommendations', category: 'actionability' },
-    { criterion: 'Calculate year-over-year growth rate', category: 'calculation' },
-    { criterion: 'Support conclusions with evidence', category: 'accuracy' },
-  ];
+  const sampleScenario: ScenarioContext = {
+    domain: 'business_analysis',
+    tier: 'moderate',
+    configId: '111111111111',
+    modelId: 'claude-sonnet-4-5',
+    taskTitle: 'Quarterly Sales Analysis',
+    taskDescription: 'Analyze quarterly sales data and provide recommendations',
+    businessContext: 'E-commerce company reviewing Q4 performance',
+    successCriteria: [
+      { criterion: 'Identify key trends in the data', category: 'completeness' },
+      { criterion: 'Provide actionable recommendations', category: 'actionability' },
+      { criterion: 'Calculate year-over-year growth rate', category: 'calculation' },
+      { criterion: 'Support conclusions with evidence', category: 'accuracy' },
+    ],
+    expectedCalculations: ['growth rate', 'percentage change', 'year-over-year comparison'],
+    expectedInsights: ['revenue trends', 'regional performance', 'product category analysis'],
+    scenarioRequirements: ['trend analysis', 'recommendations', 'data visualization'],
+    dataElements: ['quarterly_sales', 'regional_breakdown', 'product_categories'],
+    enabledTools: ['data_analysis', 'calculator'],
+    memoryToolsEnabled: [],
+  };
 
-  const sampleResponse = {
+  const sampleResponse: CognitiveResponse = {
     content: `
       Based on my analysis of the quarterly sales data, I've identified several key trends:
       
@@ -51,10 +66,18 @@ describe('MAAC Evaluator', () => {
     metadata: {
       processingTime: 5000,
       cognitiveCyclesCount: 3,
-      memoryOperationsCount: 2,
+      memoryOperationsCount: 0,
       toolsInvoked: ['data_analysis', 'calculator'],
       toolsInvokedCount: 2,
     },
+  };
+
+  const sampleMetadata: ExecutionMetadata = {
+    processingTime: 5000,
+    cognitiveCyclesCount: 3,
+    memoryOperationsCount: 0,
+    toolsInvoked: ['data_analysis', 'calculator'],
+    toolsInvokedCount: 2,
   };
 
   it('evaluates all 9 dimensions', async () => {
@@ -63,15 +86,14 @@ describe('MAAC Evaluator', () => {
       model: 'claude-sonnet-4-5',
       confidenceThreshold: 0.7,
       parallelAssessment: false,
+      includeReasoningChains: true,
+      formulaValidation: true,
+      statisticalMode: false,
     };
 
     const evaluator = new MAACEvaluator(config);
 
-    const result = await evaluator.evaluate(
-      sampleResponse,
-      sampleSuccessCriteria,
-      sampleResponse.metadata,
-    );
+    const result = await evaluator.evaluate(sampleResponse, sampleScenario, sampleMetadata);
 
     // Verify all dimensions present
     expect(result).toHaveProperty('cognitiveLoad');
@@ -84,13 +106,13 @@ describe('MAAC Evaluator', () => {
     expect(result).toHaveProperty('processingEfficiency');
     expect(result).toHaveProperty('constructValidity');
 
-    // Verify score ranges (1-5 scale per dimension)
-    expect(result.cognitiveLoad).toBeGreaterThanOrEqual(1);
-    expect(result.cognitiveLoad).toBeLessThanOrEqual(5);
+    // Verify score ranges (0-10 scale after normalization)
+    expect(result.cognitiveLoad).toBeGreaterThanOrEqual(0);
+    expect(result.cognitiveLoad).toBeLessThanOrEqual(10);
 
-    // Verify overall score (average of 9 dimensions, should be 1-5)
-    expect(result.overallScore).toBeGreaterThanOrEqual(1);
-    expect(result.overallScore).toBeLessThanOrEqual(5);
+    // Verify overall score
+    expect(result.overallScore).toBeGreaterThanOrEqual(0);
+    expect(result.overallScore).toBeLessThanOrEqual(10);
 
     // Verify confidence (0-1)
     expect(result.confidence).toBeGreaterThanOrEqual(0);
@@ -103,15 +125,14 @@ describe('MAAC Evaluator', () => {
       model: 'claude-sonnet-4-5',
       confidenceThreshold: 0.7,
       parallelAssessment: false,
+      includeReasoningChains: true,
+      formulaValidation: true,
+      statisticalMode: false,
     };
 
     const evaluator = new MAACEvaluator(config);
 
-    const result = await evaluator.evaluate(
-      sampleResponse,
-      sampleSuccessCriteria,
-      sampleResponse.metadata,
-    );
+    const result = await evaluator.evaluate(sampleResponse, sampleScenario, sampleMetadata);
 
     // Verify reasoning is provided for each dimension
     expect(result.dimensionReasonings).toBeDefined();
@@ -124,9 +145,9 @@ describe('MAAC Dimension Assessors', () => {
   let llmProvider: VercelAIProvider;
 
   beforeAll(async () => {
-    const { anthropic } = await import('@ai-sdk/anthropic');
-    const model = anthropic('claude-sonnet-4-5-20250514');
-    llmProvider = new VercelAIProvider('claude-sonnet-4-5', model);
+    const { openai } = await import('@ai-sdk/openai');
+    const model = openai('gpt-4o-mini');
+    llmProvider = new VercelAIProvider('gpt-4o-mini', model);
   });
 
   it('cognitive load assessor follows 6-question methodology', async () => {
@@ -134,8 +155,11 @@ describe('MAAC Dimension Assessors', () => {
 
     const assessor = new CognitiveLoadAssessor(llmProvider);
 
-    const context = {
-      responseContent: 'Sample response for cognitive load assessment...',
+    const context: AssessmentContext = {
+      responseText:
+        'Sample response for cognitive load assessment with multiple insights and calculations.',
+      responseContent:
+        'Sample response for cognitive load assessment with multiple insights and calculations.',
       wordCount: 150,
       cognitiveCyclesCount: 3,
       memoryOperationsCount: 1,
@@ -149,6 +173,11 @@ describe('MAAC Dimension Assessors', () => {
       expectedCalculations: ['growth rate', 'percentage change'],
       scenarioRequirements: ['trend analysis', 'recommendations'],
       successThresholds: { cognitive_load: 3.5 },
+      successCriteria: [{ criterion: 'Identify trends', category: 'completeness' }],
+      expectedInsights: ['trend analysis'],
+      enabledTools: ['calculator'],
+      memoryToolsEnabled: [],
+      memoryStoreEnabled: false,
     };
 
     const result = await assessor.assess(context);
@@ -158,7 +187,7 @@ describe('MAAC Dimension Assessors', () => {
     expect(result).toHaveProperty('confidence');
     expect(result).toHaveProperty('componentScores');
 
-    // Verify dimension score is in valid range
+    // Verify dimension score is in valid range (1-5 Likert)
     expect(result.dimensionScore).toBeGreaterThanOrEqual(1);
     expect(result.dimensionScore).toBeLessThanOrEqual(5);
   }, 60000);

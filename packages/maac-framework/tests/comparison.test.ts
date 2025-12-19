@@ -31,10 +31,10 @@ import {
 
 /**
  * Create a mock LLM provider that returns predictable scores for testing
+ * Uses the Zod schema-based invoke interface
  */
 function createMockLLMProvider(scoreOverrides: Record<string, number> = {}): LLMProvider {
-  // MAAC uses 0-5 scale for dimension scores
-  // Formula rounds to nearest integer, so use integer scores for validation
+  // MAAC uses 1-5 scale for dimension scores (Likert)
   const defaultScores: Record<string, number> = {
     cognitive_load: 4,
     tool_execution: 4,
@@ -49,75 +49,43 @@ function createMockLLMProvider(scoreOverrides: Record<string, number> = {}): LLM
   };
 
   return {
-    name: 'mock-llm',
-    model: 'mock-model',
+    modelName: 'mock-llm',
     invoke: vi
       .fn()
       .mockImplementation(
-        async ({ messages }: { messages: Array<{ role: string; content: string }> }) => {
+        async <T>({
+          systemPrompt,
+        }: {
+          systemPrompt: string;
+          userMessage?: string;
+          responseSchema?: unknown;
+        }): Promise<T> => {
           // Parse which dimension is being assessed from the system prompt
-          const systemPrompt =
-            messages.find((m: { role: string; content: string }) => m.role === 'system')?.content ||
-            '';
           const dimension =
             Object.keys(defaultScores).find((d) =>
               systemPrompt.toLowerCase().includes(d.replace(/_/g, ' ')),
             ) || 'cognitive_load';
 
-          const dimensionScore = defaultScores[dimension] || 3.75;
-
-          // Component scores should average to dimension score exactly
-          // MAAC uses 0-5 scale for component and dimension scores
-          // Don't round - use the exact score so the average equals dimension_score
+          const dimensionScore = defaultScores[dimension] || 4;
           const componentScore = dimensionScore;
 
-          // Return format matching what the assessor expects
-          return {
-            content: JSON.stringify({
-              dimension_score: dimensionScore,
-              component_scores: {
-                q1: {
-                  score: componentScore,
-                  calculation: 'Q1',
-                  evidence: 'evidence1',
-                  reasoning: 'reasoning1',
-                },
-                q2: {
-                  score: componentScore,
-                  calculation: 'Q2',
-                  evidence: 'evidence2',
-                  reasoning: 'reasoning2',
-                },
-                q3: {
-                  score: componentScore,
-                  calculation: 'Q3',
-                  evidence: 'evidence3',
-                  reasoning: 'reasoning3',
-                },
-                q4: {
-                  score: componentScore,
-                  calculation: 'Q4',
-                  evidence: 'evidence4',
-                  reasoning: 'reasoning4',
-                },
-                q5: {
-                  score: componentScore,
-                  calculation: 'Q5',
-                  evidence: 'evidence5',
-                  reasoning: 'reasoning5',
-                },
-                q6: {
-                  score: componentScore,
-                  calculation: 'Q6',
-                  evidence: 'evidence6',
-                  reasoning: 'reasoning6',
-                },
-              },
-              formula: '(Q1 + Q2 + Q3 + Q4 + Q5 + Q6) / 6',
-              confidence: 0.85,
-              reasoning: `Mock assessment for ${dimension} dimension`,
-            }),
+          // Return format matching the MAACScoreSchema Zod schema
+          const result = {
+            dimension_score: dimensionScore,
+            confidence: 0.85,
+            component_scores: {
+              q1: { score: componentScore, reasoning: 'reasoning1' },
+              q2: { score: componentScore, reasoning: 'reasoning2' },
+              q3: { score: componentScore, reasoning: 'reasoning3' },
+              q4: { score: componentScore, reasoning: 'reasoning4' },
+              q5: { score: componentScore, reasoning: 'reasoning5' },
+              q6: { score: componentScore, reasoning: 'reasoning6' },
+            },
+            key_observations: [`Mock assessment for ${dimension} dimension`],
+            reasoning: `Mock assessment reasoning for ${dimension}`,
           };
+
+          return result as T;
         },
       ),
   };
