@@ -11,23 +11,26 @@
 ---
 
 ## Phase 1: Foundation (0/2)
+
 **Goal:** Multi-page routing and navigation structure
 
 ### ✅ Completed
+
 - [x] Basic dashboard homepage with Tailwind CSS
 - [x] Experiment status component
 - [x] MAAC visualization component
 - [x] Statistical results component
 
 ### 🚧 In Progress
+
 - [ ] None
 
 ### 📋 Todo
+
 - [ ] **1.1 Setup multi-page routing & navigation**
   - Create pages: /experiments/new, /experiments/[id], /data, /settings
   - Build sidebar navigation component
   - **Files:** `src/app/experiments/new/page.tsx`, `src/components/sidebar.tsx`
-  
 - [ ] **1.2 Build experiment creation form - Basic structure**
   - Experiment metadata (name, description)
   - Domain selection (problem_solving, creative_writing, data_analysis, technical_reasoning)
@@ -37,9 +40,11 @@
 ---
 
 ## Phase 2: Experiment Creation (0/4)
+
 **Goal:** Complete experiment configuration interface
 
 ### 📋 Todo
+
 - [ ] **2.1 Add LLM provider/model selection**
   - Dropdown: OpenAI, Anthropic, DeepSeek, OpenRouter
   - Model selection (dynamic based on provider)
@@ -66,9 +71,11 @@
 ---
 
 ## Phase 3: Data Management (0/2)
+
 **Goal:** Upload and validate scenario data
 
 ### 📋 Todo
+
 - [ ] **3.1 Build data upload component**
   - Drag-drop CSV/JSON upload
   - Parse and validate files
@@ -86,9 +93,11 @@
 ---
 
 ## Phase 4: Execution Controls (0/4)
+
 **Goal:** Run and monitor experiments in real-time
 
 ### 📋 Todo
+
 - [ ] **4.1 Create experiment detail page with controls**
   - Metadata + config summary
   - Start/Pause/Stop/Resume buttons
@@ -116,9 +125,11 @@
 ---
 
 ## Phase 5: Analysis & Comparison (0/2)
+
 **Goal:** Advanced results analysis and export
 
 ### 📋 Todo
+
 - [ ] **5.1 Create experiment comparison view**
   - Multi-select (2-5 experiments)
   - Side-by-side radar charts
@@ -134,9 +145,11 @@
 ---
 
 ## Phase 6: Configuration (0/4)
+
 **Goal:** System settings and credentials management
 
 ### 📋 Todo
+
 - [ ] **6.1 Build settings page - LLM credentials**
   - API key inputs (masked)
   - Test Connection buttons
@@ -164,9 +177,11 @@
 ---
 
 ## Phase 7: Browsing & Search (0/2)
+
 **Goal:** Browse and manage experiments and scenarios
 
 ### 📋 Todo
+
 - [ ] **7.1 Create experiments list/browse page**
   - Table with filters
   - Pagination (50/page)
@@ -182,9 +197,11 @@
 ---
 
 ## Phase 8: Advanced Features (0/3)
+
 **Goal:** Real-time monitoring and system health
 
 ### 📋 Todo
+
 - [ ] **8.1 Implement live experiment progress tracking**
   - Server-Sent Events (SSE)
   - Real-time trial updates
@@ -206,9 +223,11 @@
 ---
 
 ## Phase 9: Polish (0/2)
+
 **Goal:** Final touches and user experience
 
 ### 📋 Todo
+
 - [ ] **9.1 Implement user notifications system**
   - Toast notifications
   - React context
@@ -230,6 +249,7 @@
 ## 📝 Notes & Decisions
 
 ### Architecture Decisions
+
 - Using Next.js 14 App Router for file-based routing
 - Tailwind CSS for styling
 - React Query (@tanstack/react-query) for data fetching
@@ -237,6 +257,7 @@
 - React Context for global state (notifications)
 
 ### API Endpoints Required
+
 - `POST /api/experiments` - Create experiment
 - `GET /api/experiments` - List experiments
 - `GET /api/experiments/{id}` - Get experiment details
@@ -251,6 +272,7 @@
 - `POST /api/experiments/{id}/retry` - Retry failed trials
 
 ### Dependencies to Add
+
 - `react-dropzone` - File upload
 - `date-fns` - Date formatting
 - `zod` - Schema validation (already in shared-types)
@@ -259,11 +281,13 @@
 ---
 
 ## 🐛 Known Issues
+
 - None yet
 
 ---
 
 ## 🎯 Next Steps
+
 1. Start Phase 1: Build sidebar navigation component
 2. Create routing structure for all pages
 3. Build experiment creation form skeleton
