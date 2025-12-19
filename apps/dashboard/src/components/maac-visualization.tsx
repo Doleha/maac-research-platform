@@ -2,19 +2,19 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
-import { 
-  Radar, 
-  RadarChart, 
-  PolarGrid, 
-  PolarAngleAxis, 
+import {
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
   PolarRadiusAxis,
-  ResponsiveContainer 
+  ResponsiveContainer,
 } from 'recharts';
 
 export function MAACVisualization({ experimentId }: { experimentId: string }) {
   const { data: results, isLoading } = useQuery({
     queryKey: ['experiment-results', experimentId],
-    queryFn: () => apiClient.getExperimentResults(experimentId)
+    queryFn: () => apiClient.getExperimentResults(experimentId),
   });
 
   if (isLoading) return <div>Loading...</div>;
@@ -30,7 +30,7 @@ export function MAACVisualization({ experimentId }: { experimentId: string }) {
     hallucinationControl: average(results.map((r: any) => Number(r.maacHallucinationControl))),
     knowledgeTransfer: average(results.map((r: any) => Number(r.maacKnowledgeTransfer))),
     processingEfficiency: average(results.map((r: any) => Number(r.maacProcessingEfficiency))),
-    constructValidity: average(results.map((r: any) => Number(r.maacConstructValidity)))
+    constructValidity: average(results.map((r: any) => Number(r.maacConstructValidity))),
   };
 
   const chartData = [
@@ -42,13 +42,13 @@ export function MAACVisualization({ experimentId }: { experimentId: string }) {
     { dimension: 'Hallucination Control', score: avgScores.hallucinationControl },
     { dimension: 'Knowledge Transfer', score: avgScores.knowledgeTransfer },
     { dimension: 'Processing Efficiency', score: avgScores.processingEfficiency },
-    { dimension: 'Construct Validity', score: avgScores.constructValidity }
+    { dimension: 'Construct Validity', score: avgScores.constructValidity },
   ];
 
   return (
     <div className="p-6 border rounded-lg">
       <h2 className="text-2xl font-bold mb-4">MAAC 9-Dimensional Assessment</h2>
-      
+
       <ResponsiveContainer width="100%" height={400}>
         <RadarChart data={chartData}>
           <PolarGrid />

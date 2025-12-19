@@ -18,9 +18,7 @@ export default function Home() {
           <h1 className="text-4xl font-bold mb-8">MAAC Research Dashboard</h1>
 
           <div className="mb-6">
-            <label className="block text-sm font-medium mb-2">
-              Experiment ID
-            </label>
+            <label className="block text-sm font-medium mb-2">Experiment ID</label>
             <input
               type="text"
               value={experimentId}

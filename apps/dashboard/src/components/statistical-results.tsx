@@ -6,7 +6,7 @@ import { apiClient } from '@/lib/api-client';
 export function StatisticalResults({ experimentId }: { experimentId: string }) {
   const { data: analysis, isLoading } = useQuery({
     queryKey: ['analysis-results', experimentId],
-    queryFn: () => apiClient.getAnalysisResults(experimentId)
+    queryFn: () => apiClient.getAnalysisResults(experimentId),
   });
 
   if (isLoading) return <div>Loading analysis...</div>;
@@ -23,15 +23,16 @@ export function StatisticalResults({ experimentId }: { experimentId: string }) {
       <div>
         <h3 className="text-lg font-semibold mb-3">Descriptive Statistics</h3>
         <div className="grid grid-cols-3 gap-4">
-          {stats?.meanScores && Object.entries(stats.meanScores).map(([key, value]) => (
-            <div key={key} className="p-4 bg-blue-50 rounded">
-              <p className="text-sm text-gray-600">{key}</p>
-              <p className="text-xl font-bold">{(value as number).toFixed(2)}</p>
-              <p className="text-xs text-gray-500">
-                SD: {stats.standardDeviations?.[key]?.toFixed(2) || 'N/A'}
-              </p>
-            </div>
-          ))}
+          {stats?.meanScores &&
+            Object.entries(stats.meanScores).map(([key, value]) => (
+              <div key={key} className="p-4 bg-blue-50 rounded">
+                <p className="text-sm text-gray-600">{key}</p>
+                <p className="text-xl font-bold">{(value as number).toFixed(2)}</p>
+                <p className="text-xs text-gray-500">
+                  SD: {stats.standardDeviations?.[key]?.toFixed(2) || 'N/A'}
+                </p>
+              </div>
+            ))}
         </div>
       </div>
 
@@ -52,7 +53,9 @@ export function StatisticalResults({ experimentId }: { experimentId: string }) {
               <h4 className="font-semibold mb-2">Recommendations</h4>
               <ul className="list-disc list-inside space-y-1">
                 {synthesis.integrated_recommendations.map((rec: string, i: number) => (
-                  <li key={i} className="text-sm">{rec}</li>
+                  <li key={i} className="text-sm">
+                    {rec}
+                  </li>
                 ))}
               </ul>
             </div>

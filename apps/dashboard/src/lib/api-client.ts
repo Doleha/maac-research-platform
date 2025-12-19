@@ -6,7 +6,7 @@ export const apiClient = {
     const res = await fetch(`${API_BASE_URL}/experiments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(config)
+      body: JSON.stringify(config),
     });
     return res.json();
   },
@@ -24,7 +24,7 @@ export const apiClient = {
   // Analysis
   async runAnalysis(experimentId: string) {
     const res = await fetch(`${API_BASE_URL}/analysis/${experimentId}`, {
-      method: 'POST'
+      method: 'POST',
     });
     return res.json();
   },
@@ -32,5 +32,5 @@ export const apiClient = {
   async getAnalysisResults(experimentId: string) {
     const res = await fetch(`${API_BASE_URL}/analysis/${experimentId}/latest`);
     return res.json();
-  }
+  },
 };

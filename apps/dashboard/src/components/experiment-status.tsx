@@ -8,7 +8,7 @@ export function ExperimentStatus({ experimentId }: { experimentId: string }) {
   const { data: status, isLoading } = useQuery({
     queryKey: ['experiment-status', experimentId],
     queryFn: () => apiClient.getExperimentStatus(experimentId),
-    refetchInterval: 5000 // Poll every 5 seconds
+    refetchInterval: 5000, // Poll every 5 seconds
   });
 
   if (isLoading) return <div>Loading...</div>;
@@ -17,7 +17,7 @@ export function ExperimentStatus({ experimentId }: { experimentId: string }) {
   return (
     <div className="space-y-4 p-6 border rounded-lg">
       <h2 className="text-2xl font-bold">Experiment Progress</h2>
-      
+
       <div className="grid grid-cols-2 gap-4">
         <div>
           <p className="text-sm text-gray-500">Total Trials</p>
