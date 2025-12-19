@@ -1,12 +1,12 @@
 {
-  "name": "@maac/dashboard",
-  "version": "0.1.0",
+  "name": "@abdalla/dashboard",
+  "version": "1.0.0",
   "private": false,
   "description": "Next.js monitoring dashboard for MAAC Research Platform",
   "scripts": {
+    "dev": "next dev --port 3001",
     "build": "next build",
-    "dev": "next dev -p 3001",
-    "start": "next start -p 3001",
+    "start": "next start",
     "clean": "rm -rf .next",
     "typecheck": "tsc --noEmit",
     "lint": "next lint"
@@ -16,17 +16,22 @@
     "next": "14.2.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "tailwindcss": "^3.4.3",
     "@tanstack/react-query": "^5.35.1",
     "recharts": "^2.12.6",
-    "lucide-react": "^0.378.0"
+    "lucide-react": "^0.378.0",
+    "tailwindcss": "^3.4.3",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.3.0",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38"
   },
   "devDependencies": {
-    "@types/node": "^20.12.7",
-    "@types/react": "^18.3.1",
-    "@types/react-dom": "^18.3.0",
-    "typescript": "^5.4.5",
-    "eslint": "^8.56.0",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "typescript": "^5",
+    "eslint": "^8",
     "eslint-config-next": "14.2.3",
     "vitest": "^1.5.0"
   }
