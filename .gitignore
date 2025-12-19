@@ -53,6 +53,13 @@ coverage/
 # MIMIC is a proprietary cognitive engine for evaluation only
 /packages/mimic-cognitive-engine/
 
+# Backup archives containing proprietary information
+*.tar.gz
+*.tar.bz2
+*.zip
+*-backup.*
+*-archive.*
+
 # Python
 .venv/
 venv/
