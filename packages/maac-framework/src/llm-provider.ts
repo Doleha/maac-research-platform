@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export interface LLMProvider {
   modelName: string;
-  
+
   /**
    * Invoke LLM with optional structured output
    */
@@ -21,7 +21,7 @@ export interface LLMProvider {
 export class VercelAIProvider implements LLMProvider {
   constructor(
     public modelName: string,
-    private model: any // Vercel AI SDK model instance
+    private model: any, // Vercel AI SDK model instance
   ) {}
 
   async invoke<T = string>(params: {
@@ -40,7 +40,7 @@ export class VercelAIProvider implements LLMProvider {
         prompt: params.userMessage || '',
         schema: params.responseSchema,
         temperature: params.temperature ?? 0.7,
-        maxTokens: params.maxTokens ?? 4000
+        maxTokens: params.maxTokens ?? 4000,
       });
       return object as T;
     } else {
@@ -49,7 +49,7 @@ export class VercelAIProvider implements LLMProvider {
         system: params.systemPrompt,
         prompt: params.userMessage || '',
         temperature: params.temperature ?? 0.7,
-        maxTokens: params.maxTokens ?? 4000
+        maxTokens: params.maxTokens ?? 4000,
       });
       return text as T;
     }
