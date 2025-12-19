@@ -1,33 +1,30 @@
 /**
  * MIMIC Integration Example
- * 
+ *
  * Shows how to integrate the MIMIC cognitive framework with the experiment orchestrator
  */
 
 import { MIMICOrchestrator } from '@maac/mimic-cognitive-engine';
-import type { 
-  LLMProvider, 
-  MemoryService
-} from '@maac/mimic-cognitive-engine';
+import type { LLMProvider, MemoryService } from '@maac/mimic-cognitive-engine';
 
 /**
  * Factory function to create a MIMIC cognitive system for experiments
  */
 export function createMIMICSystem(
   llmProvider: LLMProvider,
-  memoryService: MemoryService
+  memoryService: MemoryService,
 ): MIMICOrchestrator {
   return new MIMICOrchestrator({
     llmProvider,
     memoryService,
     enabledEngines: new Set([
       'goal',
-      'planning', 
+      'planning',
       'clarification',
       'validation',
       'evaluation',
-      'reflection'
-    ])
+      'reflection',
+    ]),
   });
 }
 
@@ -37,18 +34,18 @@ export function createMIMICSystem(
 export function createMockMemoryService(): MemoryService {
   return {
     store: async (_params) => {},
-    queryContext: async (_params) => ({ 
+    queryContext: async (_params) => ({
       nodes: [],
-      edges: []
+      edges: [],
     }),
-    queryReflection: async (_params) => ({ 
+    queryReflection: async (_params) => ({
       nodes: [],
-      edges: []
+      edges: [],
     }),
-    queryEvaluation: async (_params) => ({ 
+    queryEvaluation: async (_params) => ({
       nodes: [],
-      edges: []
-    })
+      edges: [],
+    }),
   };
 }
 
@@ -66,7 +63,7 @@ export function createMockLLMProvider(): LLMProvider {
       // Mock implementation
       throw new Error('Implement your LLM provider');
     },
-    model: 'gpt-4'
+    model: 'gpt-4',
   };
 }
 
@@ -74,8 +71,5 @@ export function createMockLLMProvider(): LLMProvider {
  * Example usage in experiment configuration
  */
 export const exampleMIMICConfig = {
-  cognitiveSystem: createMIMICSystem(
-    createMockLLMProvider(),
-    createMockMemoryService()
-  )
+  cognitiveSystem: createMIMICSystem(createMockLLMProvider(), createMockMemoryService()),
 };
