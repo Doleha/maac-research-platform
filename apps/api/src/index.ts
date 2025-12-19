@@ -12,12 +12,14 @@ const port = parseInt(process.env.API_PORT || '3000', 10);
 
 // Mock LLM provider for API initialization
 const mockLLMProvider: LLMProvider = {
-  name: 'mock',
-  model: 'mock-model',
-  async invoke({ messages }) {
-    return {
-      content: JSON.stringify({ status: 'mock_response', messages_count: messages.length }),
-    };
+  modelName: 'mock-model',
+  async invoke<T = string>(params: { systemPrompt: string; userMessage?: string }): Promise<T> {
+    const response = JSON.stringify({
+      status: 'mock_response',
+      prompt_length: params.systemPrompt.length,
+      has_user_message: !!params.userMessage,
+    });
+    return response as T;
   },
 };
 

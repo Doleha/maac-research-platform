@@ -49,6 +49,10 @@ coverage/
 /notes/
 /scratch/
 
+# Proprietary Code (not committed to public repo)
+# MIMIC is a proprietary cognitive engine for evaluation only
+/packages/mimic-cognitive-engine/
+
 # Python
 .venv/
 venv/
