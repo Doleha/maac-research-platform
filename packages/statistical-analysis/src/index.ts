@@ -10,6 +10,7 @@
 // ==================== CORE ENGINE ====================
 
 export { StatisticalAnalysisEngine, createStatisticalAnalysisEngine } from './engine.js';
+export type { StatisticalResults } from './engine.js';
 
 // ==================== TYPES ====================
 

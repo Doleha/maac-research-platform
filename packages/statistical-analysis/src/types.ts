@@ -946,7 +946,8 @@ export interface StatisticalAnalysisConfig {
 
   // LLM configuration for agents
   llmProvider: 'openai' | 'deepseek' | 'anthropic';
-  llmModel: string;
+  llmModel: string; // Model name string (e.g., 'gpt-4o', 'claude-3-sonnet')
+  llmModelInstance?: any; // Optional: Pre-configured LanguageModelV1 instance
   llmApiKey: string;
 
   // Processing options

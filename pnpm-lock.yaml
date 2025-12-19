@@ -218,22 +218,6 @@ importers:
         specifier: ^1.5.0
         version: 1.6.1(@types/node@20.19.27)
 
-  packages/mimic-cognitive-engine.backup:
-    dependencies:
-      '@maac/types':
-        specifier: workspace:*
-        version: link:../shared-types
-    devDependencies:
-      '@types/node':
-        specifier: ^20.12.7
-        version: 20.19.27
-      typescript:
-        specifier: ^5.4.5
-        version: 5.9.3
-      vitest:
-        specifier: ^1.5.0
-        version: 1.6.1(@types/node@20.19.27)
-
   packages/shared-types:
     devDependencies:
       '@types/node':
@@ -248,9 +232,21 @@ importers:
 
   packages/statistical-analysis:
     dependencies:
+      '@ai-sdk/anthropic':
+        specifier: ^0.0.20
+        version: 0.0.20(zod@3.25.76)
+      '@ai-sdk/openai':
+        specifier: ^0.0.24
+        version: 0.0.24(zod@3.25.76)
       '@maac/types':
         specifier: workspace:*
         version: link:../shared-types
+      '@prisma/client':
+        specifier: ^5.13.0
+        version: 5.22.0(prisma@5.22.0)
+      ai:
+        specifier: ^3.1.0
+        version: 3.4.33(react@18.3.1)(svelte@5.46.0)(vue@3.5.26)(zod@3.25.76)
     devDependencies:
       '@types/node':
         specifier: ^20.12.7
