@@ -251,6 +251,9 @@ importers:
       '@types/node':
         specifier: ^20.12.7
         version: 20.19.27
+      dotenv:
+        specifier: ^16.4.5
+        version: 16.6.1
       typescript:
         specifier: ^5.4.5
         version: 5.9.3
@@ -2648,6 +2651,11 @@ packages:
       '@babel/runtime': 7.28.4
       csstype: 3.2.3
     dev: false
+
+  /dotenv@16.6.1:
+    resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
+    engines: {node: '>=12'}
+    dev: true
 
   /dotenv@17.2.3:
     resolution: {integrity: sha512-JVUnt+DUIzu87TABbhPmNfVdBDt18BLOWjMUFJMSi/Qqg7NTYtabbvSNJGOJ7afbRuv9D/lngizHtP7QyLQ+9w==}
