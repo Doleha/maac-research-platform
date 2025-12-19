@@ -1,5 +1,5 @@
 packages:
-  - "packages/*"
-  - "apps/*"
+  - 'packages/*'
+  - 'apps/*'
   # Exclude proprietary MIMIC package (not in git)
-  - "!packages/mimic-cognitive-engine"
+  - '!packages/mimic-cognitive-engine'

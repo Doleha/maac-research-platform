@@ -43,13 +43,23 @@ export async function experimentRoutes(
       schema: {
         body: {
           type: 'object',
-          required: ['name', 'domains', 'tiers', 'repetitionsPerDomainTier', 'models', 'toolConfigs'],
+          required: [
+            'name',
+            'domains',
+            'tiers',
+            'repetitionsPerDomainTier',
+            'models',
+            'toolConfigs',
+          ],
           properties: {
             name: { type: 'string', minLength: 1, maxLength: 255 },
             description: { type: 'string', maxLength: 2000 },
             domains: {
               type: 'array',
-              items: { type: 'string', enum: ['analytical', 'planning', 'communication', 'problem_solving'] },
+              items: {
+                type: 'string',
+                enum: ['analytical', 'planning', 'communication', 'problem_solving'],
+              },
               minItems: 1,
             },
             tiers: {
@@ -60,7 +70,10 @@ export async function experimentRoutes(
             repetitionsPerDomainTier: { type: 'integer', minimum: 1, maximum: 200 },
             models: {
               type: 'array',
-              items: { type: 'string', enum: ['deepseek_v3', 'sonnet_37', 'gpt_4o', 'llama_maverick'] },
+              items: {
+                type: 'string',
+                enum: ['deepseek_v3', 'sonnet_37', 'gpt_4o', 'llama_maverick'],
+              },
               minItems: 1,
             },
             toolConfigs: {
@@ -262,7 +275,10 @@ export async function experimentRoutes(
           properties: {
             limit: { type: 'integer', minimum: 1, maximum: 1000, default: 100 },
             offset: { type: 'integer', minimum: 0, default: 0 },
-            domain: { type: 'string', enum: ['analytical', 'planning', 'communication', 'problem_solving'] },
+            domain: {
+              type: 'string',
+              enum: ['analytical', 'planning', 'communication', 'problem_solving'],
+            },
             tier: { type: 'string', enum: ['simple', 'moderate', 'complex'] },
           },
         },

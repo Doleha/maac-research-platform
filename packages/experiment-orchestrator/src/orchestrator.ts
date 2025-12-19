@@ -264,8 +264,16 @@ const TASK_TEMPLATES: TaskTemplates = {
         'Plan a product launch involving Marketing ($100K budget), Engineering (3 developers for 4 months), and Sales (training 20 reps). Coordinate dependencies, identify critical path, and create launch timeline.',
       context: 'SaaS company launching new enterprise feature',
       successCriteria: [
-        { criterion: 'Identify cross-department dependencies', weight: 0.3, category: 'completeness' },
-        { criterion: 'Create realistic timeline with milestones', weight: 0.35, category: 'accuracy' },
+        {
+          criterion: 'Identify cross-department dependencies',
+          weight: 0.3,
+          category: 'completeness',
+        },
+        {
+          criterion: 'Create realistic timeline with milestones',
+          weight: 0.35,
+          category: 'accuracy',
+        },
         { criterion: 'Risk mitigation strategies', weight: 0.35, category: 'reasoning' },
       ],
       expectedCalculations: ['Timeline dependencies', 'Resource utilization', 'Budget breakdown'],
@@ -282,11 +290,24 @@ const TASK_TEMPLATES: TaskTemplates = {
         { criterion: 'Comprehensive phase breakdown', weight: 0.25, category: 'completeness' },
         { criterion: 'Address all constraints explicitly', weight: 0.25, category: 'accuracy' },
         { criterion: 'Change management strategy', weight: 0.25, category: 'reasoning' },
-        { criterion: 'Measurable success criteria per phase', weight: 0.25, category: 'completeness' },
+        {
+          criterion: 'Measurable success criteria per phase',
+          weight: 0.25,
+          category: 'completeness',
+        },
       ],
-      expectedCalculations: ['Phased budget allocation', 'Timeline with dependencies', 'Risk scoring'],
+      expectedCalculations: [
+        'Phased budget allocation',
+        'Timeline with dependencies',
+        'Risk scoring',
+      ],
       expectedInsights: ['Change management approach', 'Technical architecture', 'Training needs'],
-      requirements: ['Strategic planning', 'Stakeholder analysis', 'Technical architecture', 'Change management'],
+      requirements: [
+        'Strategic planning',
+        'Stakeholder analysis',
+        'Technical architecture',
+        'Change management',
+      ],
       dataElements: ['Current systems inventory', 'Budget', 'Timeline', 'Workforce constraints'],
     },
   },
@@ -334,7 +355,12 @@ const TASK_TEMPLATES: TaskTemplates = {
       ],
       expectedCalculations: ['Timeline of actions', 'Stakeholder priority matrix'],
       expectedInsights: ['Message framing', 'Channel selection', 'Escalation criteria'],
-      requirements: ['Crisis communication', 'Legal awareness', 'Multi-stakeholder management', 'Reputation management'],
+      requirements: [
+        'Crisis communication',
+        'Legal awareness',
+        'Multi-stakeholder management',
+        'Reputation management',
+      ],
       dataElements: ['Breach scope', 'Stakeholder list', 'Regulatory requirements'],
     },
   },
@@ -367,7 +393,13 @@ const TASK_TEMPLATES: TaskTemplates = {
       expectedCalculations: ['Correlation analysis concepts', 'Impact prioritization'],
       expectedInsights: ['Primary drivers', 'Secondary factors', 'Quick wins vs long-term fixes'],
       requirements: ['Data interpretation', 'Multi-causal analysis', 'Strategic recommendations'],
-      dataElements: ['Churn rate', 'NPS scores', 'Support metrics', 'Pricing data', 'Competitive info'],
+      dataElements: [
+        'Churn rate',
+        'NPS scores',
+        'Support metrics',
+        'Pricing data',
+        'Competitive info',
+      ],
     },
     complex: {
       title: 'Supply Chain Resilience Redesign',
@@ -381,8 +413,17 @@ const TASK_TEMPLATES: TaskTemplates = {
         { criterion: 'Phased implementation plan', weight: 0.25, category: 'completeness' },
       ],
       expectedCalculations: ['Risk scoring', 'Cost impact', 'ROI of changes'],
-      expectedInsights: ['Diversification strategy', 'Buffer optimization', 'Supplier relationships'],
-      requirements: ['Systems thinking', 'Risk management', 'Financial modeling', 'Strategic planning'],
+      expectedInsights: [
+        'Diversification strategy',
+        'Buffer optimization',
+        'Supplier relationships',
+      ],
+      requirements: [
+        'Systems thinking',
+        'Risk management',
+        'Financial modeling',
+        'Strategic planning',
+      ],
       dataElements: ['Current supply chain map', 'Cost constraints', 'Historical disruption data'],
     },
   },
@@ -761,12 +802,15 @@ export class AdvancedExperimentOrchestrator {
     try {
       // Phase 1: Execute via cognitive system
       job.updateProgress(10);
-      const cognitiveResponse = await this.config.cognitiveSystem.execute(scenario.taskDescription, {
-        configId: scenario.configId,
-        memoryAccess: toolConfig.memoryAccess || toolConfig.memoryStore || false,
-        externalSearch: toolConfig.externalSearch || false,
-        structuredReasoning: toolConfig.structuredReasoning || scenario.tier === 'complex',
-      });
+      const cognitiveResponse = await this.config.cognitiveSystem.execute(
+        scenario.taskDescription,
+        {
+          configId: scenario.configId,
+          memoryAccess: toolConfig.memoryAccess || toolConfig.memoryStore || false,
+          externalSearch: toolConfig.externalSearch || false,
+          structuredReasoning: toolConfig.structuredReasoning || scenario.tier === 'complex',
+        },
+      );
 
       this.log(`[Trial ${scenario.scenarioId}] Cognitive execution complete`);
       job.updateProgress(50);
