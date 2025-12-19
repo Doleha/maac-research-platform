@@ -1,5 +1,6 @@
 packages:
   - 'packages/*'
   - 'apps/*'
-  # Exclude proprietary MIMIC package (not in git)
-  - '!packages/mimic-cognitive-engine'
+  # MIMIC cognitive engine (private repo - clone separately)
+  # To enable: clone your private MIMIC repo into packages/mimic-cognitive-engine
+  # Then run: pnpm install
