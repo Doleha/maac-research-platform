@@ -421,3 +421,63 @@ export const COGNITIVE_TESTING_FRAMEWORK = {
   secondaryDimensions: ['processing_efficiency', 'tool_execution', 'construct_validity'],
   assessmentFocus: 'Multi-dimensional cognitive architecture evaluation',
 };
+
+/**
+ * Get all domain patterns (for LLM context injection)
+ * Matches n8n Domain Pattern Examples tool output format
+ */
+export function getDomainPatterns(): Record<
+  string,
+  {
+    control_patterns: Array<{
+      pattern_type: string;
+      example: string;
+      expected_insight: string;
+      calculation?: string;
+      method?: string;
+      embedded_data: boolean;
+      acpa_cognitive_demands: string[];
+      memory_integration_opportunity: string;
+    }>;
+    test_patterns: string[];
+  }
+> {
+  // Convert TypeScript patterns to n8n-compatible format
+  const result: Record<
+    string,
+    { control_patterns: Array<Record<string, unknown>>; test_patterns: string[] }
+  > = {};
+
+  for (const [domain, patterns] of Object.entries(DOMAIN_PATTERNS)) {
+    result[domain] = {
+      control_patterns: patterns.controlPatterns.map((p: DomainPattern) => ({
+        pattern_type: p.patternType,
+        example: p.example,
+        expected_insight: p.expectedInsight,
+        calculation: p.calculation,
+        method: p.method,
+        embedded_data: p.embeddedData,
+        acpa_cognitive_demands: p.acpaCognitiveDemands,
+        memory_integration_opportunity: p.memoryIntegrationOpportunity,
+      })),
+      test_patterns: patterns.testPatterns,
+    };
+  }
+
+  return result as Record<
+    string,
+    {
+      control_patterns: Array<{
+        pattern_type: string;
+        example: string;
+        expected_insight: string;
+        calculation?: string;
+        method?: string;
+        embedded_data: boolean;
+        acpa_cognitive_demands: string[];
+        memory_integration_opportunity: string;
+      }>;
+      test_patterns: string[];
+    }
+  >;
+}

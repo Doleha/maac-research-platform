@@ -24,14 +24,25 @@ export * from './types';
 export {
   DOMAIN_PATTERNS,
   getPatternForScenario,
+  getDomainPatterns,
   MAAC_USAGE_GUIDANCE,
   COGNITIVE_TESTING_FRAMEWORK,
 } from './domain-patterns';
 
-// Scenario Generator
+// Scenario Generator (Template-based - fast, for testing)
 export {
   ScenarioGenerator,
   createScenarioGenerator,
   createBaselineScenarioGenerator,
   createFullToolsScenarioGenerator,
 } from './scenario-generator';
+
+// LLM Scenario Generator (Production - DeepSeek-based, matches n8n workflow)
+export {
+  LLMScenarioGenerator,
+  createLLMScenarioGenerator,
+  LLMScenarioOutputSchema,
+  type LLMScenarioOutput,
+  type LLMScenarioGeneratorConfig,
+  type GeneratedLLMScenario,
+} from './llm-scenario-generator';

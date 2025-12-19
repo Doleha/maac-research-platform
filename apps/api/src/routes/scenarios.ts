@@ -15,6 +15,8 @@ import {
   ScenarioGenerator,
   createFullToolsScenarioGenerator,
   createBaselineScenarioGenerator,
+  createLLMScenarioGenerator,
+  type LLMScenarioGeneratorConfig,
 } from '@maac/experiment-orchestrator';
 import type { Domain, Tier, ModelId } from '@maac/types';
 
@@ -28,6 +30,17 @@ interface GenerateScenariosInput {
   models?: ModelId[];
   configId?: string;
   configType?: 'full_tools' | 'baseline' | 'custom';
+}
+
+/**
+ * Input schema for LLM-based scenario generation
+ */
+interface GenerateLLMScenariosInput {
+  domains?: Domain[];
+  tiers?: Tier[];
+  repetitions?: number;
+  model?: ModelId;
+  configId?: string;
 }
 
 /**
@@ -253,6 +266,226 @@ export async function scenarioRoutes(
           return reply.code(500).send({
             error: 'Scenario generation failed',
             message: error.message,
+          });
+        }
+        throw error;
+      }
+    },
+  );
+
+  // ==========================================================================
+  // GENERATE SCENARIOS WITH LLM (Production - Tier 1a)
+  // ==========================================================================
+
+  /**
+   * POST /scenarios/generate-llm
+   * Generate scenarios using DeepSeek LLM (matches n8n production workflow)
+   *
+   * This endpoint calls DeepSeek with the exact n8n Tier 1a system prompt
+   * to generate unique, detailed scenarios with embedded calculations.
+   */
+  fastify.post<{ Body: GenerateLLMScenariosInput }>(
+    '/scenarios/generate-llm',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          properties: {
+            domains: {
+              type: 'array',
+              items: {
+                type: 'string',
+                enum: ['analytical', 'planning', 'communication', 'problem_solving'],
+              },
+              default: ['analytical'],
+            },
+            tiers: {
+              type: 'array',
+              items: { type: 'string', enum: ['simple', 'moderate', 'complex'] },
+              default: ['simple'],
+            },
+            repetitions: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 50,
+              default: 1,
+            },
+            model: {
+              type: 'string',
+              enum: ['deepseek_v3', 'sonnet_37', 'gpt_4o', 'llama_maverick'],
+              default: 'deepseek_v3',
+            },
+            configId: {
+              type: 'string',
+              pattern: '^[01]{12}$',
+              default: '111111111111',
+            },
+          },
+        },
+        response: {
+          201: {
+            type: 'object',
+            properties: {
+              message: { type: 'string' },
+              experimentId: { type: 'string' },
+              count: { type: 'integer' },
+              generationMethod: { type: 'string' },
+              scenarios: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    scenarioId: { type: 'string' },
+                    domain: { type: 'string' },
+                    tier: { type: 'string' },
+                    task_title: { type: 'string' },
+                    task_description: { type: 'string' },
+                    expected_calculations: { type: 'object' },
+                    success_thresholds: { type: 'object' },
+                    generationDurationMs: { type: 'integer' },
+                  },
+                },
+              },
+              totalGenerationTimeMs: { type: 'integer' },
+              configuration: {
+                type: 'object',
+                properties: {
+                  domains: { type: 'array', items: { type: 'string' } },
+                  tiers: { type: 'array', items: { type: 'string' } },
+                  repetitions: { type: 'integer' },
+                  model: { type: 'string' },
+                  configId: { type: 'string' },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    async (request: FastifyRequest<{ Body: GenerateLLMScenariosInput }>, reply: FastifyReply) => {
+      const {
+        domains = ['analytical'],
+        tiers = ['simple'],
+        repetitions = 1,
+        model = 'deepseek_v3',
+        configId = '111111111111',
+      } = request.body;
+
+      // Get DeepSeek API key from environment
+      const deepseekApiKey = process.env.DEEPSEEK_API_KEY;
+      if (!deepseekApiKey) {
+        return reply.code(500).send({
+          error: 'DEEPSEEK_API_KEY not configured',
+          message: 'LLM-based scenario generation requires DeepSeek API key',
+        });
+      }
+
+      const totalScenarios = domains.length * tiers.length * repetitions;
+      fastify.log.info(
+        `LLM Generating ${totalScenarios} scenarios: ${domains.length} domains × ${tiers.length} tiers × ${repetitions} reps`,
+      );
+
+      try {
+        // Create LLM scenario generator
+        const generatorConfig: LLMScenarioGeneratorConfig = {
+          deepseekApiKey,
+          domains,
+          tiers,
+          models: [model],
+          configId,
+          maxRetries: 3,
+          rateLimitDelayMs: 1500, // 1.5s between API calls
+        };
+
+        const generator = createLLMScenarioGenerator(generatorConfig);
+
+        // Generate scenarios with LLM
+        const startTime = Date.now();
+        const scenarios = await generator.generateScenarios({
+          domains,
+          tiers,
+          repetitions,
+          model,
+        });
+        const totalGenerationTime = Date.now() - startTime;
+
+        fastify.log.info(
+          `LLM generated ${scenarios.length} scenarios in ${totalGenerationTime}ms (avg ${Math.round(totalGenerationTime / scenarios.length)}ms each)`,
+        );
+
+        // Store scenarios to database
+        const experimentId = scenarios[0]?.metadata?.experiment_id || crypto.randomUUID();
+
+        // Convert LLM scenarios to database records
+        const scenarioRecords = scenarios.map((scenario) => ({
+          experimentId: scenario.metadata.experiment_id,
+          scenarioId: scenario.scenarioId,
+          domain: scenario.metadata.business_domain,
+          tier: scenario.complexity_level,
+          repetition: scenario.scenario_number,
+          configId: scenario.configId,
+          modelId: scenario.modelId,
+          taskTitle: scenario.task_title,
+          taskDescription: scenario.task_description,
+          businessContext: scenario.business_context,
+          successCriteria: JSON.parse(JSON.stringify(scenario.success_criteria)),
+          expectedCalculations: JSON.parse(
+            JSON.stringify(scenario.control_expectations.expected_calculations),
+          ),
+          expectedInsights: JSON.parse(
+            JSON.stringify(scenario.control_expectations.expected_insights),
+          ),
+          scenarioRequirements: JSON.parse(JSON.stringify(scenario.requirements)),
+          dataElements: JSON.parse(JSON.stringify(scenario.domain_specific_data)),
+          completed: false,
+        }));
+
+        // Insert in batches
+        const batchSize = 50;
+        let insertedCount = 0;
+
+        for (let i = 0; i < scenarioRecords.length; i += batchSize) {
+          const batch = scenarioRecords.slice(i, i + batchSize);
+          await prisma.mAACExperimentScenario.createMany({
+            data: batch,
+            skipDuplicates: true,
+          });
+          insertedCount += batch.length;
+          fastify.log.info(`Inserted LLM batch ${i / batchSize + 1}: ${batch.length} scenarios`);
+        }
+
+        // Return detailed summary
+        return reply.code(201).send({
+          message: `Successfully generated ${scenarios.length} LLM-based scenarios`,
+          experimentId,
+          count: scenarios.length,
+          generationMethod: 'deepseek-llm',
+          scenarios: scenarios.map((s) => ({
+            scenarioId: s.scenarioId,
+            domain: s.metadata.business_domain,
+            tier: s.complexity_level,
+            task_title: s.task_title,
+            task_description: s.task_description.substring(0, 200) + '...',
+            expected_calculations: s.control_expectations.expected_calculations,
+            success_thresholds: s.control_expectations.success_thresholds,
+            generationDurationMs: s.generationDurationMs,
+          })),
+          totalGenerationTimeMs: totalGenerationTime,
+          configuration: {
+            domains,
+            tiers,
+            repetitions,
+            model,
+            configId,
+          },
+        });
+      } catch (error) {
+        fastify.log.error(error);
+        if (error instanceof Error) {
+          return reply.code(500).send({
+            error: 'LLM scenario generation failed',
+            message: error.message,
+            hint: 'Check DeepSeek API key and rate limits',
           });
         }
         throw error;
