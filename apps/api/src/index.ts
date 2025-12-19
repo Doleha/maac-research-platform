@@ -90,30 +90,52 @@ function createDatabaseAdapter(prismaClient: PrismaClient): DatabaseClient {
   return {
     mAACExperimentalData: {
       create: async (args: { data: Record<string, unknown> }) =>
-        prismaClient.mAACExperimentalData.create(args as Parameters<typeof prismaClient.mAACExperimentalData.create>[0]),
+        prismaClient.mAACExperimentalData.create(
+          args as Parameters<typeof prismaClient.mAACExperimentalData.create>[0],
+        ),
       count: async (args?: { where?: Record<string, unknown> }) =>
-        prismaClient.mAACExperimentalData.count(args as Parameters<typeof prismaClient.mAACExperimentalData.count>[0]),
+        prismaClient.mAACExperimentalData.count(
+          args as Parameters<typeof prismaClient.mAACExperimentalData.count>[0],
+        ),
       findMany: async (args?: {
         where?: Record<string, unknown>;
         select?: Record<string, boolean>;
         orderBy?: Record<string, string>;
         take?: number;
         skip?: number;
-      }) => prismaClient.mAACExperimentalData.findMany(args as Parameters<typeof prismaClient.mAACExperimentalData.findMany>[0]),
+      }) =>
+        prismaClient.mAACExperimentalData.findMany(
+          args as Parameters<typeof prismaClient.mAACExperimentalData.findMany>[0],
+        ),
       updateMany: async (args: { where: Record<string, unknown>; data: Record<string, unknown> }) =>
-        prismaClient.mAACExperimentalData.updateMany(args as Parameters<typeof prismaClient.mAACExperimentalData.updateMany>[0]),
+        prismaClient.mAACExperimentalData.updateMany(
+          args as Parameters<typeof prismaClient.mAACExperimentalData.updateMany>[0],
+        ),
     },
     mAACExperimentScenario: {
       createMany: async (args: { data: Record<string, unknown>[] }) =>
-        prismaClient.mAACExperimentScenario.createMany(args as Parameters<typeof prismaClient.mAACExperimentScenario.createMany>[0]),
+        prismaClient.mAACExperimentScenario.createMany(
+          args as Parameters<typeof prismaClient.mAACExperimentScenario.createMany>[0],
+        ),
       count: async (args?: { where?: Record<string, unknown> }) =>
-        prismaClient.mAACExperimentScenario.count(args as Parameters<typeof prismaClient.mAACExperimentScenario.count>[0]),
-      findMany: async (args?: { where?: Record<string, unknown>; select?: Record<string, boolean> }) =>
-        prismaClient.mAACExperimentScenario.findMany(args as Parameters<typeof prismaClient.mAACExperimentScenario.findMany>[0]),
+        prismaClient.mAACExperimentScenario.count(
+          args as Parameters<typeof prismaClient.mAACExperimentScenario.count>[0],
+        ),
+      findMany: async (args?: {
+        where?: Record<string, unknown>;
+        select?: Record<string, boolean>;
+      }) =>
+        prismaClient.mAACExperimentScenario.findMany(
+          args as Parameters<typeof prismaClient.mAACExperimentScenario.findMany>[0],
+        ),
       findUnique: async (args: { where: Record<string, unknown> }) =>
-        prismaClient.mAACExperimentScenario.findUnique(args as Parameters<typeof prismaClient.mAACExperimentScenario.findUnique>[0]),
+        prismaClient.mAACExperimentScenario.findUnique(
+          args as Parameters<typeof prismaClient.mAACExperimentScenario.findUnique>[0],
+        ),
       update: async (args: { where: Record<string, unknown>; data: Record<string, unknown> }) =>
-        prismaClient.mAACExperimentScenario.update(args as Parameters<typeof prismaClient.mAACExperimentScenario.update>[0]),
+        prismaClient.mAACExperimentScenario.update(
+          args as Parameters<typeof prismaClient.mAACExperimentScenario.update>[0],
+        ),
     },
   };
 }
