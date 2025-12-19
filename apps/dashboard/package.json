@@ -1,5 +1,5 @@
 {
-  "name": "@abdalla/dashboard",
+  "name": "@maac/dashboard",
   "version": "1.0.0",
   "private": false,
   "description": "Next.js monitoring dashboard for MAAC Research Platform",
