@@ -74,10 +74,20 @@ describe('MAAC Evaluator', () => {
 
   const sampleMetadata: ExecutionMetadata = {
     processingTime: 5000,
+    startedAt: new Date(),
+    completedAt: new Date(),
     cognitiveCyclesCount: 3,
     memoryOperationsCount: 0,
     toolsInvoked: ['data_analysis', 'calculator'],
     toolsInvokedCount: 2,
+    processingMethod: 'iterative',
+    complexityAssessment: 'moderate',
+    modelId: 'gpt-4o-mini',
+    modelName: 'GPT-4o Mini',
+    sessionId: 'test-session-1',
+    trialId: 'test-trial-1',
+    wordCount: 250,
+    responseText: sampleResponse.content,
   };
 
   it('evaluates all 9 dimensions', async () => {
