@@ -8,6 +8,7 @@
  * - Standardized scoring with 6 questions per dimension
  * - Formula-based validation for research consistency
  * - LLM-agnostic assessment using Claude Sonnet 4.5 prompts
+ * - MAACEvaluator for complete end-to-end assessment
  *
  * Extracted from n8n workflows:
  * - MAAC - Tier 1 b- Experiment Processing MIMIC Only_Agentic MAAC_v2.json
@@ -18,6 +19,10 @@ export * from '@maac/types';
 
 // Export 9-dimensional assessment framework
 export * from './dimensions';
+
+// Export core MAACEvaluator
+export { MAACEvaluator, createMAACEvaluator, createResearchMAACEvaluator } from './evaluator';
+export type { MAACEvaluatorConfig, MAACAssessmentResult, ScenarioContext } from './evaluator';
 
 // Export dimension types explicitly for convenience
 export {

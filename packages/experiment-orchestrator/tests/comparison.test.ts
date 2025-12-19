@@ -78,9 +78,9 @@ describe('Cognitive Testing Framework', () => {
   it('contains primary and secondary dimensions', () => {
     expect(COGNITIVE_TESTING_FRAMEWORK).toHaveProperty('primaryDimensions');
     expect(COGNITIVE_TESTING_FRAMEWORK).toHaveProperty('secondaryDimensions');
-    
+
     // Total: 4 primary + 3 secondary = 7 dimensions listed (some may be omitted)
-    const totalDimensions = 
+    const totalDimensions =
       COGNITIVE_TESTING_FRAMEWORK.primaryDimensions.length +
       COGNITIVE_TESTING_FRAMEWORK.secondaryDimensions.length;
     expect(totalDimensions).toBeGreaterThanOrEqual(7);

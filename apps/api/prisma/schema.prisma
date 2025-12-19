@@ -1,0 +1,252 @@
+// Prisma schema for MAAC experimental database
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Core experimental data table
+model MAACExperimentalData {
+  id Int @id @default(autoincrement())
+
+  // Research identifiers
+  experimentId String @map("experiment_id")
+  sessionId    String @map("session_id") @db.Uuid
+  trialId      String @map("trial_id") @unique
+  configId     String @map("config_id")
+  domain       String
+  tier         String
+  repetition   Int
+  modelId      String @map("model_id")
+
+  // Tool configuration
+  enabledTools String[] @map("enabled_tools")
+  toolCount    Int      @map("tool_count")
+
+  goalEngineEnabled         Boolean @map("goal_engine_enabled")
+  planningEngineEnabled     Boolean @map("planning_engine_enabled")
+  clarificationEngineEnabled Boolean @map("clarification_engine_enabled")
+  validationEngineEnabled   Boolean @map("validation_engine_enabled")
+  evaluationEngineEnabled   Boolean @map("evaluation_engine_enabled")
+  reflectionEngineEnabled   Boolean @map("reflection_engine_enabled")
+  memoryStoreEnabled        Boolean @map("memory_store_enabled")
+  memoryNodeQueryEnabled    Boolean @map("memory_node_query_enabled")
+  memoryContextQueryEnabled Boolean @map("memory_context_query_enabled")
+  memoryEvalQueryEnabled    Boolean @map("memory_eval_query_enabled")
+  memoryReflQueryEnabled    Boolean @map("memory_refl_query_enabled")
+  thinkToolEnabled          Boolean @map("think_tool_enabled")
+
+  // Response data
+  mimicResponseText    String  @map("mimic_response_text") @db.Text
+  wordCount            Int     @map("word_count")
+  processingMetadata   Json    @map("processing_metadata")
+  cognitiveCyclesCount Int     @map("cognitive_cycles_count")
+  memoryOperationsCount Int    @map("memory_operations_count")
+  toolsInvokedCount    Int     @map("tools_invoked_count")
+  processingMethod     String? @map("processing_method")
+  complexityAssessment String? @map("complexity_assessment")
+  processingTime       Int     @map("processing_time") // milliseconds
+
+  // MAAC Nine-Dimensional Assessment
+  maacCognitiveLoad        Decimal? @map("maac_cognitive_load") @db.Decimal(5, 2)
+  maacToolExecution        Decimal? @map("maac_tool_execution") @db.Decimal(5, 2)
+  maacContentQuality       Decimal? @map("maac_content_quality") @db.Decimal(5, 2)
+  maacMemoryIntegration    Decimal? @map("maac_memory_integration") @db.Decimal(5, 2)
+  maacComplexityHandling   Decimal? @map("maac_complexity_handling") @db.Decimal(5, 2)
+  maacHallucinationControl Decimal? @map("maac_hallucination_control") @db.Decimal(5, 2)
+  maacKnowledgeTransfer    Decimal? @map("maac_knowledge_transfer") @db.Decimal(5, 2)
+  maacProcessingEfficiency Decimal? @map("maac_processing_efficiency") @db.Decimal(5, 2)
+  maacConstructValidity    Decimal? @map("maac_construct_validity") @db.Decimal(5, 2)
+  maacOverallScore         Decimal? @map("maac_overall_score") @db.Decimal(5, 2)
+  maacConfidence           Decimal? @map("maac_confidence") @db.Decimal(3, 2)
+
+  // Statistical metadata
+  statisticalSignificanceP Decimal? @map("statistical_significance_p") @db.Decimal(10, 8)
+  effectSizeCohenD         Decimal? @map("effect_size_cohens_d") @db.Decimal(5, 3)
+  confidenceInterval95     Json?    @map("confidence_interval_95")
+
+  // Status tracking
+  maacCompleted       Boolean   @default(false) @map("maac_completed")
+  publicationReady    Boolean   @default(false) @map("publication_ready")
+  tier2ComparativeReady Boolean @default(false) @map("tier2_comparative_ready")
+
+  // Tier 2 batch processing
+  tier2BatchProcessed Boolean   @default(false) @map("tier2_batch_processed")
+  tier2BatchId        String?   @map("tier2_batch_id")
+  tier2ProcessedAt    DateTime? @map("tier2_processed_at")
+  tier2BatchNumber    Int?      @map("tier2_batch_number")
+  tier2AnalysisStatus String    @default("pending") @map("tier2_analysis_status")
+
+  // Timestamps
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  mimicStartedAt    DateTime? @map("mimic_started_at")
+  mimicCompletedAt  DateTime? @map("mimic_completed_at")
+
+  @@index([experimentId])
+  @@index([sessionId])
+  @@index([trialId])
+  @@index([configId])
+  @@index([domain, tier])
+  @@index([modelId])
+  @@index([maacCompleted])
+  @@index([publicationReady])
+  @@map("maac_experimental_data")
+}
+
+// Scenario definitions
+model MAACExperimentScenario {
+  id Int @id @default(autoincrement())
+
+  experimentId String @map("experiment_id")
+  scenarioId   String @map("scenario_id") @unique
+  domain       String
+  tier         String
+  repetition   Int
+  configId     String @map("config_id")
+  modelId      String @map("model_id")
+
+  // Task definition
+  taskTitle       String @map("task_title")
+  taskDescription String @map("task_description") @db.Text
+  businessContext String @map("business_context") @db.Text
+
+  // Success criteria (BLIND - not given to LLM)
+  successCriteria      Json   @map("success_criteria")
+  expectedCalculations Json   @map("expected_calculations")
+  expectedInsights     Json   @map("expected_insights")
+  scenarioRequirements Json   @map("scenario_requirements")
+  dataElements         Json?  @map("data_elements")
+
+  // Status
+  completed Boolean   @default(false)
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@index([experimentId])
+  @@index([scenarioId])
+  @@index([domain, tier])
+  @@index([configId])
+  @@map("maac_experiment_scenarios")
+}
+
+// Tier 2 statistical analysis
+model MAACTier2Analysis {
+  id Int @id @default(autoincrement())
+
+  sessionId               String   @map("session_id") @db.Uuid
+  analysisTimestamp       DateTime @default(now()) @map("analysis_timestamp")
+  maacFrameworkVersion    String   @default("nine_dimensional_v1.0") @map("maac_framework_version")
+  experimentsAnalyzed     Int      @map("experiments_analyzed")
+  analysisBatchId         String   @map("analysis_batch_id")
+  batchNumber             Int      @map("batch_number")
+  batchSize               Int      @default(500) @map("batch_size")
+
+  // Statistical results
+  coreStatistics     Json @map("core_statistics")
+  advancedStatistics Json @map("advanced_statistics")
+
+  // Multi-agent analysis results
+  businessAnalysis            Json @map("business_analysis")
+  cognitiveArchitectureAnalysis Json @map("cognitive_architecture_analysis")
+  experimentalDesignValidation Json @map("experimental_design_validation")
+  synthesisResults            Json @map("synthesis_results")
+
+  // Quality metadata
+  dataQualityScore         Decimal? @map("data_quality_score") @db.Decimal(3, 2)
+  analysisConfidenceLevel  Decimal? @map("analysis_confidence_level") @db.Decimal(3, 2)
+  analysisQualityValidated Boolean  @default(false) @map("analysis_quality_validated")
+
+  // Agent completion tracking
+  coreStatisticalAgentCompleted Boolean @default(false) @map("core_statistical_agent_completed")
+  advancedStatisticalAgentCompleted Boolean @default(false) @map("advanced_statistical_agent_completed")
+  businessAnalysisAgentCompleted Boolean @default(false) @map("business_analysis_agent_completed")
+  cognitiveArchitectureAgentCompleted Boolean @default(false) @map("cognitive_architecture_agent_completed")
+  experimentalDesignAgentCompleted Boolean @default(false) @map("experimental_design_agent_completed")
+  synthesisAgentCompleted Boolean @default(false) @map("synthesis_agent_completed")
+
+  // Publication
+  readyForPublication Boolean @default(false) @map("ready_for_publication")
+
+  @@index([sessionId])
+  @@index([analysisBatchId])
+  @@index([batchNumber])
+  @@index([readyForPublication])
+  @@map("maac_tier2_analysis")
+}
+
+// Statistical summaries for publication
+model MAACStatisticalSummary {
+  id Int @id @default(autoincrement())
+
+  analysisType  String @map("analysis_type")
+  analysisScope String @map("analysis_scope")
+
+  // Sample information
+  sampleSize         Int      @map("sample_size")
+  experimentCount    Int      @map("experiment_count")
+  configurationCount Int      @map("configuration_count")
+  domainCoverage     String[] @map("domain_coverage")
+
+  // Statistical results
+  meanScore                  Decimal @map("mean_score") @db.Decimal(5, 2)
+  standardDeviation          Decimal @map("standard_deviation") @db.Decimal(5, 2)
+  confidenceInterval95Lower  Decimal @map("confidence_interval_95_lower") @db.Decimal(5, 2)
+  confidenceInterval95Upper  Decimal @map("confidence_interval_95_upper") @db.Decimal(5, 2)
+  pValue                     Decimal @map("p_value") @db.Decimal(10, 8)
+  effectSize                 Decimal @map("effect_size") @db.Decimal(5, 3)
+  statisticalPower           Decimal @map("statistical_power") @db.Decimal(3, 2)
+
+  // MAAC framework validation
+  frameworkReliabilityAlpha   Decimal? @map("framework_reliability_alpha") @db.Decimal(3, 2)
+  interDimensionalCorrelation Json?    @map("inter_dimensional_correlation")
+  constructValidityScore      Decimal? @map("construct_validity_score") @db.Decimal(3, 2)
+  predictiveValidityR2        Decimal? @map("predictive_validity_r2") @db.Decimal(3, 2)
+
+  // Research insights
+  keyFindings         String[] @map("key_findings")
+  methodologicalNotes String?  @map("methodological_notes") @db.Text
+  limitations         String[] @map("limitations")
+
+  // Publication metadata
+  analysisTimestamp DateTime @default(now()) @map("analysis_timestamp")
+  analystNotes      String?  @map("analyst_notes") @db.Text
+  publicationReady  Boolean  @default(false) @map("publication_ready")
+
+  @@index([analysisType])
+  @@index([publicationReady])
+  @@map("maac_statistical_summary")
+}
+
+// Academic reports
+model MAACAcademicReport {
+  id Int @id @default(autoincrement())
+
+  sessionId        String   @map("session_id") @db.Uuid
+  reportType       String   @map("report_type")
+  reportTimestamp  DateTime @default(now()) @map("report_timestamp")
+
+  // Report content
+  introductionSection String @map("introduction_section") @db.Text
+  methodologySection  String @map("methodology_section") @db.Text
+  resultsSection      String @map("results_section") @db.Text
+  discussionSection   String @map("discussion_section") @db.Text
+  conclusionSection   String @map("conclusion_section") @db.Text
+  referencesSection   String @map("references_section") @db.Text
+
+  // Metadata
+  dataQualityScore        Decimal @map("data_quality_score") @db.Decimal(3, 2)
+  reportQualityScore      Decimal @map("report_quality_score") @db.Decimal(3, 2)
+  literatureRelevanceScore Decimal @map("literature_relevance_score") @db.Decimal(3, 2)
+
+  // Publication
+  readyForSubmission Boolean @default(false) @map("ready_for_submission")
+
+  @@index([sessionId])
+  @@index([reportType])
+  @@index([readyForSubmission])
+  @@map("maac_academic_reports")
+}
