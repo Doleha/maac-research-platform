@@ -2,15 +2,15 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  Home, 
-  FlaskConical, 
-  Plus, 
-  Database, 
-  Settings, 
+import {
+  Home,
+  FlaskConical,
+  Plus,
+  Database,
+  Settings,
   BarChart3,
   Layers,
-  Activity
+  Activity,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -38,9 +38,9 @@ export function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 space-y-1 px-3 py-4">
         {navigation.map((item) => {
-          const isActive = pathname === item.href || 
-            (item.href !== '/' && pathname.startsWith(item.href));
-          
+          const isActive =
+            pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
+
           return (
             <Link
               key={item.name}
@@ -49,7 +49,7 @@ export function Sidebar() {
                 'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                 isActive
                   ? 'bg-gray-800 text-white'
-                  : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                  : 'text-gray-400 hover:bg-gray-800 hover:text-white',
               )}
             >
               <item.icon className="h-5 w-5" />
@@ -61,9 +61,7 @@ export function Sidebar() {
 
       {/* Footer */}
       <div className="border-t border-gray-800 p-4">
-        <p className="text-xs text-gray-500">
-          v1.0.0 • Open Source
-        </p>
+        <p className="text-xs text-gray-500">v1.0.0 • Open Source</p>
       </div>
     </div>
   );
