@@ -368,12 +368,12 @@ const ComponentScoreZodSchema = z.object({
 
 /**
  * LLM Response Schema - what we expect from the LLM
- * This is a simplified schema that gets transformed to MAACScore
+ * component_scores is optional - we'll use dimension_score as fallback
  */
 export const MAACScoreSchema = z.object({
   dimension_score: z.number().min(1).max(5).describe('Overall dimension score from 1-5 Likert'),
   confidence: z.number().min(0).max(1).describe('Confidence in the assessment from 0-1'),
-  component_scores: z.record(ComponentScoreZodSchema).describe('Individual question scores'),
+  component_scores: z.record(ComponentScoreZodSchema).optional().describe('Individual question scores (q1-q6)'),
   key_observations: z.array(z.string()).describe('Key observations from the assessment'),
   reasoning: z.string().optional().describe('Overall assessment reasoning'),
 });

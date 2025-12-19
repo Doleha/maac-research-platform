@@ -10,8 +10,8 @@ describe('Real API Test', () => {
     console.log('OPENAI_API_KEY exists:', !!process.env.OPENAI_API_KEY);
 
     const { openai } = await import('@ai-sdk/openai');
-    const model = openai('gpt-4o-mini');
-    llmProvider = new VercelAIProvider('gpt-4o-mini', model);
+    const model = openai('gpt-4o');
+    llmProvider = new VercelAIProvider('gpt-4o', model);
   });
 
   it('makes real API call with structured output', async () => {

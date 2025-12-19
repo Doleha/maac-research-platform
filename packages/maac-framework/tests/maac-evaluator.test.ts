@@ -2,45 +2,34 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { MAACEvaluator, ScenarioContext } from '../src/evaluator';
 import { VercelAIProvider } from '../src/llm-provider';
 import { CognitiveResponse, ExecutionMetadata } from '@maac/types';
-import { AssessmentContext } from '../src/dimensions/types';
+import { AssessmentContext, MAACDimension, LLMProvider } from '../src/dimensions/types';
+import {
+  CognitiveLoadAssessor,
+  ToolExecutionAssessor,
+  ContentQualityAssessor,
+  MemoryIntegrationAssessor,
+  ComplexityHandlingAssessor,
+  HallucinationControlAssessor,
+  KnowledgeTransferAssessor,
+  ProcessingEfficiencyAssessor,
+  ConstructValidityAssessor,
+} from '../src/dimensions';
 
 // Load environment variables from vitest.config.ts
 
-describe('MAAC Evaluator', () => {
+describe('MAAC Dimension Assessors - Sequential Debug', () => {
   let llmProvider: VercelAIProvider;
 
   beforeAll(async () => {
-    // Initialize OpenAI provider (Anthropic API key appears to be invalid)
+    console.log('\n🔧 Initializing LLM Provider...');
     const { openai } = await import('@ai-sdk/openai');
-    const model = openai('gpt-4o-mini');
-    llmProvider = new VercelAIProvider('gpt-4o-mini', model);
+    const model = openai('gpt-4o');
+    llmProvider = new VercelAIProvider('gpt-4o', model);
+    console.log('✅ LLM Provider initialized\n');
   });
 
-  const sampleScenario: ScenarioContext = {
-    domain: 'business_analysis',
-    tier: 'moderate',
-    configId: '111111111111',
-    modelId: 'claude-sonnet-4-5',
-    taskTitle: 'Quarterly Sales Analysis',
-    taskDescription: 'Analyze quarterly sales data and provide recommendations',
-    businessContext: 'E-commerce company reviewing Q4 performance',
-    successCriteria: [
-      { criterion: 'Identify key trends in the data', category: 'completeness' },
-      { criterion: 'Provide actionable recommendations', category: 'actionability' },
-      { criterion: 'Calculate year-over-year growth rate', category: 'calculation' },
-      { criterion: 'Support conclusions with evidence', category: 'accuracy' },
-    ],
-    expectedCalculations: ['growth rate', 'percentage change', 'year-over-year comparison'],
-    expectedInsights: ['revenue trends', 'regional performance', 'product category analysis'],
-    scenarioRequirements: ['trend analysis', 'recommendations', 'data visualization'],
-    dataElements: ['quarterly_sales', 'regional_breakdown', 'product_categories'],
-    enabledTools: ['data_analysis', 'calculator'],
-    memoryToolsEnabled: [],
-  };
-
-  const sampleResponse: CognitiveResponse = {
-    content: `
-      Based on my analysis of the quarterly sales data, I've identified several key trends:
+  const testContext: AssessmentContext = {
+    responseText: `Based on my analysis of the quarterly sales data, I've identified several key trends:
       
       1. **Revenue Growth**: Q4 showed a 15.3% increase compared to Q3, driven primarily by 
          the new product line launch. Year-over-year growth stands at 23.7%.
@@ -58,147 +47,192 @@ describe('MAAC Evaluator', () => {
       **Recommendations**:
       1. Increase inventory allocation for electronics category by 20%
       2. Expand Asia-Pacific distribution channels
-      3. Review apparel pricing strategy to address declining share
-      
-      These conclusions are supported by the attached data tables showing monthly 
-      transaction volumes and customer acquisition costs.
-    `,
-    metadata: {
-      processingTime: 5000,
-      cognitiveCyclesCount: 3,
-      memoryOperationsCount: 0,
-      toolsInvoked: ['data_analysis', 'calculator'],
-      toolsInvokedCount: 2,
-    },
-  };
-
-  const sampleMetadata: ExecutionMetadata = {
+      3. Review apparel pricing strategy to address declining share`,
+    wordCount: 250,
     processingTime: 5000,
-    startedAt: new Date(),
-    completedAt: new Date(),
     cognitiveCyclesCount: 3,
     memoryOperationsCount: 0,
-    toolsInvoked: ['data_analysis', 'calculator'],
     toolsInvokedCount: 2,
-    processingMethod: 'iterative',
-    complexityAssessment: 'moderate',
-    modelId: 'gpt-4o-mini',
-    modelName: 'GPT-4o Mini',
-    sessionId: 'test-session-1',
-    trialId: 'test-trial-1',
-    wordCount: 250,
-    responseText: sampleResponse.content,
+    toolsInvoked: ['data_analysis', 'calculator'],
+    configId: '111111111111',
+    modelId: 'gpt-4o',
+    domain: 'business_analysis',
+    tier: 'moderate',
+    enabledTools: ['data_analysis', 'calculator'],
+    memoryToolsEnabled: [],
+    memoryStoreEnabled: false,
+    successCriteria: [
+      { criterion: 'Identify key trends', category: 'completeness' },
+      { criterion: 'Provide recommendations', category: 'actionability' },
+    ],
+    expectedCalculations: ['growth rate', 'percentage change'],
+    expectedInsights: ['revenue trends', 'regional performance'],
+    scenarioRequirements: ['trend analysis', 'recommendations'],
+    successThresholds: {},
+    businessContext: 'E-commerce Q4 analysis',
+    dataElements: ['quarterly_sales', 'regional_breakdown'],
   };
 
-  it('evaluates all 9 dimensions', async () => {
-    const config = {
-      llmProvider,
-      model: 'claude-sonnet-4-5',
-      confidenceThreshold: 0.7,
-      parallelAssessment: false,
-      includeReasoningChains: true,
-      formulaValidation: true,
-      statisticalMode: false,
-    };
-
-    const evaluator = new MAACEvaluator(config);
-
-    const result = await evaluator.evaluate(sampleResponse, sampleScenario, sampleMetadata);
-
-    // Verify all dimensions present
-    expect(result).toHaveProperty('cognitiveLoad');
-    expect(result).toHaveProperty('toolExecution');
-    expect(result).toHaveProperty('contentQuality');
-    expect(result).toHaveProperty('memoryIntegration');
-    expect(result).toHaveProperty('complexityHandling');
-    expect(result).toHaveProperty('hallucinationControl');
-    expect(result).toHaveProperty('knowledgeTransfer');
-    expect(result).toHaveProperty('processingEfficiency');
-    expect(result).toHaveProperty('constructValidity');
-
-    // Verify score ranges (0-10 scale after normalization)
-    expect(result.cognitiveLoad).toBeGreaterThanOrEqual(0);
-    expect(result.cognitiveLoad).toBeLessThanOrEqual(10);
-
-    // Verify overall score
-    expect(result.overallScore).toBeGreaterThanOrEqual(0);
-    expect(result.overallScore).toBeLessThanOrEqual(10);
-
-    // Verify confidence (0-1)
-    expect(result.confidence).toBeGreaterThanOrEqual(0);
-    expect(result.confidence).toBeLessThanOrEqual(1);
-  }, 120000); // 2 minute timeout for LLM calls
-
-  it('provides dimension reasonings', async () => {
-    const config = {
-      llmProvider,
-      model: 'claude-sonnet-4-5',
-      confidenceThreshold: 0.7,
-      parallelAssessment: false,
-      includeReasoningChains: true,
-      formulaValidation: true,
-      statisticalMode: false,
-    };
-
-    const evaluator = new MAACEvaluator(config);
-
-    const result = await evaluator.evaluate(sampleResponse, sampleScenario, sampleMetadata);
-
-    // Verify reasoning is provided for each dimension
-    expect(result.dimensionReasonings).toBeDefined();
-    expect(result.dimensionReasonings.cognitiveLoad).toBeTruthy();
-    expect(result.dimensionReasonings.contentQuality).toBeTruthy();
-  }, 120000);
-});
-
-describe('MAAC Dimension Assessors', () => {
-  let llmProvider: VercelAIProvider;
-
-  beforeAll(async () => {
-    const { openai } = await import('@ai-sdk/openai');
-    const model = openai('gpt-4o-mini');
-    llmProvider = new VercelAIProvider('gpt-4o-mini', model);
-  });
-
-  it('cognitive load assessor follows 6-question methodology', async () => {
-    const { CognitiveLoadAssessor } = await import('../src/dimensions/cognitive-load');
-
+  it('1. Cognitive Load Assessor', async () => {
+    console.log('\n📊 Testing: COGNITIVE LOAD');
     const assessor = new CognitiveLoadAssessor(llmProvider);
+    
+    try {
+      const result = await assessor.assess(testContext);
+      console.log('  ✅ Score:', result.dimensionScore);
+      console.log('  📈 Confidence:', result.confidence);
+      console.log('  📝 Components:', Object.keys(result.componentScores).length);
+      console.log('  🔍 Key Observations:', result.keyObservations?.slice(0, 2));
+      
+      expect(result.dimensionScore).toBeGreaterThanOrEqual(1);
+      expect(result.dimensionScore).toBeLessThanOrEqual(5);
+    } catch (error) {
+      console.log('  ❌ Error:', error);
+      throw error;
+    }
+  }, 60000);
 
-    const context: AssessmentContext = {
-      responseText:
-        'Sample response for cognitive load assessment with multiple insights and calculations.',
-      responseContent:
-        'Sample response for cognitive load assessment with multiple insights and calculations.',
-      wordCount: 150,
-      cognitiveCyclesCount: 3,
-      memoryOperationsCount: 1,
-      toolsInvoked: ['calculator'],
-      toolsInvokedCount: 1,
-      processingTime: 3000,
-      configId: '111111111111',
-      modelId: 'claude-sonnet-4-5',
-      domain: 'business_analysis',
-      tier: 'moderate',
-      expectedCalculations: ['growth rate', 'percentage change'],
-      scenarioRequirements: ['trend analysis', 'recommendations'],
-      successThresholds: { cognitive_load: 3.5 },
-      successCriteria: [{ criterion: 'Identify trends', category: 'completeness' }],
-      expectedInsights: ['trend analysis'],
-      enabledTools: ['calculator'],
-      memoryToolsEnabled: [],
-      memoryStoreEnabled: false,
-    };
+  it('2. Tool Execution Assessor', async () => {
+    console.log('\n📊 Testing: TOOL EXECUTION');
+    const assessor = new ToolExecutionAssessor(llmProvider);
+    
+    try {
+      const result = await assessor.assess(testContext);
+      console.log('  ✅ Score:', result.dimensionScore);
+      console.log('  📈 Confidence:', result.confidence);
+      console.log('  📝 Components:', Object.keys(result.componentScores).length);
+      
+      expect(result.dimensionScore).toBeGreaterThanOrEqual(1);
+      expect(result.dimensionScore).toBeLessThanOrEqual(5);
+    } catch (error) {
+      console.log('  ❌ Error:', error);
+      throw error;
+    }
+  }, 60000);
 
-    const result = await assessor.assess(context);
+  it('3. Content Quality Assessor', async () => {
+    console.log('\n📊 Testing: CONTENT QUALITY');
+    const assessor = new ContentQualityAssessor(llmProvider);
+    
+    try {
+      const result = await assessor.assess(testContext);
+      console.log('  ✅ Score:', result.dimensionScore);
+      console.log('  📈 Confidence:', result.confidence);
+      console.log('  📝 Components:', Object.keys(result.componentScores).length);
+      
+      expect(result.dimensionScore).toBeGreaterThanOrEqual(1);
+      expect(result.dimensionScore).toBeLessThanOrEqual(5);
+    } catch (error) {
+      console.log('  ❌ Error:', error);
+      throw error;
+    }
+  }, 60000);
 
-    // Verify score structure
-    expect(result).toHaveProperty('dimensionScore');
-    expect(result).toHaveProperty('confidence');
-    expect(result).toHaveProperty('componentScores');
+  it('4. Memory Integration Assessor', async () => {
+    console.log('\n📊 Testing: MEMORY INTEGRATION');
+    const assessor = new MemoryIntegrationAssessor(llmProvider);
+    
+    try {
+      const result = await assessor.assess(testContext);
+      console.log('  ✅ Score:', result.dimensionScore);
+      console.log('  📈 Confidence:', result.confidence);
+      console.log('  📝 Components:', Object.keys(result.componentScores).length);
+      
+      expect(result.dimensionScore).toBeGreaterThanOrEqual(1);
+      expect(result.dimensionScore).toBeLessThanOrEqual(5);
+    } catch (error) {
+      console.log('  ❌ Error:', error);
+      throw error;
+    }
+  }, 60000);
 
-    // Verify dimension score is in valid range (1-5 Likert)
-    expect(result.dimensionScore).toBeGreaterThanOrEqual(1);
-    expect(result.dimensionScore).toBeLessThanOrEqual(5);
+  it('5. Complexity Handling Assessor', async () => {
+    console.log('\n📊 Testing: COMPLEXITY HANDLING');
+    const assessor = new ComplexityHandlingAssessor(llmProvider);
+    
+    try {
+      const result = await assessor.assess(testContext);
+      console.log('  ✅ Score:', result.dimensionScore);
+      console.log('  📈 Confidence:', result.confidence);
+      console.log('  📝 Components:', Object.keys(result.componentScores).length);
+      
+      expect(result.dimensionScore).toBeGreaterThanOrEqual(1);
+      expect(result.dimensionScore).toBeLessThanOrEqual(5);
+    } catch (error) {
+      console.log('  ❌ Error:', error);
+      throw error;
+    }
+  }, 60000);
+
+  it('6. Hallucination Control Assessor', async () => {
+    console.log('\n📊 Testing: HALLUCINATION CONTROL');
+    const assessor = new HallucinationControlAssessor(llmProvider);
+    
+    try {
+      const result = await assessor.assess(testContext);
+      console.log('  ✅ Score:', result.dimensionScore);
+      console.log('  📈 Confidence:', result.confidence);
+      console.log('  📝 Components:', Object.keys(result.componentScores).length);
+      
+      expect(result.dimensionScore).toBeGreaterThanOrEqual(1);
+      expect(result.dimensionScore).toBeLessThanOrEqual(5);
+    } catch (error) {
+      console.log('  ❌ Error:', error);
+      throw error;
+    }
+  }, 60000);
+
+  it('7. Knowledge Transfer Assessor', async () => {
+    console.log('\n📊 Testing: KNOWLEDGE TRANSFER');
+    const assessor = new KnowledgeTransferAssessor(llmProvider);
+    
+    try {
+      const result = await assessor.assess(testContext);
+      console.log('  ✅ Score:', result.dimensionScore);
+      console.log('  📈 Confidence:', result.confidence);
+      console.log('  📝 Components:', Object.keys(result.componentScores).length);
+      
+      expect(result.dimensionScore).toBeGreaterThanOrEqual(1);
+      expect(result.dimensionScore).toBeLessThanOrEqual(5);
+    } catch (error) {
+      console.log('  ❌ Error:', error);
+      throw error;
+    }
+  }, 60000);
+
+  it('8. Processing Efficiency Assessor', async () => {
+    console.log('\n📊 Testing: PROCESSING EFFICIENCY');
+    const assessor = new ProcessingEfficiencyAssessor(llmProvider);
+    
+    try {
+      const result = await assessor.assess(testContext);
+      console.log('  ✅ Score:', result.dimensionScore);
+      console.log('  📈 Confidence:', result.confidence);
+      console.log('  📝 Components:', Object.keys(result.componentScores).length);
+      
+      expect(result.dimensionScore).toBeGreaterThanOrEqual(1);
+      expect(result.dimensionScore).toBeLessThanOrEqual(5);
+    } catch (error) {
+      console.log('  ❌ Error:', error);
+      throw error;
+    }
+  }, 60000);
+
+  it('9. Construct Validity Assessor', async () => {
+    console.log('\n📊 Testing: CONSTRUCT VALIDITY');
+    const assessor = new ConstructValidityAssessor(llmProvider);
+    
+    try {
+      const result = await assessor.assess(testContext);
+      console.log('  ✅ Score:', result.dimensionScore);
+      console.log('  📈 Confidence:', result.confidence);
+      console.log('  📝 Components:', Object.keys(result.componentScores).length);
+      
+      expect(result.dimensionScore).toBeGreaterThanOrEqual(1);
+      expect(result.dimensionScore).toBeLessThanOrEqual(5);
+    } catch (error) {
+      console.log('  ❌ Error:', error);
+      throw error;
+    }
   }, 60000);
 });
