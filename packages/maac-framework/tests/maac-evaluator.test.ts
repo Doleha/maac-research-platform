@@ -70,7 +70,7 @@ describe('MAAC Evaluator', () => {
     const result = await evaluator.evaluate(
       sampleResponse,
       sampleSuccessCriteria,
-      sampleResponse.metadata
+      sampleResponse.metadata,
     );
 
     // Verify all dimensions present
@@ -110,7 +110,7 @@ describe('MAAC Evaluator', () => {
     const result = await evaluator.evaluate(
       sampleResponse,
       sampleSuccessCriteria,
-      sampleResponse.metadata
+      sampleResponse.metadata,
     );
 
     // Verify reasoning is provided for each dimension
@@ -131,9 +131,9 @@ describe('MAAC Dimension Assessors', () => {
 
   it('cognitive load assessor follows 6-question methodology', async () => {
     const { CognitiveLoadAssessor } = await import('../src/dimensions/cognitive-load');
-    
+
     const assessor = new CognitiveLoadAssessor(llmProvider);
-    
+
     const context = {
       responseContent: 'Sample response for cognitive load assessment...',
       wordCount: 150,
@@ -157,7 +157,7 @@ describe('MAAC Dimension Assessors', () => {
     expect(result).toHaveProperty('dimensionScore');
     expect(result).toHaveProperty('confidence');
     expect(result).toHaveProperty('componentScores');
-    
+
     // Verify dimension score is in valid range
     expect(result.dimensionScore).toBeGreaterThanOrEqual(1);
     expect(result.dimensionScore).toBeLessThanOrEqual(5);
