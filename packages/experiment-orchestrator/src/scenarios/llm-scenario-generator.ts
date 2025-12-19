@@ -586,25 +586,33 @@ export class LLMScenarioGenerator {
           properties: {
             task_id: { type: 'string', description: 'Unique task identifier' },
             task_title: { type: 'string', description: 'Descriptive title for the scenario' },
-            task_description: { type: 'string', description: 'Full scenario description with embedded data' },
+            task_description: {
+              type: 'string',
+              description: 'Full scenario description with embedded data',
+            },
             business_context: { type: 'string', description: 'Business context for the scenario' },
             scenario_type: { type: 'string', enum: ['control', 'test'] },
             scenario_number: { type: 'integer', description: 'Scenario number in sequence' },
-            requirements: { 
-              type: 'array', 
+            requirements: {
+              type: 'array',
               items: { type: 'string' },
-              description: 'List of requirements for completing the task' 
+              description: 'List of requirements for completing the task',
             },
-            success_criteria: { 
-              type: 'array', 
+            success_criteria: {
+              type: 'array',
               items: { type: 'string' },
-              description: 'Criteria for evaluating success' 
+              description: 'Criteria for evaluating success',
             },
             complexity_level: { type: 'string', enum: ['simple', 'moderate', 'complex'] },
             estimated_duration: { type: 'string', description: 'Estimated time to complete' },
             domain_specific_data: {
               type: 'object',
-              required: ['data_elements', 'calculations_required', 'industry_context', 'business_function'],
+              required: [
+                'data_elements',
+                'calculations_required',
+                'industry_context',
+                'business_function',
+              ],
               properties: {
                 data_elements: { type: 'array', items: { type: 'string' } },
                 calculations_required: { type: 'array', items: { type: 'string' } },
@@ -614,19 +622,25 @@ export class LLMScenarioGenerator {
             },
             control_expectations: {
               type: 'object',
-              required: ['expected_calculations', 'expected_insights', 'expected_trends', 'success_thresholds'],
+              required: [
+                'expected_calculations',
+                'expected_insights',
+                'expected_trends',
+                'success_thresholds',
+              ],
               properties: {
-                expected_calculations: { 
-                  type: 'object', 
+                expected_calculations: {
+                  type: 'object',
                   additionalProperties: { type: 'string' },
-                  description: 'Key-value pairs of expected calculation results - MUST NOT BE EMPTY' 
+                  description:
+                    'Key-value pairs of expected calculation results - MUST NOT BE EMPTY',
                 },
                 expected_insights: { type: 'array', items: { type: 'string' } },
                 expected_trends: { type: 'array', items: { type: 'string' } },
-                success_thresholds: { 
-                  type: 'object', 
+                success_thresholds: {
+                  type: 'object',
                   additionalProperties: { type: 'string' },
-                  description: 'Key-value pairs of success thresholds - MUST NOT BE EMPTY' 
+                  description: 'Key-value pairs of success thresholds - MUST NOT BE EMPTY',
                 },
               },
             },
@@ -641,7 +655,10 @@ export class LLMScenarioGenerator {
               ],
               properties: {
                 primary_dimensions_tested: { type: 'array', items: { type: 'string' } },
-                cognitive_complexity_level: { type: 'string', enum: ['simple', 'moderate', 'complex'] },
+                cognitive_complexity_level: {
+                  type: 'string',
+                  enum: ['simple', 'moderate', 'complex'],
+                },
                 memory_integration_opportunities: { type: 'array', items: { type: 'string' } },
                 knowledge_transfer_elements: { type: 'array', items: { type: 'string' } },
                 expected_tool_usage_patterns: { type: 'array', items: { type: 'string' } },
@@ -742,7 +759,7 @@ export class LLMScenarioGenerator {
     // Log raw response for debugging
     console.log('Raw LLM response length:', response.length);
     console.log('Raw LLM response preview:', response.substring(0, 500));
-    
+
     // Extract JSON from response (handle potential markdown code blocks)
     let jsonStr = response.trim();
 
@@ -776,7 +793,10 @@ export class LLMScenarioGenerator {
     // Validate against schema
     const result = LLMScenarioOutputSchema.safeParse(parsed);
     if (!result.success) {
-      console.error('Schema validation failed. Parsed object:', JSON.stringify(parsed, null, 2).substring(0, 500));
+      console.error(
+        'Schema validation failed. Parsed object:',
+        JSON.stringify(parsed, null, 2).substring(0, 500),
+      );
       throw new Error(`Schema validation failed: ${result.error.message}`);
     }
 

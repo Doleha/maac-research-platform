@@ -32,7 +32,7 @@ async function main() {
 
   try {
     const startTime = Date.now();
-    
+
     const scenarios = await generator.generateScenarios({
       domains: ['problem_solving'],
       tiers: ['simple'],
@@ -44,13 +44,17 @@ async function main() {
           console.log(`  Elapsed: ${(progress.elapsedMs / 1000).toFixed(1)}s`);
         }
         if (progress.estimatedRemainingMs) {
-          console.log(`  Estimated remaining: ${(progress.estimatedRemainingMs / 1000).toFixed(1)}s`);
+          console.log(
+            `  Estimated remaining: ${(progress.estimatedRemainingMs / 1000).toFixed(1)}s`,
+          );
         }
       },
     });
 
     const endTime = Date.now();
-    console.log(`\n✅ Generated ${scenarios.length} scenario(s) in ${((endTime - startTime) / 1000).toFixed(1)}s\n`);
+    console.log(
+      `\n✅ Generated ${scenarios.length} scenario(s) in ${((endTime - startTime) / 1000).toFixed(1)}s\n`,
+    );
 
     for (const scenario of scenarios) {
       console.log('='.repeat(80));
@@ -61,7 +65,6 @@ async function main() {
       console.log('Generation Time:', `${scenario.generationDurationMs}ms`);
       console.log('='.repeat(80));
     }
-
   } catch (error) {
     console.error('❌ Error generating scenario:', error);
     process.exit(1);
