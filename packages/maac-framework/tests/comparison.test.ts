@@ -51,38 +51,75 @@ function createMockLLMProvider(scoreOverrides: Record<string, number> = {}): LLM
   return {
     name: 'mock-llm',
     model: 'mock-model',
-    invoke: vi.fn().mockImplementation(async ({ messages }: { messages: Array<{ role: string; content: string }> }) => {
-      // Parse which dimension is being assessed from the system prompt
-      const systemPrompt = messages.find((m: { role: string; content: string }) => m.role === 'system')?.content || '';
-      const dimension = Object.keys(defaultScores).find((d) =>
-        systemPrompt.toLowerCase().includes(d.replace(/_/g, ' ')),
-      ) || 'cognitive_load';
+    invoke: vi
+      .fn()
+      .mockImplementation(
+        async ({ messages }: { messages: Array<{ role: string; content: string }> }) => {
+          // Parse which dimension is being assessed from the system prompt
+          const systemPrompt =
+            messages.find((m: { role: string; content: string }) => m.role === 'system')?.content ||
+            '';
+          const dimension =
+            Object.keys(defaultScores).find((d) =>
+              systemPrompt.toLowerCase().includes(d.replace(/_/g, ' ')),
+            ) || 'cognitive_load';
 
-      const dimensionScore = defaultScores[dimension] || 3.75;
-      
-      // Component scores should average to dimension score exactly
-      // MAAC uses 0-5 scale for component and dimension scores
-      // Don't round - use the exact score so the average equals dimension_score
-      const componentScore = dimensionScore;
+          const dimensionScore = defaultScores[dimension] || 3.75;
 
-      // Return format matching what the assessor expects
-      return {
-        content: JSON.stringify({
-          dimension_score: dimensionScore,
-          component_scores: {
-            q1: { score: componentScore, calculation: 'Q1', evidence: 'evidence1', reasoning: 'reasoning1' },
-            q2: { score: componentScore, calculation: 'Q2', evidence: 'evidence2', reasoning: 'reasoning2' },
-            q3: { score: componentScore, calculation: 'Q3', evidence: 'evidence3', reasoning: 'reasoning3' },
-            q4: { score: componentScore, calculation: 'Q4', evidence: 'evidence4', reasoning: 'reasoning4' },
-            q5: { score: componentScore, calculation: 'Q5', evidence: 'evidence5', reasoning: 'reasoning5' },
-            q6: { score: componentScore, calculation: 'Q6', evidence: 'evidence6', reasoning: 'reasoning6' },
-          },
-          formula: '(Q1 + Q2 + Q3 + Q4 + Q5 + Q6) / 6',
-          confidence: 0.85,
-          reasoning: `Mock assessment for ${dimension} dimension`,
-        }),
-      };
-    }),
+          // Component scores should average to dimension score exactly
+          // MAAC uses 0-5 scale for component and dimension scores
+          // Don't round - use the exact score so the average equals dimension_score
+          const componentScore = dimensionScore;
+
+          // Return format matching what the assessor expects
+          return {
+            content: JSON.stringify({
+              dimension_score: dimensionScore,
+              component_scores: {
+                q1: {
+                  score: componentScore,
+                  calculation: 'Q1',
+                  evidence: 'evidence1',
+                  reasoning: 'reasoning1',
+                },
+                q2: {
+                  score: componentScore,
+                  calculation: 'Q2',
+                  evidence: 'evidence2',
+                  reasoning: 'reasoning2',
+                },
+                q3: {
+                  score: componentScore,
+                  calculation: 'Q3',
+                  evidence: 'evidence3',
+                  reasoning: 'reasoning3',
+                },
+                q4: {
+                  score: componentScore,
+                  calculation: 'Q4',
+                  evidence: 'evidence4',
+                  reasoning: 'reasoning4',
+                },
+                q5: {
+                  score: componentScore,
+                  calculation: 'Q5',
+                  evidence: 'evidence5',
+                  reasoning: 'reasoning5',
+                },
+                q6: {
+                  score: componentScore,
+                  calculation: 'Q6',
+                  evidence: 'evidence6',
+                  reasoning: 'reasoning6',
+                },
+              },
+              formula: '(Q1 + Q2 + Q3 + Q4 + Q5 + Q6) / 6',
+              confidence: 0.85,
+              reasoning: `Mock assessment for ${dimension} dimension`,
+            }),
+          };
+        },
+      ),
   };
 }
 
@@ -415,7 +452,9 @@ describe('N8N Formula Parity', () => {
     const questionScores = [4, 4, 4, 4, 4, 4];
     const n8nExpected = 4;
 
-    const calculated = Math.round(questionScores.reduce((a, b) => a + b, 0) / questionScores.length);
+    const calculated = Math.round(
+      questionScores.reduce((a, b) => a + b, 0) / questionScores.length,
+    );
 
     expect(calculated).toBe(n8nExpected);
   });
@@ -432,7 +471,7 @@ describe('N8N Formula Parity', () => {
       { score: 4, weight: 0.12 }, // hallucination control
       { score: 4, weight: 0.11 }, // knowledge transfer
       { score: 4, weight: 0.11 }, // processing efficiency
-      { score: 4, weight: 0.10 }, // construct validity
+      { score: 4, weight: 0.1 }, // construct validity
     ];
 
     const totalWeight = dimensionScores.reduce((sum, d) => sum + d.weight, 0);
