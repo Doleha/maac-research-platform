@@ -76,14 +76,14 @@ describe('MAAC Dimension Assessors - Sequential Debug', () => {
   it('1. Cognitive Load Assessor', async () => {
     console.log('\n📊 Testing: COGNITIVE LOAD');
     const assessor = new CognitiveLoadAssessor(llmProvider);
-    
+
     try {
       const result = await assessor.assess(testContext);
       console.log('  ✅ Score:', result.dimensionScore);
       console.log('  📈 Confidence:', result.confidence);
       console.log('  📝 Components:', Object.keys(result.componentScores).length);
       console.log('  🔍 Key Observations:', result.keyObservations?.slice(0, 2));
-      
+
       expect(result.dimensionScore).toBeGreaterThanOrEqual(1);
       expect(result.dimensionScore).toBeLessThanOrEqual(5);
     } catch (error) {
@@ -95,13 +95,13 @@ describe('MAAC Dimension Assessors - Sequential Debug', () => {
   it('2. Tool Execution Assessor', async () => {
     console.log('\n📊 Testing: TOOL EXECUTION');
     const assessor = new ToolExecutionAssessor(llmProvider);
-    
+
     try {
       const result = await assessor.assess(testContext);
       console.log('  ✅ Score:', result.dimensionScore);
       console.log('  📈 Confidence:', result.confidence);
       console.log('  📝 Components:', Object.keys(result.componentScores).length);
-      
+
       expect(result.dimensionScore).toBeGreaterThanOrEqual(1);
       expect(result.dimensionScore).toBeLessThanOrEqual(5);
     } catch (error) {
@@ -113,13 +113,13 @@ describe('MAAC Dimension Assessors - Sequential Debug', () => {
   it('3. Content Quality Assessor', async () => {
     console.log('\n📊 Testing: CONTENT QUALITY');
     const assessor = new ContentQualityAssessor(llmProvider);
-    
+
     try {
       const result = await assessor.assess(testContext);
       console.log('  ✅ Score:', result.dimensionScore);
       console.log('  📈 Confidence:', result.confidence);
       console.log('  📝 Components:', Object.keys(result.componentScores).length);
-      
+
       expect(result.dimensionScore).toBeGreaterThanOrEqual(1);
       expect(result.dimensionScore).toBeLessThanOrEqual(5);
     } catch (error) {
@@ -131,13 +131,13 @@ describe('MAAC Dimension Assessors - Sequential Debug', () => {
   it('4. Memory Integration Assessor', async () => {
     console.log('\n📊 Testing: MEMORY INTEGRATION');
     const assessor = new MemoryIntegrationAssessor(llmProvider);
-    
+
     try {
       const result = await assessor.assess(testContext);
       console.log('  ✅ Score:', result.dimensionScore);
       console.log('  📈 Confidence:', result.confidence);
       console.log('  📝 Components:', Object.keys(result.componentScores).length);
-      
+
       expect(result.dimensionScore).toBeGreaterThanOrEqual(1);
       expect(result.dimensionScore).toBeLessThanOrEqual(5);
     } catch (error) {
@@ -149,13 +149,13 @@ describe('MAAC Dimension Assessors - Sequential Debug', () => {
   it('5. Complexity Handling Assessor', async () => {
     console.log('\n📊 Testing: COMPLEXITY HANDLING');
     const assessor = new ComplexityHandlingAssessor(llmProvider);
-    
+
     try {
       const result = await assessor.assess(testContext);
       console.log('  ✅ Score:', result.dimensionScore);
       console.log('  📈 Confidence:', result.confidence);
       console.log('  📝 Components:', Object.keys(result.componentScores).length);
-      
+
       expect(result.dimensionScore).toBeGreaterThanOrEqual(1);
       expect(result.dimensionScore).toBeLessThanOrEqual(5);
     } catch (error) {
@@ -167,13 +167,13 @@ describe('MAAC Dimension Assessors - Sequential Debug', () => {
   it('6. Hallucination Control Assessor', async () => {
     console.log('\n📊 Testing: HALLUCINATION CONTROL');
     const assessor = new HallucinationControlAssessor(llmProvider);
-    
+
     try {
       const result = await assessor.assess(testContext);
       console.log('  ✅ Score:', result.dimensionScore);
       console.log('  📈 Confidence:', result.confidence);
       console.log('  📝 Components:', Object.keys(result.componentScores).length);
-      
+
       expect(result.dimensionScore).toBeGreaterThanOrEqual(1);
       expect(result.dimensionScore).toBeLessThanOrEqual(5);
     } catch (error) {
@@ -185,13 +185,13 @@ describe('MAAC Dimension Assessors - Sequential Debug', () => {
   it('7. Knowledge Transfer Assessor', async () => {
     console.log('\n📊 Testing: KNOWLEDGE TRANSFER');
     const assessor = new KnowledgeTransferAssessor(llmProvider);
-    
+
     try {
       const result = await assessor.assess(testContext);
       console.log('  ✅ Score:', result.dimensionScore);
       console.log('  📈 Confidence:', result.confidence);
       console.log('  📝 Components:', Object.keys(result.componentScores).length);
-      
+
       expect(result.dimensionScore).toBeGreaterThanOrEqual(1);
       expect(result.dimensionScore).toBeLessThanOrEqual(5);
     } catch (error) {
@@ -203,13 +203,13 @@ describe('MAAC Dimension Assessors - Sequential Debug', () => {
   it('8. Processing Efficiency Assessor', async () => {
     console.log('\n📊 Testing: PROCESSING EFFICIENCY');
     const assessor = new ProcessingEfficiencyAssessor(llmProvider);
-    
+
     try {
       const result = await assessor.assess(testContext);
       console.log('  ✅ Score:', result.dimensionScore);
       console.log('  📈 Confidence:', result.confidence);
       console.log('  📝 Components:', Object.keys(result.componentScores).length);
-      
+
       expect(result.dimensionScore).toBeGreaterThanOrEqual(1);
       expect(result.dimensionScore).toBeLessThanOrEqual(5);
     } catch (error) {
@@ -221,13 +221,13 @@ describe('MAAC Dimension Assessors - Sequential Debug', () => {
   it('9. Construct Validity Assessor', async () => {
     console.log('\n📊 Testing: CONSTRUCT VALIDITY');
     const assessor = new ConstructValidityAssessor(llmProvider);
-    
+
     try {
       const result = await assessor.assess(testContext);
       console.log('  ✅ Score:', result.dimensionScore);
       console.log('  📈 Confidence:', result.confidence);
       console.log('  📝 Components:', Object.keys(result.componentScores).length);
-      
+
       expect(result.dimensionScore).toBeGreaterThanOrEqual(1);
       expect(result.dimensionScore).toBeLessThanOrEqual(5);
     } catch (error) {

@@ -373,7 +373,10 @@ const ComponentScoreZodSchema = z.object({
 export const MAACScoreSchema = z.object({
   dimension_score: z.number().min(1).max(5).describe('Overall dimension score from 1-5 Likert'),
   confidence: z.number().min(0).max(1).describe('Confidence in the assessment from 0-1'),
-  component_scores: z.record(ComponentScoreZodSchema).optional().describe('Individual question scores (q1-q6)'),
+  component_scores: z
+    .record(ComponentScoreZodSchema)
+    .optional()
+    .describe('Individual question scores (q1-q6)'),
   key_observations: z.array(z.string()).describe('Key observations from the assessment'),
   reasoning: z.string().optional().describe('Overall assessment reasoning'),
 });

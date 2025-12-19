@@ -77,7 +77,7 @@ ${context.responseText}`;
         userMessage: userPrompt,
         responseSchema: MAACScoreSchema,
       });
-      
+
       // Debug: log the raw response
       if (process.env.DEBUG_MAAC) {
         console.log(`[${this.dimension}] Raw LLM response:`, JSON.stringify(rawScore, null, 2));
@@ -105,12 +105,12 @@ ${context.responseText}`;
     const rawComponentScores = raw.component_scores as Record<string, ComponentScore> | undefined;
     const llmDimensionScore = raw.dimension_score as number;
     const llmConfidence = raw.confidence as number;
-    
+
     // If component_scores is provided, use them; otherwise create synthetic ones from dimension_score
     let componentScores: Record<string, ComponentScore>;
     let dimensionScore: number;
     let confidence: number;
-    
+
     if (rawComponentScores && Object.keys(rawComponentScores).length > 0) {
       componentScores = rawComponentScores;
       dimensionScore = calculateDimensionScore(componentScores);
@@ -118,12 +118,30 @@ ${context.responseText}`;
     } else {
       // Create synthetic component scores from the LLM's dimension score
       componentScores = {
-        q1: { score: llmDimensionScore, reasoning: raw.reasoning as string || 'Aggregated assessment' },
-        q2: { score: llmDimensionScore, reasoning: raw.reasoning as string || 'Aggregated assessment' },
-        q3: { score: llmDimensionScore, reasoning: raw.reasoning as string || 'Aggregated assessment' },
-        q4: { score: llmDimensionScore, reasoning: raw.reasoning as string || 'Aggregated assessment' },
-        q5: { score: llmDimensionScore, reasoning: raw.reasoning as string || 'Aggregated assessment' },
-        q6: { score: llmDimensionScore, reasoning: raw.reasoning as string || 'Aggregated assessment' },
+        q1: {
+          score: llmDimensionScore,
+          reasoning: (raw.reasoning as string) || 'Aggregated assessment',
+        },
+        q2: {
+          score: llmDimensionScore,
+          reasoning: (raw.reasoning as string) || 'Aggregated assessment',
+        },
+        q3: {
+          score: llmDimensionScore,
+          reasoning: (raw.reasoning as string) || 'Aggregated assessment',
+        },
+        q4: {
+          score: llmDimensionScore,
+          reasoning: (raw.reasoning as string) || 'Aggregated assessment',
+        },
+        q5: {
+          score: llmDimensionScore,
+          reasoning: (raw.reasoning as string) || 'Aggregated assessment',
+        },
+        q6: {
+          score: llmDimensionScore,
+          reasoning: (raw.reasoning as string) || 'Aggregated assessment',
+        },
       };
       dimensionScore = llmDimensionScore;
       confidence = llmConfidence;
