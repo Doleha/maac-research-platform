@@ -80,8 +80,8 @@ export interface Trial {
 }
 
 export interface MAACAssessment {
-  // 9 dimensional scores
-  cognitivLoad: number; // 0-10
+  // 9 dimensional scores (1-5 Likert scale)
+  cognitivLoad: number; // 1-5
   toolExecution: number;
   contentQuality: number;
   memoryIntegration: number;
@@ -92,7 +92,7 @@ export interface MAACAssessment {
   constructValidity: number;
 
   // Metadata
-  overallScore: number; // 0-10
+  overallScore: number; // 1-5 (average of dimensional scores)
   confidence: number; // 0-1
   assessmentReasoning: string;
   dimensionReasonings: Record<string, string>;

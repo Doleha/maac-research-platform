@@ -1020,8 +1020,8 @@ def maac_scoring_validation(scores: ArrayLike) -> dict[str, Any]:
     
     n_samples, n_dims = data.shape
     
-    # MAAC scores should be in 0-10 range
-    in_range = (data >= 0) & (data <= 10)
+    # MAAC scores should be in 1-5 Likert range
+    in_range = (data >= 1) & (data <= 5)
     range_compliance = safe_float(np.mean(in_range))
     
     # Check for NaN/Inf values

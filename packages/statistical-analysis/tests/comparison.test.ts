@@ -23,6 +23,7 @@ import type { ExperimentData, BatchPayload } from '../src/types.js';
 
 /**
  * Sample experiment data extracted from n8n workflow execution
+ * All MAAC scores use 1-5 Likert scale
  */
 const sampleExperiments: ExperimentData[] = [
   {
@@ -33,16 +34,16 @@ const sampleExperiments: ExperimentData[] = [
     domain: 'software_engineering',
     tier: 'tier1',
     model_id: 'gpt-4-turbo',
-    maac_overall_score: 7.85,
-    maac_cognitive_load: 7.8,
-    maac_tool_execution: 8.2,
-    maac_content_quality: 7.5,
-    maac_memory_integration: 6.9,
-    maac_complexity_handling: 7.1,
-    maac_hallucination_control: 8.5,
-    maac_knowledge_transfer: 7.3,
-    maac_processing_efficiency: 7.6,
-    maac_construct_validity: 7.4,
+    maac_overall_score: 3.9,
+    maac_cognitive_load: 3.9,
+    maac_tool_execution: 4.1,
+    maac_content_quality: 3.8,
+    maac_memory_integration: 3.5,
+    maac_complexity_handling: 3.6,
+    maac_hallucination_control: 4.3,
+    maac_knowledge_transfer: 3.7,
+    maac_processing_efficiency: 3.8,
+    maac_construct_validity: 3.7,
   },
   {
     experiment_id: 'exp-002',
@@ -52,16 +53,16 @@ const sampleExperiments: ExperimentData[] = [
     domain: 'software_engineering',
     tier: 'tier1',
     model_id: 'gpt-4-turbo',
-    maac_overall_score: 8.12,
-    maac_cognitive_load: 8.1,
-    maac_tool_execution: 8.5,
-    maac_content_quality: 7.8,
-    maac_memory_integration: 7.2,
-    maac_complexity_handling: 7.5,
-    maac_hallucination_control: 8.8,
-    maac_knowledge_transfer: 7.6,
-    maac_processing_efficiency: 7.9,
-    maac_construct_validity: 7.7,
+    maac_overall_score: 4.1,
+    maac_cognitive_load: 4.1,
+    maac_tool_execution: 4.3,
+    maac_content_quality: 3.9,
+    maac_memory_integration: 3.6,
+    maac_complexity_handling: 3.8,
+    maac_hallucination_control: 4.4,
+    maac_knowledge_transfer: 3.8,
+    maac_processing_efficiency: 4.0,
+    maac_construct_validity: 3.9,
   },
   {
     experiment_id: 'exp-003',
@@ -71,16 +72,16 @@ const sampleExperiments: ExperimentData[] = [
     domain: 'data_analysis',
     tier: 'tier2',
     model_id: 'claude-3-opus',
-    maac_overall_score: 8.45,
-    maac_cognitive_load: 8.3,
-    maac_tool_execution: 8.7,
-    maac_content_quality: 8.2,
-    maac_memory_integration: 7.8,
-    maac_complexity_handling: 8.1,
-    maac_hallucination_control: 9.0,
-    maac_knowledge_transfer: 8.0,
-    maac_processing_efficiency: 8.2,
-    maac_construct_validity: 8.0,
+    maac_overall_score: 4.2,
+    maac_cognitive_load: 4.2,
+    maac_tool_execution: 4.4,
+    maac_content_quality: 4.1,
+    maac_memory_integration: 3.9,
+    maac_complexity_handling: 4.1,
+    maac_hallucination_control: 4.5,
+    maac_knowledge_transfer: 4.0,
+    maac_processing_efficiency: 4.1,
+    maac_construct_validity: 4.0,
   },
   {
     experiment_id: 'exp-004',
@@ -90,16 +91,16 @@ const sampleExperiments: ExperimentData[] = [
     domain: 'data_analysis',
     tier: 'tier2',
     model_id: 'claude-3-opus',
-    maac_overall_score: 7.65,
-    maac_cognitive_load: 7.5,
-    maac_tool_execution: 7.8,
-    maac_content_quality: 7.4,
-    maac_memory_integration: 7.0,
-    maac_complexity_handling: 7.2,
-    maac_hallucination_control: 8.2,
-    maac_knowledge_transfer: 7.1,
-    maac_processing_efficiency: 7.4,
-    maac_construct_validity: 7.3,
+    maac_overall_score: 3.8,
+    maac_cognitive_load: 3.8,
+    maac_tool_execution: 3.9,
+    maac_content_quality: 3.7,
+    maac_memory_integration: 3.5,
+    maac_complexity_handling: 3.6,
+    maac_hallucination_control: 4.1,
+    maac_knowledge_transfer: 3.6,
+    maac_processing_efficiency: 3.7,
+    maac_construct_validity: 3.7,
   },
   {
     experiment_id: 'exp-005',
@@ -109,30 +110,31 @@ const sampleExperiments: ExperimentData[] = [
     domain: 'research',
     tier: 'tier3',
     model_id: 'gpt-4-turbo',
-    maac_overall_score: 8.92,
-    maac_cognitive_load: 8.8,
-    maac_tool_execution: 9.1,
-    maac_content_quality: 8.7,
-    maac_memory_integration: 8.5,
-    maac_complexity_handling: 8.6,
-    maac_hallucination_control: 9.3,
-    maac_knowledge_transfer: 8.4,
-    maac_processing_efficiency: 8.6,
-    maac_construct_validity: 8.5,
+    maac_overall_score: 4.5,
+    maac_cognitive_load: 4.4,
+    maac_tool_execution: 4.6,
+    maac_content_quality: 4.4,
+    maac_memory_integration: 4.3,
+    maac_complexity_handling: 4.3,
+    maac_hallucination_control: 4.7,
+    maac_knowledge_transfer: 4.2,
+    maac_processing_efficiency: 4.3,
+    maac_construct_validity: 4.3,
   },
 ];
 
 /**
  * Known n8n statistical outputs for the sample data
  * Calculated using sample std (n-1 denominator)
+ * Updated for 1-5 Likert scale
  */
 const n8nExpectedStats = {
   descriptive: {
-    mean: 8.198,
-    std: 0.503, // sample std with n-1 denominator
-    median: 8.12,
-    min: 7.65,
-    max: 8.92,
+    mean: 4.1,
+    std: 0.274, // sample std with n-1 denominator, recalculated for 1-5 scale
+    median: 4.1,
+    min: 3.8,
+    max: 4.5,
     skew: 0.312,
     kurtosis: -1.234,
   },
@@ -166,9 +168,10 @@ describe('Data Preparation Validation', () => {
 
       // First row should contain first experiment's dimension scores
       // Matrix only includes the 9 MAAC dimensions (not overall score)
-      expect(matrix[0]).toContain(7.8); // cognitive load
-      expect(matrix[0]).toContain(8.2); // tool execution
-      expect(matrix[0]).toContain(7.5); // content quality
+      // All values use 1-5 Likert scale
+      expect(matrix[0]).toContain(3.9); // cognitive load
+      expect(matrix[0]).toContain(4.1); // tool execution
+      expect(matrix[0]).toContain(3.8); // content quality
     });
 
     it('handles missing values gracefully', () => {
@@ -240,9 +243,10 @@ describe('Data Preparation Validation', () => {
       const dimensionalData = extractDimensionalData(sampleExperiments);
 
       // Use maac_cognitive_load which is in MAAC_DIMENSIONS
-      expect(dimensionalData['maac_cognitive_load'][0]).toBe(7.8);
-      expect(dimensionalData['maac_cognitive_load'][1]).toBe(8.1);
-      expect(dimensionalData['maac_cognitive_load'][4]).toBe(8.8);
+      // Values use 1-5 Likert scale
+      expect(dimensionalData['maac_cognitive_load'][0]).toBe(3.9);
+      expect(dimensionalData['maac_cognitive_load'][1]).toBe(4.1);
+      expect(dimensionalData['maac_cognitive_load'][4]).toBe(4.4);
     });
   });
 });

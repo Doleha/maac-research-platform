@@ -66,7 +66,7 @@ export interface MAACEvaluatorConfig {
 // ============================================================
 
 export interface MAACAssessmentResult {
-  // 9 Dimensional Scores (0-10 scale, normalized from 1-5)
+  // 9 Dimensional Scores (1-5 Likert scale)
   cognitiveLoad: number;
   toolExecution: number;
   contentQuality: number;
@@ -473,13 +473,12 @@ export class MAACEvaluator {
   }
 
   private normalizeScores(scores: Map<MAACDimension, MAACScore>): Map<MAACDimension, number> {
-    // Convert 1-5 Likert scale to 0-10 scale
+    // Keep native 1-5 Likert scale scores
     const normalized = new Map<MAACDimension, number>();
 
     for (const [dimension, score] of scores.entries()) {
-      // Formula: (score - 1) / 4 * 10 = normalized 0-10
-      const normalizedScore = ((score.dimensionScore - 1) / 4) * 10;
-      normalized.set(dimension, Math.round(normalizedScore * 100) / 100);
+      // Keep 1-5 Likert scale (no normalization)
+      normalized.set(dimension, Math.round(score.dimensionScore * 100) / 100);
     }
 
     return normalized;
@@ -530,9 +529,10 @@ export class MAACEvaluator {
     for (const [dimension, score] of normalizedScores.entries()) {
       const name = dimensionNames[dimension];
 
-      if (score >= 7.5) {
+      // 1-5 Likert scale thresholds for strengths/weaknesses
+      if (score >= 4.0) {
         strengths.push(name);
-      } else if (score < 5.0) {
+      } else if (score < 2.5) {
         weaknesses.push(name);
       }
 
@@ -548,7 +548,7 @@ export class MAACEvaluator {
 
     return `MAAC Assessment Summary:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Overall Performance: ${performanceLevel} (${overallScore.toFixed(1)}/10)
+Overall Performance: ${performanceLevel} (${overallScore.toFixed(2)}/5)
 
 Strengths: ${strengths.length > 0 ? strengths.join(', ') : 'None identified above threshold'}
 
@@ -560,12 +560,13 @@ ${observations.length > 0 ? observations.map((o) => `• ${o}`).join('\n') : '�
   }
 
   private interpretScore(score: number): string {
-    if (score >= 9.0) return 'Exceptional';
-    if (score >= 8.0) return 'Excellent';
-    if (score >= 7.0) return 'Good';
-    if (score >= 6.0) return 'Satisfactory';
-    if (score >= 5.0) return 'Adequate';
-    if (score >= 4.0) return 'Below Expectations';
+    // 1-5 Likert scale interpretation
+    if (score >= 4.5) return 'Exceptional';
+    if (score >= 4.0) return 'Excellent';
+    if (score >= 3.5) return 'Good';
+    if (score >= 3.0) return 'Satisfactory';
+    if (score >= 2.5) return 'Adequate';
+    if (score >= 2.0) return 'Below Expectations';
     return 'Needs Improvement';
   }
 
