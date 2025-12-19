@@ -17,6 +17,8 @@ import {
   createBaselineScenarioGenerator,
   createLLMScenarioGenerator,
   type LLMScenarioGeneratorConfig,
+  type ScenarioGenerationProgress,
+  type GeneratedLLMScenario,
 } from '@maac/experiment-orchestrator';
 import type { Domain, Tier, ModelId } from '@maac/types';
 

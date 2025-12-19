@@ -340,7 +340,7 @@ export class LLMScenarioGenerator {
       for (const tier of tiers) {
         for (let rep = 1; rep <= repetitions; rep++) {
           const currentIndex = completed + 1;
-          
+
           // Emit progress update before generation
           onProgress?.({
             type: 'progress',
@@ -352,9 +352,10 @@ export class LLMScenarioGenerator {
             repetition: rep,
             message: `Generating scenario ${currentIndex}/${total}: ${domain}/${tier}/rep${rep}...`,
             elapsedMs: Date.now() - startTime,
-            estimatedRemainingMs: completed > 0 
-              ? Math.round(((Date.now() - startTime) / completed) * (total - completed))
-              : undefined,
+            estimatedRemainingMs:
+              completed > 0
+                ? Math.round(((Date.now() - startTime) / completed) * (total - completed))
+                : undefined,
           });
 
           try {
@@ -383,11 +384,11 @@ export class LLMScenarioGenerator {
               message: `✓ Completed ${completed}/${total}: ${scenario.task_title.substring(0, 50)}...`,
               scenario,
               elapsedMs: Date.now() - startTime,
-              estimatedRemainingMs: completed < total
-                ? Math.round(((Date.now() - startTime) / completed) * (total - completed))
-                : 0,
+              estimatedRemainingMs:
+                completed < total
+                  ? Math.round(((Date.now() - startTime) / completed) * (total - completed))
+                  : 0,
             });
-
           } catch (error) {
             // Emit error event but continue processing
             onProgress?.({
@@ -402,7 +403,7 @@ export class LLMScenarioGenerator {
               error: error instanceof Error ? error.message : 'Unknown error',
               elapsedMs: Date.now() - startTime,
             });
-            
+
             // Re-throw to let caller handle
             throw error;
           }

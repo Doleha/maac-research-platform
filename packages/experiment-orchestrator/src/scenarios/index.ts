@@ -45,4 +45,6 @@ export {
   type LLMScenarioOutput,
   type LLMScenarioGeneratorConfig,
   type GeneratedLLMScenario,
+  type ScenarioGenerationProgress,
+  type ProgressCallback,
 } from './llm-scenario-generator';
