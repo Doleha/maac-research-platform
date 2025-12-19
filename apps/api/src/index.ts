@@ -1,14 +1,16 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { MAACFramework, LLMProvider } from '@maac/framework';
-import { ExperimentOrchestrator } from '@maac/experiment-orchestrator';
+import { ExperimentOrchestrator, AdvancedExperimentOrchestrator } from '@maac/experiment-orchestrator';
 import { StatisticalAnalyzer } from '@maac/statistical-analysis';
+import { experimentRoutes } from './routes/experiments.js';
 
 const fastify = Fastify({
   logger: true,
 });
 
 const port = parseInt(process.env.API_PORT || '3000', 10);
+const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 
 // Mock LLM provider for API initialization
 const mockLLMProvider: LLMProvider = {
@@ -27,6 +29,12 @@ const mockLLMProvider: LLMProvider = {
 const framework = new MAACFramework(mockLLMProvider);
 const orchestrator = new ExperimentOrchestrator();
 const analyzer = new StatisticalAnalyzer();
+
+// Initialize advanced orchestrator with Redis
+const advancedOrchestrator = new AdvancedExperimentOrchestrator({
+  redisUrl,
+  concurrency: 10,
+});
 
 // Register CORS
 await fastify.register(cors, {
@@ -66,6 +74,9 @@ fastify.post<{ Body: { data: number[] } }>('/analyze', async (request) => {
   const results = analyzer.analyze(data);
   return results;
 });
+
+// Register advanced experiment routes
+await fastify.register(experimentRoutes, { orchestrator: advancedOrchestrator });
 
 // Start server
 const start = async () => {

@@ -1,7 +1,7 @@
 {
   "name": "@maac/experiment-orchestrator",
   "version": "0.1.0",
-  "description": "Experiment execution and orchestration framework",
+  "description": "Experiment execution and orchestration framework with BullMQ job queue",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
@@ -13,11 +13,16 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@maac/types": "workspace:*"
+    "@maac/types": "workspace:*",
+    "@maac/framework": "workspace:*",
+    "bullmq": "^5.4.2",
+    "ioredis": "^5.3.2",
+    "zod": "^3.23.6"
   },
   "devDependencies": {
     "typescript": "^5.4.5",
     "@types/node": "^20.12.7",
+    "@prisma/client": "^5.11.0",
     "vitest": "^1.5.0"
   }
 }

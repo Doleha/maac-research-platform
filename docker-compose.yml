@@ -169,12 +169,21 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  # Redis - Job Queue for BullMQ Experiment Orchestrator
+  # Used for: job storage, worker coordination, job persistence, rate limiting
   redis:
     image: redis:7-alpine
+    container_name: maac-redis
     ports:
       - '6379:6379'
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    command: redis-server --appendonly yes
 
   neo4j:
     image: neo4j:5.19

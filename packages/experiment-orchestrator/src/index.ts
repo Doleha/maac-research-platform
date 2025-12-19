@@ -1,16 +1,43 @@
-import { ExperimentConfig } from '@maac/types';
-
 /**
  * Experiment Orchestrator
  * Manages experiment execution, scheduling, and coordination
  *
  * Extracted from n8n workflows:
  * - MAAC - Tier 1a - Experiment Processing - Scenario Generation Only.json
+ * - MAAC - Tier 1b - Experiment Processing MIMIC Only
  */
 
 // Export scenario generation module
 export * from './scenarios';
 
+// Export advanced orchestrator with BullMQ
+export { AdvancedExperimentOrchestrator, CreateExperimentSchema } from './orchestrator';
+
+// Export types separately
+export type {
+  OrchestratorConfig,
+  DatabaseClient,
+  MAACEvaluatorInterface,
+  MAACAssessmentResult,
+  RedisConfig,
+  ExperimentRunResult,
+  ExperimentStatus,
+  CreateExperimentInput,
+} from './orchestrator';
+
+// Re-export types from @maac/types
+export type {
+  ExperimentConfig,
+  Scenario,
+  Trial,
+  Domain,
+  Tier,
+  ModelId,
+  SuccessCriterion,
+  ToolConfigBlock,
+} from '@maac/types';
+
+// Legacy ExperimentOrchestrator for backward compatibility
 export interface ExperimentRun {
   id: string;
   configId: string;
@@ -20,10 +47,13 @@ export interface ExperimentRun {
   results?: unknown;
 }
 
+/**
+ * @deprecated Use AdvancedExperimentOrchestrator instead
+ */
 export class ExperimentOrchestrator {
   private runs: Map<string, ExperimentRun> = new Map();
 
-  async startExperiment(config: ExperimentConfig): Promise<ExperimentRun> {
+  async startExperiment(config: { experimentId: string }): Promise<ExperimentRun> {
     const run: ExperimentRun = {
       id: crypto.randomUUID(),
       configId: config.experimentId,
@@ -31,8 +61,6 @@ export class ExperimentOrchestrator {
     };
 
     this.runs.set(run.id, run);
-
-    // Start execution
     run.status = 'running';
     run.startTime = new Date();
 
@@ -47,5 +75,3 @@ export class ExperimentOrchestrator {
     return Array.from(this.runs.values());
   }
 }
-
-export * from '@maac/types';
