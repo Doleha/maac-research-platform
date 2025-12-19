@@ -142,6 +142,9 @@ importers:
       '@maac/framework':
         specifier: workspace:*
         version: link:../maac-framework
+      '@maac/mimic-cognitive-engine':
+        specifier: workspace:*
+        version: link:../mimic-cognitive-engine
       '@maac/types':
         specifier: workspace:*
         version: link:../shared-types
@@ -208,6 +211,22 @@ importers:
       dotenv:
         specifier: ^17.2.3
         version: 17.2.3
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+      vitest:
+        specifier: ^1.5.0
+        version: 1.6.1(@types/node@20.19.27)
+
+  packages/mimic-cognitive-engine.backup:
+    dependencies:
+      '@maac/types':
+        specifier: workspace:*
+        version: link:../shared-types
+    devDependencies:
+      '@types/node':
+        specifier: ^20.12.7
+        version: 20.19.27
       typescript:
         specifier: ^5.4.5
         version: 5.9.3
