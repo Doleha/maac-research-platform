@@ -24,6 +24,10 @@ export * from './dimensions';
 export { MAACEvaluator, createMAACEvaluator, createResearchMAACEvaluator } from './evaluator';
 export type { MAACEvaluatorConfig, MAACAssessmentResult, ScenarioContext } from './evaluator';
 
+// Export LLM Provider abstraction
+export { VercelAIProvider } from './llm-provider';
+export type { LLMProvider as LLMProviderInterface } from './llm-provider';
+
 // Export dimension types explicitly for convenience
 export {
   MAACDimension,

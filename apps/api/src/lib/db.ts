@@ -18,7 +18,7 @@ export const dbHelpers = {
   // Get trial by ID
   async getTrial(trialId: string) {
     return db.mAACExperimentalData.findUnique({
-      where: { trialId }
+      where: { trialId },
     });
   },
 
@@ -26,7 +26,7 @@ export const dbHelpers = {
   async getExperimentTrials(experimentId: string) {
     return db.mAACExperimentalData.findMany({
       where: { experimentId },
-      orderBy: { createdAt: 'asc' }
+      orderBy: { createdAt: 'asc' },
     });
   },
 
@@ -34,7 +34,7 @@ export const dbHelpers = {
   async getTrialsByModel(modelId: string) {
     return db.mAACExperimentalData.findMany({
       where: { modelId },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
   },
 
@@ -57,8 +57,8 @@ export const dbHelpers = {
         maacKnowledgeTransfer: true,
         maacProcessingEfficiency: true,
         maacConstructValidity: true,
-        maacConfidence: true
-      }
+        maacConfidence: true,
+      },
     });
   },
 
@@ -122,9 +122,9 @@ export const dbHelpers = {
           maacConstructValidity: data.maacScores.constructValidity,
           maacOverallScore: data.maacScores.overallScore,
           maacConfidence: data.maacScores.confidence,
-          maacCompleted: true
-        })
-      }
+          maacCompleted: true,
+        }),
+      },
     });
-  }
+  },
 };
