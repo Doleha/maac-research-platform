@@ -6,3 +6,4 @@
 
 export { experimentRoutes } from './experiments';
 export { analysisRoutes } from './analysis';
+export { scenarioRoutes } from './scenarios';

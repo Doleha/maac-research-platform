@@ -131,7 +131,10 @@ function createMockMAACEvaluator() {
           contentQuality: Math.min(5, Math.max(1, baseScore + (Math.random() - 0.5) * 0.5)),
           memoryIntegration: Math.min(5, Math.max(1, baseScore + (Math.random() - 0.5) * 0.4)),
           complexityHandling: Math.min(5, Math.max(1, baseScore + (Math.random() - 0.5) * 0.5)),
-          hallucinationControl: Math.min(5, Math.max(1, baseScore + 0.3 + (Math.random() - 0.5) * 0.5)),
+          hallucinationControl: Math.min(
+            5,
+            Math.max(1, baseScore + 0.3 + (Math.random() - 0.5) * 0.5),
+          ),
           knowledgeTransfer: Math.min(5, Math.max(1, baseScore + (Math.random() - 0.5) * 0.5)),
           processingEfficiency: Math.min(5, Math.max(1, baseScore + (Math.random() - 0.5) * 0.6)),
           constructValidity: Math.min(5, Math.max(1, baseScore + (Math.random() - 0.5) * 0.5)),
