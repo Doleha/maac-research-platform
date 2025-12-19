@@ -128,10 +128,7 @@ export async function scenarioRoutes(
         },
       },
     },
-    async (
-      request: FastifyRequest<{ Body: GenerateScenariosInput }>,
-      reply: FastifyReply,
-    ) => {
+    async (request: FastifyRequest<{ Body: GenerateScenariosInput }>, reply: FastifyReply) => {
       const {
         domains = ['analytical', 'planning'],
         tiers = ['simple', 'moderate'],
@@ -187,9 +184,7 @@ export async function scenarioRoutes(
         const scenarios = await generator.generateScenarios();
         const generationTime = Date.now() - startTime;
 
-        fastify.log.info(
-          `Generated ${scenarios.length} scenarios in ${generationTime}ms`,
-        );
+        fastify.log.info(`Generated ${scenarios.length} scenarios in ${generationTime}ms`);
 
         // Store scenarios to database
         const experimentId = scenarios[0]?.experimentId || crypto.randomUUID();
@@ -207,8 +202,12 @@ export async function scenarioRoutes(
           taskDescription: scenario.taskDescription,
           businessContext: scenario.businessContext,
           successCriteria: JSON.parse(JSON.stringify(scenario.successCriteria)),
-          expectedCalculations: JSON.parse(JSON.stringify(scenario.controlExpectations.expectedCalculations)),
-          expectedInsights: JSON.parse(JSON.stringify(scenario.controlExpectations.expectedInsights)),
+          expectedCalculations: JSON.parse(
+            JSON.stringify(scenario.controlExpectations.expectedCalculations),
+          ),
+          expectedInsights: JSON.parse(
+            JSON.stringify(scenario.controlExpectations.expectedInsights),
+          ),
           scenarioRequirements: JSON.parse(JSON.stringify(scenario.requirements)),
           dataElements: JSON.parse(JSON.stringify(scenario.domainSpecificData)),
           completed: false,
@@ -330,8 +329,7 @@ export async function scenarioRoutes(
       },
     },
     async (request, _reply) => {
-      const { limit = 50, offset = 0, domain, tier, experimentId, completed } =
-        request.query;
+      const { limit = 50, offset = 0, domain, tier, experimentId, completed } = request.query;
 
       const where: Record<string, unknown> = {};
       if (domain) where.domain = domain;
@@ -447,34 +445,31 @@ export async function scenarioRoutes(
       },
     },
     async () => {
-      const [total, completed, byDomain, byTier, recentExperiments] =
-        await Promise.all([
-          prisma.mAACExperimentScenario.count(),
-          prisma.mAACExperimentScenario.count({ where: { completed: true } }),
-          prisma.mAACExperimentScenario.groupBy({
-            by: ['domain'],
-            _count: true,
-          }),
-          prisma.mAACExperimentScenario.groupBy({
-            by: ['tier'],
-            _count: true,
-          }),
-          prisma.$queryRaw`
+      const [total, completed, byDomain, byTier, recentExperiments] = await Promise.all([
+        prisma.mAACExperimentScenario.count(),
+        prisma.mAACExperimentScenario.count({ where: { completed: true } }),
+        prisma.mAACExperimentScenario.groupBy({
+          by: ['domain'],
+          _count: true,
+        }),
+        prisma.mAACExperimentScenario.groupBy({
+          by: ['tier'],
+          _count: true,
+        }),
+        prisma.$queryRaw`
             SELECT experiment_id, COUNT(*) as count, MIN(created_at) as created_at
             FROM maac_experiment_scenarios
             GROUP BY experiment_id
             ORDER BY MIN(created_at) DESC
             LIMIT 5
           ` as Promise<Array<{ experiment_id: string; count: bigint; created_at: Date }>>,
-        ]);
+      ]);
 
       return {
         total,
         completed,
         pending: total - completed,
-        byDomain: Object.fromEntries(
-          byDomain.map((d) => [d.domain, d._count]),
-        ),
+        byDomain: Object.fromEntries(byDomain.map((d) => [d.domain, d._count])),
         byTier: Object.fromEntries(byTier.map((t) => [t.tier, t._count])),
         recentExperiments: recentExperiments.map((e) => ({
           experimentId: e.experiment_id,
