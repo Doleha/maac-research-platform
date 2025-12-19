@@ -117,30 +117,43 @@ ${context.responseText}`;
       confidence = calculateConfidence(componentScores);
     } else {
       // Create synthetic component scores from the LLM's dimension score
+      const syntheticReasoning = (raw.reasoning as string) || 'Aggregated assessment';
       componentScores = {
         q1: {
           score: llmDimensionScore,
-          reasoning: (raw.reasoning as string) || 'Aggregated assessment',
+          calculation: 'Synthetic from dimension_score',
+          evidence: 'N/A - synthetic component',
+          reasoning: syntheticReasoning,
         },
         q2: {
           score: llmDimensionScore,
-          reasoning: (raw.reasoning as string) || 'Aggregated assessment',
+          calculation: 'Synthetic from dimension_score',
+          evidence: 'N/A - synthetic component',
+          reasoning: syntheticReasoning,
         },
         q3: {
           score: llmDimensionScore,
-          reasoning: (raw.reasoning as string) || 'Aggregated assessment',
+          calculation: 'Synthetic from dimension_score',
+          evidence: 'N/A - synthetic component',
+          reasoning: syntheticReasoning,
         },
         q4: {
           score: llmDimensionScore,
-          reasoning: (raw.reasoning as string) || 'Aggregated assessment',
+          calculation: 'Synthetic from dimension_score',
+          evidence: 'N/A - synthetic component',
+          reasoning: syntheticReasoning,
         },
         q5: {
           score: llmDimensionScore,
-          reasoning: (raw.reasoning as string) || 'Aggregated assessment',
+          calculation: 'Synthetic from dimension_score',
+          evidence: 'N/A - synthetic component',
+          reasoning: syntheticReasoning,
         },
         q6: {
           score: llmDimensionScore,
-          reasoning: (raw.reasoning as string) || 'Aggregated assessment',
+          calculation: 'Synthetic from dimension_score',
+          evidence: 'N/A - synthetic component',
+          reasoning: syntheticReasoning,
         },
       };
       dimensionScore = llmDimensionScore;
