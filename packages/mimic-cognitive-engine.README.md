@@ -7,11 +7,13 @@ MIMIC (Modular Intelligence for Memory-Integrated Cognition) is a cognitive arch
 ## For Authorized Users
 
 If you have access to the MIMIC source code, place it in:
+
 ```
 packages/mimic-cognitive-engine/
 ```
 
 The package should export:
+
 - `MIMICOrchestrator` - Main orchestrator implementing `CognitiveSystem` interface
 - `MIMIC_SYSTEM_PROMPT` - System prompt for testing
 - Individual engines for advanced usage
