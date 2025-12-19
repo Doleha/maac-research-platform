@@ -33,38 +33,53 @@ import {
  * Create a mock LLM provider that returns predictable scores for testing
  */
 function createMockLLMProvider(scoreOverrides: Record<string, number> = {}): LLMProvider {
+  // MAAC uses 0-5 scale for dimension scores
+  // Formula rounds to nearest integer, so use integer scores for validation
   const defaultScores: Record<string, number> = {
-    cognitive_load: 7.8,
-    tool_execution: 8.2,
-    content_quality: 7.5,
-    memory_integration: 6.9,
-    complexity_handling: 7.1,
-    hallucination_control: 8.5,
-    knowledge_transfer: 7.3,
-    processing_efficiency: 7.6,
-    construct_validity: 7.4,
+    cognitive_load: 4,
+    tool_execution: 4,
+    content_quality: 4,
+    memory_integration: 3,
+    complexity_handling: 4,
+    hallucination_control: 4,
+    knowledge_transfer: 4,
+    processing_efficiency: 4,
+    construct_validity: 4,
     ...scoreOverrides,
   };
 
   return {
-    invoke: vi.fn().mockImplementation(async (prompt: string) => {
-      // Parse which dimension is being assessed from prompt
+    name: 'mock-llm',
+    model: 'mock-model',
+    invoke: vi.fn().mockImplementation(async ({ messages }: { messages: Array<{ role: string; content: string }> }) => {
+      // Parse which dimension is being assessed from the system prompt
+      const systemPrompt = messages.find((m: { role: string; content: string }) => m.role === 'system')?.content || '';
       const dimension = Object.keys(defaultScores).find((d) =>
-        prompt.toLowerCase().includes(d.replace('_', ' ')),
-      );
+        systemPrompt.toLowerCase().includes(d.replace(/_/g, ' ')),
+      ) || 'cognitive_load';
 
-      const score = dimension ? defaultScores[dimension] : 7.5;
+      const dimensionScore = defaultScores[dimension] || 3.75;
+      
+      // Component scores should average to dimension score exactly
+      // MAAC uses 0-5 scale for component and dimension scores
+      // Don't round - use the exact score so the average equals dimension_score
+      const componentScore = dimensionScore;
 
+      // Return format matching what the assessor expects
       return {
         content: JSON.stringify({
-          score,
-          confidence: 0.85,
-          reasoning: `Mock assessment for ${dimension || 'unknown'} dimension`,
-          components: {
-            component1: { score: score * 0.9, weight: 0.5 },
-            component2: { score: score * 1.1, weight: 0.5 },
+          dimension_score: dimensionScore,
+          component_scores: {
+            q1: { score: componentScore, calculation: 'Q1', evidence: 'evidence1', reasoning: 'reasoning1' },
+            q2: { score: componentScore, calculation: 'Q2', evidence: 'evidence2', reasoning: 'reasoning2' },
+            q3: { score: componentScore, calculation: 'Q3', evidence: 'evidence3', reasoning: 'reasoning3' },
+            q4: { score: componentScore, calculation: 'Q4', evidence: 'evidence4', reasoning: 'reasoning4' },
+            q5: { score: componentScore, calculation: 'Q5', evidence: 'evidence5', reasoning: 'reasoning5' },
+            q6: { score: componentScore, calculation: 'Q6', evidence: 'evidence6', reasoning: 'reasoning6' },
           },
-          indicators: ['indicator1', 'indicator2'],
+          formula: '(Q1 + Q2 + Q3 + Q4 + Q5 + Q6) / 6',
+          confidence: 0.85,
+          reasoning: `Mock assessment for ${dimension} dimension`,
         }),
       };
     }),
@@ -134,9 +149,7 @@ This implementation includes proper type hints and handles edge cases.`,
   memoryStoreEnabled: true,
 
   // Success criteria
-  successCriteria: [
-    { id: 'sc-1', description: 'Implements binary search correctly', weight: 1.0 },
-  ],
+  successCriteria: [{ id: 'sc-1', description: 'Implements binary search correctly', weight: 1.0 }],
   expectedCalculations: ['binary search algorithm'],
   expectedInsights: ['time complexity', 'edge cases'],
   scenarioRequirements: ['type hints', 'error handling'],
@@ -148,19 +161,21 @@ This implementation includes proper type hints and handles edge cases.`,
 
 /**
  * Expected n8n output scores (from actual n8n trial execution)
+ * MAAC uses 0-5 scale for all dimension scores
+ * Formula rounds component averages to nearest integer
  */
 const n8nExpectedScores = {
-  cognitive_load: 7.8,
-  tool_execution: 8.2,
-  content_quality: 7.5,
-  memory_integration: 6.9,
-  complexity_handling: 7.1,
-  hallucination_control: 8.5,
-  knowledge_transfer: 7.3,
-  processing_efficiency: 7.6,
-  construct_validity: 7.4,
-  // Weighted overall from n8n: sum(score * weight) / sum(weights)
-  overall_score: 7.59, // (7.8*0.12 + 8.2*0.11 + 7.5*0.11 + 6.9*0.11 + 7.1*0.11 + 8.5*0.12 + 7.3*0.11 + 7.6*0.11 + 7.4*0.10)
+  cognitive_load: 4,
+  tool_execution: 4,
+  content_quality: 4,
+  memory_integration: 3,
+  complexity_handling: 4,
+  hallucination_control: 4,
+  knowledge_transfer: 4,
+  processing_efficiency: 4,
+  construct_validity: 4,
+  // Weighted overall from n8n: simple average for equal weights
+  overall_score: 3.89, // (4+4+4+3+4+4+4+4+4)/9 = 35/9
 };
 
 // ==================== DIMENSION ASSESSOR TESTS ====================
@@ -177,7 +192,7 @@ describe('MAAC Dimension Assessors', () => {
       const assessor = new CognitiveLoadAssessor(mockLLM);
       const result = await assessor.assess(sampleContext);
 
-      expect(result.score).toBeCloseTo(n8nExpectedScores.cognitive_load, 1);
+      expect(result.dimensionScore).toBeCloseTo(n8nExpectedScores.cognitive_load, 1);
       expect(result.dimension).toBe(MAACDimension.COGNITIVE_LOAD);
       expect(result.confidence).toBeGreaterThan(0);
       expect(result.confidence).toBeLessThanOrEqual(1);
@@ -210,8 +225,8 @@ describe('MAAC Dimension Assessors', () => {
       const assessor = new CognitiveLoadAssessor(mockLLM);
       const result = await assessor.assess(emptyContext);
 
-      expect(result.score).toBeGreaterThanOrEqual(0);
-      expect(result.score).toBeLessThanOrEqual(10);
+      expect(result.dimensionScore).toBeGreaterThanOrEqual(0);
+      expect(result.dimensionScore).toBeLessThanOrEqual(5);
     });
   });
 
@@ -220,7 +235,7 @@ describe('MAAC Dimension Assessors', () => {
       const assessor = new ToolExecutionAssessor(mockLLM);
       const result = await assessor.assess(sampleContext);
 
-      expect(result.score).toBeCloseTo(n8nExpectedScores.tool_execution, 1);
+      expect(result.dimensionScore).toBeCloseTo(n8nExpectedScores.tool_execution, 1);
       expect(result.dimension).toBe(MAACDimension.TOOL_EXECUTION);
     });
   });
@@ -230,7 +245,7 @@ describe('MAAC Dimension Assessors', () => {
       const assessor = new ContentQualityAssessor(mockLLM);
       const result = await assessor.assess(sampleContext);
 
-      expect(result.score).toBeCloseTo(n8nExpectedScores.content_quality, 1);
+      expect(result.dimensionScore).toBeCloseTo(n8nExpectedScores.content_quality, 1);
       expect(result.dimension).toBe(MAACDimension.CONTENT_QUALITY);
     });
   });
@@ -240,7 +255,7 @@ describe('MAAC Dimension Assessors', () => {
       const assessor = new MemoryIntegrationAssessor(mockLLM);
       const result = await assessor.assess(sampleContext);
 
-      expect(result.score).toBeCloseTo(n8nExpectedScores.memory_integration, 1);
+      expect(result.dimensionScore).toBeCloseTo(n8nExpectedScores.memory_integration, 1);
       expect(result.dimension).toBe(MAACDimension.MEMORY_INTEGRATION);
     });
   });
@@ -250,7 +265,7 @@ describe('MAAC Dimension Assessors', () => {
       const assessor = new ComplexityHandlingAssessor(mockLLM);
       const result = await assessor.assess(sampleContext);
 
-      expect(result.score).toBeCloseTo(n8nExpectedScores.complexity_handling, 1);
+      expect(result.dimensionScore).toBeCloseTo(n8nExpectedScores.complexity_handling, 1);
       expect(result.dimension).toBe(MAACDimension.COMPLEXITY_HANDLING);
     });
   });
@@ -260,7 +275,7 @@ describe('MAAC Dimension Assessors', () => {
       const assessor = new HallucinationControlAssessor(mockLLM);
       const result = await assessor.assess(sampleContext);
 
-      expect(result.score).toBeCloseTo(n8nExpectedScores.hallucination_control, 1);
+      expect(result.dimensionScore).toBeCloseTo(n8nExpectedScores.hallucination_control, 1);
       expect(result.dimension).toBe(MAACDimension.HALLUCINATION_CONTROL);
     });
   });
@@ -270,7 +285,7 @@ describe('MAAC Dimension Assessors', () => {
       const assessor = new KnowledgeTransferAssessor(mockLLM);
       const result = await assessor.assess(sampleContext);
 
-      expect(result.score).toBeCloseTo(n8nExpectedScores.knowledge_transfer, 1);
+      expect(result.dimensionScore).toBeCloseTo(n8nExpectedScores.knowledge_transfer, 1);
       expect(result.dimension).toBe(MAACDimension.KNOWLEDGE_TRANSFER);
     });
   });
@@ -280,7 +295,7 @@ describe('MAAC Dimension Assessors', () => {
       const assessor = new ProcessingEfficiencyAssessor(mockLLM);
       const result = await assessor.assess(sampleContext);
 
-      expect(result.score).toBeCloseTo(n8nExpectedScores.processing_efficiency, 1);
+      expect(result.dimensionScore).toBeCloseTo(n8nExpectedScores.processing_efficiency, 1);
       expect(result.dimension).toBe(MAACDimension.PROCESSING_EFFICIENCY);
     });
   });
@@ -290,7 +305,7 @@ describe('MAAC Dimension Assessors', () => {
       const assessor = new ConstructValidityAssessor(mockLLM);
       const result = await assessor.assess(sampleContext);
 
-      expect(result.score).toBeCloseTo(n8nExpectedScores.construct_validity, 1);
+      expect(result.dimensionScore).toBeCloseTo(n8nExpectedScores.construct_validity, 1);
       expect(result.dimension).toBe(MAACDimension.CONSTRUCT_VALIDITY);
     });
   });
@@ -311,7 +326,7 @@ describe('MAACFramework Integration', () => {
 
     expect(result.dimensions.size).toBe(9);
     expect(result.overallScore).toBeGreaterThan(0);
-    expect(result.overallScore).toBeLessThanOrEqual(10);
+    expect(result.overallScore).toBeLessThanOrEqual(5);
     expect(result.confidence).toBeGreaterThan(0);
     expect(result.confidence).toBeLessThanOrEqual(1);
   });
@@ -370,13 +385,13 @@ describe('MAAC Score Range Validation', () => {
     mockLLM = createMockLLMProvider();
   });
 
-  it('all dimension scores are within 0-10 range', async () => {
+  it('all dimension scores are within 0-5 range', async () => {
     const assessors = createAllAssessors(mockLLM);
 
     for (const [dimension, assessor] of assessors) {
       const result = await assessor.assess(sampleContext);
-      expect(result.score).toBeGreaterThanOrEqual(0);
-      expect(result.score).toBeLessThanOrEqual(10);
+      expect(result.dimensionScore).toBeGreaterThanOrEqual(0);
+      expect(result.dimensionScore).toBeLessThanOrEqual(5);
     }
   });
 
@@ -396,27 +411,28 @@ describe('MAAC Score Range Validation', () => {
 describe('N8N Formula Parity', () => {
   it('replicates n8n cognitive load formula', () => {
     // n8n formula: (Q1 + Q2 + Q3 + Q4 + Q5 + Q6) / 6
-    // Each question is scored 0-10, average gives dimension score
-    const questionScores = [8.0, 7.5, 7.8, 8.0, 7.6, 8.0];
-    const n8nExpected = 7.82;
+    // MAAC uses 0-5 scale for each question score, result is rounded to integer
+    const questionScores = [4, 4, 4, 4, 4, 4];
+    const n8nExpected = 4;
 
-    const calculated = questionScores.reduce((a, b) => a + b, 0) / questionScores.length;
+    const calculated = Math.round(questionScores.reduce((a, b) => a + b, 0) / questionScores.length);
 
-    expect(calculated).toBeCloseTo(n8nExpected, 1);
+    expect(calculated).toBe(n8nExpected);
   });
 
   it('replicates n8n overall score aggregation', () => {
     // n8n formula for overall score: weighted average
+    // MAAC uses 0-5 scale for all dimension scores
     const dimensionScores = [
-      { score: 7.8, weight: 0.12 },  // cognitive load
-      { score: 8.2, weight: 0.11 },  // tool execution
-      { score: 7.5, weight: 0.11 },  // content quality
-      { score: 6.9, weight: 0.11 },  // memory integration
-      { score: 7.1, weight: 0.11 },  // complexity handling
-      { score: 8.5, weight: 0.12 },  // hallucination control
-      { score: 7.3, weight: 0.11 },  // knowledge transfer
-      { score: 7.6, weight: 0.11 },  // processing efficiency
-      { score: 7.4, weight: 0.10 },  // construct validity
+      { score: 4, weight: 0.12 }, // cognitive load
+      { score: 4, weight: 0.11 }, // tool execution
+      { score: 4, weight: 0.11 }, // content quality
+      { score: 3, weight: 0.11 }, // memory integration
+      { score: 4, weight: 0.11 }, // complexity handling
+      { score: 4, weight: 0.12 }, // hallucination control
+      { score: 4, weight: 0.11 }, // knowledge transfer
+      { score: 4, weight: 0.11 }, // processing efficiency
+      { score: 4, weight: 0.10 }, // construct validity
     ];
 
     const totalWeight = dimensionScores.reduce((sum, d) => sum + d.weight, 0);
@@ -428,7 +444,7 @@ describe('N8N Formula Parity', () => {
 
   it('validates weight normalization', () => {
     // Weights should sum to 1.0 (or close to it)
-    const weights = [0.12, 0.11, 0.11, 0.11, 0.11, 0.12, 0.11, 0.11, 0.10];
+    const weights = [0.12, 0.11, 0.11, 0.11, 0.11, 0.12, 0.11, 0.11, 0.1];
     const totalWeight = weights.reduce((a, b) => a + b, 0);
 
     expect(totalWeight).toBeCloseTo(1.0, 2);
@@ -436,13 +452,14 @@ describe('N8N Formula Parity', () => {
 
   it('handles equal weights correctly', () => {
     // If all weights are equal, result should be simple average
-    const scores = [7.0, 8.0, 9.0];
+    // MAAC uses 0-5 scale
+    const scores = [3.5, 4.0, 4.5];
     const equalWeight = 1 / scores.length;
 
     const weightedCalc = scores.reduce((sum, s) => sum + s * equalWeight, 0);
     const simpleAverage = scores.reduce((a, b) => a + b, 0) / scores.length;
 
     expect(weightedCalc).toBeCloseTo(simpleAverage, 5);
-    expect(simpleAverage).toBeCloseTo(8.0, 5);
+    expect(simpleAverage).toBeCloseTo(4.0, 5);
   });
 });
