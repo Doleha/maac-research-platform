@@ -496,6 +496,239 @@ export async function scenarioRoutes(
   );
 
   // ==========================================================================
+  // GENERATE SCENARIOS WITH LLM + STREAMING PROGRESS (SSE)
+  // ==========================================================================
+
+  /**
+   * POST /scenarios/generate-llm-stream
+   * Generate scenarios using DeepSeek LLM with Server-Sent Events for real-time progress
+   *
+   * Returns an SSE stream with progress updates as each scenario is generated.
+   * Use this for UI feedback with progress bars.
+   */
+  fastify.post<{ Body: GenerateLLMScenariosInput }>(
+    '/scenarios/generate-llm-stream',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          properties: {
+            domains: {
+              type: 'array',
+              items: {
+                type: 'string',
+                enum: ['analytical', 'planning', 'communication', 'problem_solving'],
+              },
+              default: ['analytical'],
+            },
+            tiers: {
+              type: 'array',
+              items: { type: 'string', enum: ['simple', 'moderate', 'complex'] },
+              default: ['simple'],
+            },
+            repetitions: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 50,
+              default: 1,
+            },
+            model: {
+              type: 'string',
+              enum: ['deepseek_v3', 'sonnet_37', 'gpt_4o', 'llama_maverick'],
+              default: 'deepseek_v3',
+            },
+            configId: {
+              type: 'string',
+              pattern: '^[01]{12}$',
+              default: '111111111111',
+            },
+          },
+        },
+      },
+    },
+    async (request: FastifyRequest<{ Body: GenerateLLMScenariosInput }>, reply: FastifyReply) => {
+      const {
+        domains = ['analytical'],
+        tiers = ['simple'],
+        repetitions = 1,
+        model = 'deepseek_v3',
+        configId = '111111111111',
+      } = request.body;
+
+      // Get DeepSeek API key from environment
+      const deepseekApiKey = process.env.DEEPSEEK_API_KEY;
+      if (!deepseekApiKey) {
+        return reply.code(500).send({
+          error: 'DEEPSEEK_API_KEY not configured',
+          message: 'LLM-based scenario generation requires DeepSeek API key',
+        });
+      }
+
+      const totalScenarios = domains.length * tiers.length * repetitions;
+      fastify.log.info(`[SSE] LLM Generating ${totalScenarios} scenarios with streaming progress`);
+
+      // Set SSE headers
+      reply.raw.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+        'X-Accel-Buffering': 'no', // Disable nginx buffering
+      });
+
+      // Helper to send SSE event
+      const sendEvent = (event: string, data: unknown) => {
+        reply.raw.write(`event: ${event}\n`);
+        reply.raw.write(`data: ${JSON.stringify(data)}\n\n`);
+      };
+
+      // Store generated scenarios for final database insert
+      const generatedScenarios: GeneratedLLMScenario[] = [];
+
+      try {
+        // Create LLM scenario generator
+        const generatorConfig: LLMScenarioGeneratorConfig = {
+          deepseekApiKey,
+          domains,
+          tiers,
+          models: [model],
+          configId,
+          maxRetries: 3,
+          rateLimitDelayMs: 1500,
+        };
+
+        const generator = createLLMScenarioGenerator(generatorConfig);
+        const startTime = Date.now();
+
+        // Generate scenarios with progress callback
+        const scenarios = await generator.generateScenarios({
+          domains,
+          tiers,
+          repetitions,
+          model,
+          onProgress: (progress: ScenarioGenerationProgress) => {
+            // Send progress event
+            sendEvent('progress', {
+              type: progress.type,
+              current: progress.current,
+              total: progress.total,
+              percentage: progress.percentage,
+              domain: progress.domain,
+              tier: progress.tier,
+              repetition: progress.repetition,
+              scenarioId: progress.scenarioId,
+              taskTitle: progress.taskTitle,
+              message: progress.message,
+              error: progress.error,
+              elapsedMs: progress.elapsedMs,
+              estimatedRemainingMs: progress.estimatedRemainingMs,
+            });
+
+            // Track scenarios for database insert
+            if (progress.type === 'scenario_complete' && progress.scenario) {
+              generatedScenarios.push(progress.scenario);
+            }
+          },
+        });
+
+        const totalGenerationTime = Date.now() - startTime;
+
+        // Send storing event
+        sendEvent('progress', {
+          type: 'storing',
+          current: scenarios.length,
+          total: scenarios.length,
+          percentage: 100,
+          message: `Storing ${scenarios.length} scenarios to database...`,
+        });
+
+        // Store scenarios to database
+        const experimentId = scenarios[0]?.metadata?.experiment_id || crypto.randomUUID();
+
+        const scenarioRecords = scenarios.map((scenario) => ({
+          experimentId: scenario.metadata.experiment_id,
+          scenarioId: scenario.scenarioId,
+          domain: scenario.metadata.business_domain,
+          tier: scenario.complexity_level,
+          repetition: scenario.scenario_number,
+          configId: scenario.configId,
+          modelId: scenario.modelId,
+          taskTitle: scenario.task_title,
+          taskDescription: scenario.task_description,
+          businessContext: scenario.business_context,
+          successCriteria: JSON.parse(JSON.stringify(scenario.success_criteria)),
+          expectedCalculations: JSON.parse(
+            JSON.stringify(scenario.control_expectations.expected_calculations),
+          ),
+          expectedInsights: JSON.parse(
+            JSON.stringify(scenario.control_expectations.expected_insights),
+          ),
+          scenarioRequirements: JSON.parse(JSON.stringify(scenario.requirements)),
+          dataElements: JSON.parse(JSON.stringify(scenario.domain_specific_data)),
+          completed: false,
+        }));
+
+        // Insert in batches
+        const batchSize = 50;
+        for (let i = 0; i < scenarioRecords.length; i += batchSize) {
+          const batch = scenarioRecords.slice(i, i + batchSize);
+          await prisma.mAACExperimentScenario.createMany({
+            data: batch,
+            skipDuplicates: true,
+          });
+
+          // Send storage progress
+          sendEvent('progress', {
+            type: 'storing',
+            current: Math.min(i + batchSize, scenarioRecords.length),
+            total: scenarioRecords.length,
+            percentage: Math.round(((i + batchSize) / scenarioRecords.length) * 100),
+            message: `Stored ${Math.min(i + batchSize, scenarioRecords.length)}/${scenarioRecords.length} scenarios...`,
+          });
+        }
+
+        // Send final complete event
+        sendEvent('complete', {
+          message: `Successfully generated and stored ${scenarios.length} scenarios`,
+          experimentId,
+          count: scenarios.length,
+          generationMethod: 'deepseek-llm-streaming',
+          totalGenerationTimeMs: totalGenerationTime,
+          avgTimePerScenarioMs: Math.round(totalGenerationTime / scenarios.length),
+          scenarios: scenarios.map((s) => ({
+            scenarioId: s.scenarioId,
+            domain: s.metadata.business_domain,
+            tier: s.complexity_level,
+            task_title: s.task_title,
+          })),
+          configuration: {
+            domains,
+            tiers,
+            repetitions,
+            model,
+            configId,
+          },
+        });
+
+        // End the stream
+        reply.raw.end();
+      } catch (error) {
+        fastify.log.error(error);
+
+        // Send error event
+        sendEvent('error', {
+          error: 'LLM scenario generation failed',
+          message: error instanceof Error ? error.message : 'Unknown error',
+          hint: 'Check DeepSeek API key and rate limits',
+          scenariosGenerated: generatedScenarios.length,
+        });
+
+        reply.raw.end();
+      }
+    },
+  );
+
+  // ==========================================================================
   // LIST SCENARIOS
   // ==========================================================================
 
