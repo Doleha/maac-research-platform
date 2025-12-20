@@ -56,8 +56,8 @@ export function QueueMonitor({
   const fetchQueueData = async () => {
     try {
       const url = experimentId
-        ? `http://localhost:3001/api/queue?experimentId=${experimentId}`
-        : 'http://localhost:3001/api/queue';
+        ? `http://localhost:3000/api/queue?experimentId=${experimentId}`
+        : 'http://localhost:3000/api/queue';
 
       const response = await fetch(url);
       if (!response.ok) {

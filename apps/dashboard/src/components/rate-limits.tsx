@@ -25,7 +25,7 @@ export function RateLimitControls() {
 
   const fetchLimits = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/settings/rate-limits');
+      const response = await fetch('http://localhost:3000/api/settings/rate-limits');
       if (response.ok) {
         const data = await response.json();
         setLimits(data.limits || limits);
@@ -41,7 +41,7 @@ export function RateLimitControls() {
     setSuccess(false);
 
     try {
-      const response = await fetch('http://localhost:3001/api/settings/rate-limits', {
+      const response = await fetch('http://localhost:3000/api/settings/rate-limits', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ limits }),

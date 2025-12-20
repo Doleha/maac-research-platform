@@ -39,7 +39,7 @@ export function BillingCredits() {
 
   const fetchBalance = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/billing/credits');
+      const response = await fetch('http://localhost:3000/api/billing/credits');
       if (response.ok) {
         const data = await response.json();
         setBalance(data.balance);
@@ -53,7 +53,7 @@ export function BillingCredits() {
 
   const fetchTransactions = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/billing/transactions?limit=10');
+      const response = await fetch('http://localhost:3000/api/billing/transactions?limit=10');
       if (response.ok) {
         const data = await response.json();
         setTransactions(data.transactions || []);
@@ -70,7 +70,7 @@ export function BillingCredits() {
 
     try {
       // Create Stripe checkout session
-      const response = await fetch('http://localhost:3001/api/billing/create-checkout', {
+      const response = await fetch('http://localhost:3000/api/billing/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

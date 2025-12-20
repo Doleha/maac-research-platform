@@ -55,7 +55,7 @@ export default function ExperimentDetailPage({ params }: { params: { id: string 
 
   const fetchExperiment = async () => {
     try {
-      const response = await fetch(`http://localhost:3001/api/experiments/${params.id}/status`);
+      const response = await fetch(`http://localhost:3000/api/experiments/${params.id}/status`);
       if (!response.ok) {
         throw new Error('Failed to fetch experiment');
       }
@@ -77,7 +77,7 @@ export default function ExperimentDetailPage({ params }: { params: { id: string 
           ? `/api/experiments/${params.id}/start`
           : `/api/experiments/${params.id}/${action}`;
 
-      const response = await fetch(`http://localhost:3001${endpoint}`, {
+      const response = await fetch(`http://localhost:3000${endpoint}`, {
         method: 'POST',
       });
 

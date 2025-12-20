@@ -58,7 +58,7 @@ export default function ExperimentsPage() {
     const fetchExperiments = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:3001/api/experiments');
+        const response = await fetch('http://localhost:3000/api/experiments');
         if (!response.ok) throw new Error('Failed to fetch experiments');
         const data = await response.json();
         setExperiments(data.experiments || []);

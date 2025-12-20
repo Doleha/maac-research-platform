@@ -27,7 +27,7 @@ export function DatabaseSettings() {
 
   const fetchConnections = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/settings/databases');
+      const response = await fetch('http://localhost:3000/api/settings/databases');
       if (response.ok) {
         const data = await response.json();
         setConnections(data.connections || connections);
@@ -40,7 +40,7 @@ export function DatabaseSettings() {
   const testConnection = async (name: string) => {
     setTesting(name);
     try {
-      const response = await fetch('http://localhost:3001/api/settings/test-database', {
+      const response = await fetch('http://localhost:3000/api/settings/test-database', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ database: name.toLowerCase() }),
@@ -80,7 +80,7 @@ export function DatabaseSettings() {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:3001/api/settings/databases', {
+      const response = await fetch('http://localhost:3000/api/settings/databases', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ connections }),

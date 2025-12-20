@@ -45,7 +45,7 @@ export default function SettingsPage() {
 
   const fetchCredentials = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/settings/credentials');
+      const response = await fetch('http://localhost:3000/api/settings/credentials');
       if (response.ok) {
         const data = await response.json();
         // Don't show actual keys, just indicate if they exist
@@ -67,7 +67,7 @@ export default function SettingsPage() {
     setSaveSuccess(false);
 
     try {
-      const response = await fetch('http://localhost:3001/api/settings/credentials', {
+      const response = await fetch('http://localhost:3000/api/settings/credentials', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ credentials }),
@@ -94,7 +94,7 @@ export default function SettingsPage() {
     }));
 
     try {
-      const response = await fetch('http://localhost:3001/api/settings/test-connection', {
+      const response = await fetch('http://localhost:3000/api/settings/test-connection', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ provider }),

@@ -274,13 +274,13 @@ async function main() {
     return result;
   });
 
-  // Legacy experiment management
-  fastify.get('/experiments', async () => {
+  // Legacy experiment management (renamed to avoid conflict with new routes)
+  fastify.get('/legacy/experiments', async () => {
     const runs = orchestrator.listExperimentRuns();
     return { experiments: runs };
   });
 
-  fastify.get<{ Params: { id: string } }>('/experiments/:id', async (request) => {
+  fastify.get<{ Params: { id: string } }>('/legacy/experiments/:id', async (request) => {
     const { id } = request.params;
     const run = orchestrator.getExperimentRun(id);
     if (!run) {

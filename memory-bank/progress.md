@@ -1,28 +1,27 @@
-# Progress (Updated: 2025-12-19)
+# Progress (Updated: 2025-12-20)
 
 ## Done
 
-- Tier 2 statistical analysis implementation complete
-- Likert scale extraction and CSV export fixes
-- LLM-based scenario generator created with DeepSeek integration
-- Exact n8n Tier 1a system prompt with complete example scenario embedded
-- DeepSeek function calling for schema enforcement (equivalent to LangChain Structured Output Parser)
-- Domain pattern integration (5 patterns per domain, cycling via repetition % 5)
-- SSE streaming endpoint with real-time progress callbacks
-- Production-level validation with empty object checks for expected_calculations and success_thresholds
-- Database storage pipeline via Prisma with batch inserts (50 scenarios at a time)
-- Complete schema validation - all 14 top-level fields verified in test output
-- Memory bank patterns saved (TypeScript execution, env loading, LLM generation)
-- n8n workflow analysis documentation reviewed and implementation matched exactly
+- Dashboard development: 27/27 tasks (100%)
+- Backend-dashboard alignment analysis and documentation
+- INTEGRATION_TODO.md tracker created (Option 3 hybrid approach)
+- Database schema: Added Experiment, Scenario, Setting models to Prisma
+- Prisma migration applied: 20251220045935_add_experiment_scenario_settings_models
+- Backend API endpoints: POST /experiments stores metadata, GET /experiments list with filters
+- Backend API endpoints: GET /experiments/:id details, POST /experiments/:id/stop
+- Status tracking hooks: start/pause/resume/stop update database status
+- Scenario endpoints: Already existed (GET /scenarios, POST /scenarios/generate)
+- Dashboard form: Multi-select for domains, tiers, models
+- Dashboard form: Updated submission to format data for backend API
+- API client: Updated with listExperiments, getExperiment, stop/pause/resume
+- Experiments list page: Updated for new backend response structure
 
 ## Doing
 
-- Documenting Tier 1a implementation for future reference
+- Testing integration: Verify experiment creation flow works end-to-end
 
 ## Next
 
-- Generate 1,800 baseline scenarios (4 domains × 3 tiers × 150 repetitions) with config 111111111111
-- Create batch generation script or use existing /scenarios/generate-llm-stream endpoint
-- Monitor generation progress and validate database storage
-- Generate remaining 16,200 scenarios across 10 tool configurations (total 18,000)
-- Connect generated scenarios to MIMIC engine for Tier 1b processing
+- Run integration tests (Tasks 7.1-7.5)
+- Update documentation (Tasks 8.1-8.3)
+- Phase 2 advanced features (SSE, exports, monitoring)

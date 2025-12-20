@@ -31,7 +31,7 @@ export default function GenerateScenariosPage() {
   // Estimate cost
   const handleEstimate = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/scenarios/generate/estimate', {
+      const response = await fetch('http://localhost:3000/api/scenarios/generate/estimate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -55,7 +55,7 @@ export default function GenerateScenariosPage() {
     setStreamingText('');
 
     try {
-      const response = await fetch('http://localhost:3001/api/scenarios/generate', {
+      const response = await fetch('http://localhost:3000/api/scenarios/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

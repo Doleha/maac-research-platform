@@ -66,7 +66,7 @@ export function ExperimentForm() {
 
   useEffect(() => {
     // Fetch user's credit balance
-    fetch('http://localhost:3001/api/billing/credits')
+    fetch('http://localhost:3000/api/billing/credits')
       .then((res) => res.json())
       .then((data) => setUserCredits(data.balance?.remainingCredits || 0))
       .catch((err) => console.error('Failed to fetch credits', err));
@@ -195,7 +195,7 @@ export function ExperimentForm() {
       };
 
       // Connect to backend API
-      const response = await fetch('http://localhost:3001/api/experiments', {
+      const response = await fetch('http://localhost:3000/api/experiments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(apiPayload),
