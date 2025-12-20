@@ -31,7 +31,7 @@ export function MemoryServiceSettings() {
 
   const fetchSettings = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/settings/memory');
+      const response = await fetch('http://localhost:3001/api/settings/memory');
       if (response.ok) {
         const data = await response.json();
         setSettings(data.settings || settings);
@@ -46,7 +46,7 @@ export function MemoryServiceSettings() {
 
     setLoadingStats(true);
     try {
-      const response = await fetch('http://localhost:3000/api/memory/stats');
+      const response = await fetch('http://localhost:3001/api/memory/stats');
       if (response.ok) {
         const data = await response.json();
         setSettings((prev) => ({ ...prev, neo4jStats: data.stats }));
@@ -64,7 +64,7 @@ export function MemoryServiceSettings() {
     setSuccess(false);
 
     try {
-      const response = await fetch('http://localhost:3000/api/settings/memory', {
+      const response = await fetch('http://localhost:3001/api/settings/memory', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ settings }),

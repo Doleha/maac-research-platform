@@ -22,7 +22,7 @@ export function ExportButtons({ experimentId, experimentName }: ExportButtonsPro
 
     try {
       const response = await fetch(
-        `http://localhost:3000/api/experiments/${experimentId}/export?format=${format}`,
+        `http://localhost:3001/api/experiments/${experimentId}/export?format=${format}`,
       );
 
       if (!response.ok) {

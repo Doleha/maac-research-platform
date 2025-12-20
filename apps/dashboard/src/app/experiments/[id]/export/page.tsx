@@ -23,7 +23,7 @@ export default function ExperimentExportPage({ params }: { params: { id: string 
 
   const fetchExperiment = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api/experiments/${params.id}/status`);
+      const response = await fetch(`http://localhost:3001/api/experiments/${params.id}/status`);
       if (response.ok) {
         const data = await response.json();
         setExperiment(data);

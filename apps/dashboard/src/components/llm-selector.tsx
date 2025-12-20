@@ -45,7 +45,7 @@ export function LLMSelector({ value, onChange, errors = {} }: LLMSelectorProps) 
     setModelError(null);
 
     try {
-      const url = `http://localhost:3000/api/llm/models?provider=${provider}${forceRefresh ? '&refresh=true' : ''}`;
+      const url = `http://localhost:3001/api/llm/models?provider=${provider}${forceRefresh ? '&refresh=true' : ''}`;
       const response = await fetch(url);
 
       if (!response.ok) {

@@ -47,7 +47,7 @@ export function LiveProgress({ experimentId, totalTrials: _totalTrials, onComple
   useEffect(() => {
     // Connect to SSE endpoint
     const eventSource = new EventSource(
-      `http://localhost:3000/api/experiments/${experimentId}/progress`,
+      `http://localhost:3001/api/experiments/${experimentId}/progress`,
     );
 
     eventSource.onopen = () => {

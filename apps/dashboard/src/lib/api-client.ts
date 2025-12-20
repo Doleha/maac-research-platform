@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export interface ExperimentListFilters {
   status?: string;
@@ -35,7 +35,7 @@ export const apiClient = {
     if (filters.sortOrder) params.set('sortOrder', filters.sortOrder);
     if (filters.limit) params.set('limit', String(filters.limit));
     if (filters.offset) params.set('offset', String(filters.offset));
-    
+
     const res = await fetch(`${API_BASE_URL}/api/experiments?${params}`);
     return res.json();
   },

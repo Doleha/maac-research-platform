@@ -76,7 +76,7 @@ export default function ExperimentComparePage() {
 
   const fetchExperiments = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/experiments');
+      const response = await fetch('http://localhost:3001/api/experiments');
       if (!response.ok) {
         throw new Error('Failed to fetch experiments');
       }
@@ -106,7 +106,7 @@ export default function ExperimentComparePage() {
     setComparing(true);
     try {
       const ids = Array.from(selectedIds);
-      const response = await fetch('http://localhost:3000/api/experiments/compare', {
+      const response = await fetch('http://localhost:3001/api/experiments/compare', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ experimentIds: ids }),

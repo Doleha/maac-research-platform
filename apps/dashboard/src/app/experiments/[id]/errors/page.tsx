@@ -45,7 +45,7 @@ export default function ExperimentErrorsPage({ params }: { params: { id: string 
 
   const fetchFailedTrials = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api/experiments/${params.id}/errors`);
+      const response = await fetch(`http://localhost:3001/api/experiments/${params.id}/errors`);
       if (!response.ok) {
         throw new Error('Failed to fetch error logs');
       }
@@ -91,7 +91,7 @@ export default function ExperimentErrorsPage({ params }: { params: { id: string 
     setRetryingTrials((prev) => new Set(prev).add(trialId));
     try {
       const response = await fetch(
-        `http://localhost:3000/api/experiments/${params.id}/trials/${trialId}/retry`,
+        `http://localhost:3001/api/experiments/${params.id}/trials/${trialId}/retry`,
         { method: 'POST' },
       );
 
@@ -123,7 +123,7 @@ export default function ExperimentErrorsPage({ params }: { params: { id: string 
     setBatchRetrying(true);
     try {
       const response = await fetch(
-        `http://localhost:3000/api/experiments/${params.id}/trials/retry-batch`,
+        `http://localhost:3001/api/experiments/${params.id}/trials/retry-batch`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

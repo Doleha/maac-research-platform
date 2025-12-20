@@ -57,8 +57,8 @@ export function WorkerStatus({
   const fetchWorkerData = async () => {
     try {
       const [workersRes, logsRes] = await Promise.all([
-        fetch('http://localhost:3000/api/workers'),
-        fetch(`http://localhost:3000/api/workers/logs?limit=${maxLogs}`),
+        fetch('http://localhost:3001/api/workers'),
+        fetch(`http://localhost:3001/api/workers/logs?limit=${maxLogs}`),
       ]);
 
       if (!workersRes.ok || !logsRes.ok) {

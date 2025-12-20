@@ -53,9 +53,9 @@ export default function SystemHealthPage() {
   const fetchSystemHealth = async () => {
     try {
       const [containersRes, servicesRes, metricsRes] = await Promise.all([
-        fetch('http://localhost:3000/api/system/containers'),
-        fetch('http://localhost:3000/api/system/services'),
-        fetch('http://localhost:3000/api/system/metrics'),
+        fetch('http://localhost:3001/api/system/containers'),
+        fetch('http://localhost:3001/api/system/services'),
+        fetch('http://localhost:3001/api/system/metrics'),
       ]);
 
       if (!containersRes.ok || !servicesRes.ok || !metricsRes.ok) {
@@ -99,7 +99,7 @@ export default function SystemHealthPage() {
   ) => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/system/containers/${containerName}/${action}`,
+        `http://localhost:3001/api/system/containers/${containerName}/${action}`,
         { method: 'POST' },
       );
 

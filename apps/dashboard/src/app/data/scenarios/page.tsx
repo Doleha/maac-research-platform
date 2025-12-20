@@ -40,7 +40,7 @@ export default function ScenariosPage() {
     const fetchScenarios = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:3000/api/scenarios');
+        const response = await fetch('http://localhost:3001/api/scenarios');
         if (!response.ok) throw new Error('Failed to fetch scenarios');
         const data = await response.json();
         setScenarios(data.scenarios || []);
@@ -97,7 +97,7 @@ export default function ScenariosPage() {
     try {
       setSaving(true);
       const response = await fetch(
-        `http://localhost:3000/api/scenarios/${editForm.scenario_id}`,
+        `http://localhost:3001/api/scenarios/${editForm.scenario_id}`,
         {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -124,7 +124,7 @@ export default function ScenariosPage() {
     if (!confirm('Are you sure you want to delete this scenario?')) return;
 
     try {
-      const response = await fetch(`http://localhost:3000/api/scenarios/${scenarioId}`, {
+      const response = await fetch(`http://localhost:3001/api/scenarios/${scenarioId}`, {
         method: 'DELETE',
       });
 
