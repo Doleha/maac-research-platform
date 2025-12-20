@@ -43,28 +43,28 @@ export function DatabaseSettings() {
       const response = await fetch('http://localhost:3001/api/settings/test-database', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ database: name.toLowerCase() })
+        body: JSON.stringify({ database: name.toLowerCase() }),
       });
 
       const data = await response.json();
-      
-      setConnections(prev =>
-        prev.map(conn =>
+
+      setConnections((prev) =>
+        prev.map((conn) =>
           conn.name === name
             ? {
                 ...conn,
                 status: data.success ? 'connected' : 'disconnected',
                 version: data.version,
-                metadata: data.metadata
+                metadata: data.metadata,
               }
-            : conn
-        )
+            : conn,
+        ),
       );
     } catch (err) {
-      setConnections(prev =>
-        prev.map(conn =>
-          conn.name === name ? { ...conn, status: 'disconnected' as const } : conn
-        )
+      setConnections((prev) =>
+        prev.map((conn) =>
+          conn.name === name ? { ...conn, status: 'disconnected' as const } : conn,
+        ),
       );
     } finally {
       setTesting(null);
@@ -72,9 +72,7 @@ export function DatabaseSettings() {
   };
 
   const updateURL = (name: string, url: string) => {
-    setConnections(prev =>
-      prev.map(conn => (conn.name === name ? { ...conn, url } : conn))
-    );
+    setConnections((prev) => prev.map((conn) => (conn.name === name ? { ...conn, url } : conn)));
   };
 
   const handleSave = async () => {
@@ -85,7 +83,7 @@ export function DatabaseSettings() {
       const response = await fetch('http://localhost:3001/api/settings/databases', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ connections })
+        body: JSON.stringify({ connections }),
       });
 
       if (!response.ok) {
@@ -107,7 +105,9 @@ export function DatabaseSettings() {
     const badge = badges[status];
     const Icon = badge.icon;
     return (
-      <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${badge.bg} ${badge.text}`}>
+      <span
+        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${badge.bg} ${badge.text}`}
+      >
         <Icon className="h-3 w-3" />
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
@@ -128,20 +128,14 @@ export function DatabaseSettings() {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Database Connections</h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Configure database connection strings
-          </p>
+          <p className="mt-1 text-sm text-gray-500">Configure database connection strings</p>
         </div>
         <button
           onClick={handleSave}
           disabled={saving}
           className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {saving ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Database className="h-4 w-4" />
-          )}
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Database className="h-4 w-4" />}
           Save Settings
         </button>
       </div>

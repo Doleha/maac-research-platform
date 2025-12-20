@@ -77,41 +77,46 @@ export async function billingRoutes(fastify: FastifyInstance) {
     }
 
     try {
-      // In production, integrate with Stripe:
-      // const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-      // const session = await stripe.checkout.sessions.create({
-      //   payment_method_types: ['card'],
-      //   line_items: [{
-      //     price_data: {
-      //       currency: 'usd',
-      //       product_data: {
-      //         name: `${credits} MAAC Credits`,
-      //       },
-      //       unit_amount: amount * 100, // Stripe uses cents
-      //     },
-      //     quantity: 1,
-      //   }],
-      //   mode: 'payment',
-      //   success_url: `${process.env.FRONTEND_URL}/settings?payment=success`,
-      //   cancel_url: `${process.env.FRONTEND_URL}/settings?payment=cancelled`,
-      //   metadata: {
-      //     credits: credits.toString(),
-      //     userId: req.user.id, // From authentication middleware
-      //   },
-      // });
-      //
-      // return { sessionId: session.id, checkoutUrl: session.url };
+      // Initialize Stripe
+      const stripe = (await import('stripe')).default;
+      const stripeClient = new stripe(process.env.STRIPE_SECRET_KEY!, {
+        apiVersion: '2024-12-18.acacia',
+      });
 
-      // Mock response for development
+      // Create checkout session
+      const session = await stripeClient.checkout.sessions.create({
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price_data: {
+              currency: 'usd',
+              product_data: {
+                name: `${credits.toLocaleString()} MAAC Credits`,
+                description: `Research platform credits for LLM usage (1 credit = $0.001)`,
+              },
+              unit_amount: amount * 100, // Stripe uses cents
+            },
+            quantity: 1,
+          },
+        ],
+        mode: 'payment',
+        success_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/settings?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/settings?payment=cancelled`,
+        metadata: {
+          credits: credits.toString(),
+          // userId: request.user?.id, // Add when auth is implemented
+        },
+      });
+
       return {
-        sessionId: 'cs_test_' + Math.random().toString(36).substring(7),
-        checkoutUrl: 'https://checkout.stripe.com/mock-session',
-        message: 'Stripe integration pending - this is a mock response',
+        sessionId: session.id,
+        checkoutUrl: session.url,
       };
     } catch (error) {
       console.error('Checkout creation failed:', error);
       return reply.status(500).send({
         error: 'Failed to create checkout session',
+        details: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   });
@@ -121,21 +126,77 @@ export async function billingRoutes(fastify: FastifyInstance) {
    *
    * Stripe webhook handler for payment events
    */
-  fastify.post('/webhook', async () => {
-    // In production, verify Stripe webhook signature:
-    // const sig = req.headers['stripe-signature'];
-    // const event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-    //
-    // Handle different event types:
-    // switch (event.type) {
-    //   case 'checkout.session.completed':
-    //     const session = event.data.object;
-    //     // Add credits to user account
-    //     await addCreditsToUser(session.metadata.userId, session.metadata.credits);
-    //     break;
-    // }
+  fastify.post('/webhook', async (request, reply) => {
+    const sig = request.headers['stripe-signature'];
 
-    return { received: true };
+    if (!sig) {
+      return reply.status(400).send({ error: 'Missing stripe-signature header' });
+    }
+
+    try {
+      const stripe = (await import('stripe')).default;
+      const stripeClient = new stripe(process.env.STRIPE_SECRET_KEY!, {
+        apiVersion: '2024-12-18.acacia',
+      });
+
+      // Verify webhook signature
+      const event = stripeClient.webhooks.constructEvent(
+        request.body as string | Buffer,
+        sig,
+        process.env.STRIPE_WEBHOOK_SECRET!
+      );
+
+      // Handle different event types
+      switch (event.type) {
+        case 'checkout.session.completed': {
+          const session = event.data.object as any;
+          const credits = parseInt(session.metadata?.credits || '0', 10);
+          const userId = session.metadata?.userId;
+
+          if (userId && credits > 0) {
+            // Add credits to user account
+            const { PrismaClient } = await import('@prisma/client');
+            const prisma = new PrismaClient();
+
+            await prisma.user.update({
+              where: { id: userId },
+              data: {
+                credits: {
+                  increment: credits,
+                },
+              },
+            });
+
+            // Record transaction
+            await prisma.creditTransaction.create({
+              data: {
+                userId,
+                type: 'PURCHASE',
+                amount: credits,
+                description: `Purchased ${credits.toLocaleString()} credits`,
+                stripePaymentIntentId: session.payment_intent as string,
+                stripeCheckoutSessionId: session.id,
+              },
+            });
+
+            await prisma.$disconnect();
+          }
+          break;
+        }
+        case 'payment_intent.payment_failed': {
+          console.error('Payment failed:', event.data.object);
+          break;
+        }
+      }
+
+      return { received: true };
+    } catch (error) {
+      console.error('Webhook error:', error);
+      return reply.status(400).send({
+        error: 'Webhook signature verification failed',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
   });
 
   /**
@@ -175,7 +236,7 @@ export async function billingRoutes(fastify: FastifyInstance) {
    * Estimate cost for an experiment based on tier, provider, model, and trial count
    */
   fastify.post<{
-    Body: { 
+    Body: {
       tier: string;
       trials: number;
       model: string;
@@ -196,7 +257,7 @@ export async function billingRoutes(fastify: FastifyInstance) {
         provider,
         model,
         estimatedInputTokens,
-        estimatedOutputTokens
+        estimatedOutputTokens,
       );
 
       const baseFee = getTierBaseFee(tier);
@@ -234,4 +295,3 @@ export async function billingRoutes(fastify: FastifyInstance) {
     }
   });
 }
-

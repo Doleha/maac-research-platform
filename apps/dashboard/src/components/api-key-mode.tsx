@@ -58,7 +58,7 @@ export function APIKeyModeSelector({
         <label className="block text-sm font-medium text-gray-700 mb-3">
           API Key Mode <span className="text-red-500">*</span>
         </label>
-        
+
         <div className="grid gap-3 sm:grid-cols-2">
           {/* Own API Keys */}
           <button
@@ -88,7 +88,12 @@ export function APIKeyModeSelector({
                 <div className="absolute right-3 top-3">
                   <div className="h-5 w-5 rounded-full bg-blue-600 flex items-center justify-center">
                     <svg className="h-3 w-3 text-white" fill="currentColor" viewBox="0 0 12 12">
-                      <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" strokeWidth="2" fill="none" />
+                      <path
+                        d="M10 3L4.5 8.5L2 6"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        fill="none"
+                      />
                     </svg>
                   </div>
                 </div>
@@ -112,7 +117,9 @@ export function APIKeyModeSelector({
                   mode === 'system' ? 'bg-blue-100' : 'bg-gray-100'
                 }`}
               >
-                <Zap className={`h-5 w-5 ${mode === 'system' ? 'text-blue-600' : 'text-gray-600'}`} />
+                <Zap
+                  className={`h-5 w-5 ${mode === 'system' ? 'text-blue-600' : 'text-gray-600'}`}
+                />
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-gray-900">Use System Credits</h3>
@@ -127,7 +134,12 @@ export function APIKeyModeSelector({
                 <div className="absolute right-3 top-3">
                   <div className="h-5 w-5 rounded-full bg-blue-600 flex items-center justify-center">
                     <svg className="h-3 w-3 text-white" fill="currentColor" viewBox="0 0 12 12">
-                      <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" strokeWidth="2" fill="none" />
+                      <path
+                        d="M10 3L4.5 8.5L2 6"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        fill="none"
+                      />
                     </svg>
                   </div>
                 </div>
@@ -155,7 +167,8 @@ export function APIKeyModeSelector({
             {providers.map(({ key, label, placeholder }) => (
               <div key={key}>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                  {label} API Key {selectedProvider === key && <span className="text-red-500">*</span>}
+                  {label} API Key{' '}
+                  {selectedProvider === key && <span className="text-red-500">*</span>}
                 </label>
                 <div className="relative">
                   <input
@@ -187,7 +200,8 @@ export function APIKeyModeSelector({
             <div className="text-sm text-yellow-800">
               <p className="font-medium">Low Credit Balance</p>
               <p className="mt-1">
-                Your credit balance is low. Consider purchasing more credits in Settings to avoid experiment interruptions.
+                Your credit balance is low. Consider purchasing more credits in Settings to avoid
+                experiment interruptions.
               </p>
               <a
                 href="/settings#billing"

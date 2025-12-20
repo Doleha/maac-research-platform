@@ -40,7 +40,11 @@ export const CHARGE_MATRIX: Record<string, Record<string, ChargeRate>> = {
     'anthropic/claude-3.5-sonnet': { inputTokenCost: 3, outputTokenCost: 15, baseFee: 0.5 },
     'openai/gpt-4-turbo': { inputTokenCost: 10, outputTokenCost: 30, baseFee: 0.5 },
     'google/gemini-pro-1.5': { inputTokenCost: 1.25, outputTokenCost: 5, baseFee: 0.5 },
-    'meta-llama/llama-3.1-405b-instruct': { inputTokenCost: 2.7, outputTokenCost: 2.7, baseFee: 0.5 },
+    'meta-llama/llama-3.1-405b-instruct': {
+      inputTokenCost: 2.7,
+      outputTokenCost: 2.7,
+      baseFee: 0.5,
+    },
   },
   grok: {
     'grok-2-1212': { inputTokenCost: 2, outputTokenCost: 10 }, // Estimated pricing
@@ -89,7 +93,7 @@ export function calculateCreditCost(
   provider: string,
   model: string,
   inputTokens: number,
-  outputTokens: number
+  outputTokens: number,
 ): number {
   const providerRates = CHARGE_MATRIX[provider.toLowerCase()];
   if (!providerRates) {
@@ -102,11 +106,8 @@ export function calculateCreditCost(
     const rates = Object.values(providerRates);
     const avgInputCost = rates.reduce((sum, r) => sum + r.inputTokenCost, 0) / rates.length;
     const avgOutputCost = rates.reduce((sum, r) => sum + r.outputTokenCost, 0) / rates.length;
-    
-    return (
-      (inputTokens / 1000) * avgInputCost +
-      (outputTokens / 1000) * avgOutputCost
-    );
+
+    return (inputTokens / 1000) * avgInputCost + (outputTokens / 1000) * avgOutputCost;
   }
 
   const cost =

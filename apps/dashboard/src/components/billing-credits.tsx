@@ -84,7 +84,7 @@ export function BillingCredits() {
       }
 
       const data = await response.json();
-      
+
       // Redirect to Stripe checkout
       if (data.checkoutUrl) {
         window.location.href = data.checkoutUrl;
@@ -105,9 +105,7 @@ export function BillingCredits() {
     return icons[type];
   };
 
-  const usagePercentage = balance
-    ? (balance.usedCredits / balance.totalCredits) * 100
-    : 0;
+  const usagePercentage = balance ? (balance.usedCredits / balance.totalCredits) * 100 : 0;
 
   return (
     <div className="space-y-6">
@@ -156,8 +154,8 @@ export function BillingCredits() {
                     usagePercentage > 80
                       ? 'bg-red-600'
                       : usagePercentage > 50
-                      ? 'bg-yellow-600'
-                      : 'bg-green-600'
+                        ? 'bg-yellow-600'
+                        : 'bg-green-600'
                   }`}
                   style={{ width: `${usagePercentage}%` }}
                 />
@@ -210,16 +208,14 @@ export function BillingCredits() {
                   )}
                 </div>
                 <p className="mt-2 text-xs text-gray-500">
-                  ${(pkg.price / (pkg.credits + pkg.bonus) * 1000).toFixed(2)} per 1k credits
+                  ${((pkg.price / (pkg.credits + pkg.bonus)) * 1000).toFixed(2)} per 1k credits
                 </p>
 
                 <button
                   onClick={() => handlePurchase(index)}
                   disabled={purchasing && selectedPackage === index}
                   className={`mt-4 w-full rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors ${
-                    pkg.popular
-                      ? 'bg-blue-600 hover:bg-blue-700'
-                      : 'bg-gray-600 hover:bg-gray-700'
+                    pkg.popular ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-600 hover:bg-gray-700'
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   {purchasing && selectedPackage === index ? (
@@ -242,8 +238,8 @@ export function BillingCredits() {
             <div className="text-sm text-blue-800">
               <p className="font-medium">Secure Payment via Stripe</p>
               <p className="mt-1">
-                Credits are purchased securely through Stripe. No credit card information is stored on our servers.
-                Credits can be used for any experiment using system API keys.
+                Credits are purchased securely through Stripe. No credit card information is stored
+                on our servers. Credits can be used for any experiment using system API keys.
               </p>
             </div>
           </div>

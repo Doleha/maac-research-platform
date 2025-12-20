@@ -253,7 +253,7 @@
     - `/api/billing/estimate` - Tier-aware cost estimation
     - `/api/billing/info` - Comprehensive billing info
   - **Charge Matrix System**: Token-based pricing for 7 providers × 30+ models
-  - **Usage Tracking Infrastructure**: 
+  - **Usage Tracking Infrastructure**:
     - Real-time token usage tracking with Prisma transactions
     - Automatic credit deduction on LLM calls
     - `trackLLMCall()` middleware wrapper for instrumentation
@@ -263,7 +263,7 @@
     - Tier 1b: 50 credit base fee + token costs
     - Tier 2: Token costs only (no base fee)
   - Fastify route registration
-  - Files: 
+  - Files:
     - `apps/api/src/routes/llm.ts`
     - `apps/api/src/routes/billing.ts`
     - `apps/api/src/lib/charge-matrix.ts` ⭐ NEW

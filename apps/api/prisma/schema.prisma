@@ -122,12 +122,20 @@ model MAACExperimentScenario {
   scenarioRequirements Json   @map("scenario_requirements")
   dataElements         Json?  @map("data_elements")
 
+  // Billing fields
+  userId           String? @map("user_id")
+  user             User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  apiKeyMode       String  @default("system") @map("api_key_mode") // "own" or "system"
+  creditsUsed      Int     @default(0) @map("credits_used") // Total credits consumed
+  estimatedCredits Int?    @map("estimated_credits") // Pre-run estimate
+
   // Status
   completed Boolean   @default(false)
   createdAt DateTime  @default(now()) @map("created_at")
 
   @@index([experimentId])
   @@index([scenarioId])
+  @@index([userId])
   @@index([domain, tier])
   @@index([configId])
   @@map("maac_experiment_scenarios")
@@ -262,8 +270,8 @@ model User {
   credits   Int      @default(0) // Credit balance (1 credit = $0.001 USD)
   
   // Relations
-  experiments        MAACExperiment[]
-  creditTransactions CreditTransaction[]
+  experimentScenarios MAACExperimentScenario[]
+  creditTransactions  CreditTransaction[]
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

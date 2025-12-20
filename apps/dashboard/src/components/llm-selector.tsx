@@ -28,12 +28,14 @@ const providers = [
 ];
 
 export function LLMSelector({ value, onChange, errors = {} }: LLMSelectorProps) {
-  const [availableModels, setAvailableModels] = useState<Array<{ value: string; label: string }>>([]);
+  const [availableModels, setAvailableModels] = useState<Array<{ value: string; label: string }>>(
+    [],
+  );
   const [loadingModels, setLoadingModels] = useState(false);
   const [modelError, setModelError] = useState<string | null>(null);
 
-  // Fetch models when provider changes or dropdown is opened
-  const fetchModels = async (provider: string) => {
+  // Fetch models from actual provider APIs
+  const fetchModels = async (provider: string, forceRefresh: boolean = false) => {
     if (!provider) {
       setAvailableModels([]);
       return;
@@ -43,8 +45,9 @@ export function LLMSelector({ value, onChange, errors = {} }: LLMSelectorProps) 
     setModelError(null);
 
     try {
-      const response = await fetch(`http://localhost:3001/api/llm/models?provider=${provider}`);
-      
+      const url = `http://localhost:3001/api/llm/models?provider=${provider}${forceRefresh ? '&refresh=true' : ''}`;
+      const response = await fetch(url);
+
       if (!response.ok) {
         throw new Error(`Failed to fetch models for ${provider}`);
       }
@@ -86,9 +89,9 @@ export function LLMSelector({ value, onChange, errors = {} }: LLMSelectorProps) 
   };
 
   const handleModelDropdownClick = () => {
-    // Refresh models when dropdown is opened
+    // Refresh models from provider APIs when dropdown is clicked
     if (value.provider && !loadingModels) {
-      fetchModels(value.provider);
+      fetchModels(value.provider, true); // Force refresh from provider
     }
   };
 
@@ -138,9 +141,7 @@ export function LLMSelector({ value, onChange, errors = {} }: LLMSelectorProps) 
                   : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
               } ${loadingModels ? 'cursor-wait opacity-60' : ''}`}
             >
-              <option value="">
-                {loadingModels ? 'Loading models...' : 'Select a model...'}
-              </option>
+              <option value="">{loadingModels ? 'Loading models...' : 'Select a model...'}</option>
               {availableModels.map((model) => (
                 <option key={model.value} value={model.value}>
                   {model.label}
@@ -166,9 +167,7 @@ export function LLMSelector({ value, onChange, errors = {} }: LLMSelectorProps) 
             </p>
           )}
           {!loadingModels && availableModels.length === 0 && !modelError && (
-            <p className="mt-1 text-sm text-yellow-600">
-              No models available. Click to refresh.
-            </p>
+            <p className="mt-1 text-sm text-yellow-600">No models available. Click to refresh.</p>
           )}
         </div>
       )}

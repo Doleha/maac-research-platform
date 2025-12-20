@@ -44,7 +44,7 @@ export function RateLimitControls() {
       const response = await fetch('http://localhost:3001/api/settings/rate-limits', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ limits })
+        body: JSON.stringify({ limits }),
       });
 
       if (!response.ok) {
@@ -61,7 +61,7 @@ export function RateLimitControls() {
   };
 
   const updateLimit = (key: keyof RateLimits, value: number) => {
-    setLimits(prev => ({ ...prev, [key]: value }));
+    setLimits((prev) => ({ ...prev, [key]: value }));
   };
 
   return (
@@ -69,9 +69,7 @@ export function RateLimitControls() {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Rate Limiting</h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Control concurrency and throughput limits
-          </p>
+          <p className="mt-1 text-sm text-gray-500">Control concurrency and throughput limits</p>
         </div>
         <button
           onClick={handleSave}
@@ -102,12 +100,8 @@ export function RateLimitControls() {
         {/* Max Workers */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-medium text-gray-700">
-              Maximum Concurrent Workers
-            </label>
-            <span className="text-sm font-semibold text-blue-600">
-              {limits.maxWorkers}
-            </span>
+            <label className="text-sm font-medium text-gray-700">Maximum Concurrent Workers</label>
+            <span className="text-sm font-semibold text-blue-600">{limits.maxWorkers}</span>
           </div>
           <input
             type="range"
@@ -122,19 +116,16 @@ export function RateLimitControls() {
             <span>20</span>
           </div>
           <p className="mt-2 text-xs text-gray-500">
-            Number of parallel trial executions. Higher values increase throughput but consume more resources.
+            Number of parallel trial executions. Higher values increase throughput but consume more
+            resources.
           </p>
         </div>
 
         {/* Jobs Per Minute */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-medium text-gray-700">
-              Jobs Per Minute
-            </label>
-            <span className="text-sm font-semibold text-blue-600">
-              {limits.jobsPerMinute}
-            </span>
+            <label className="text-sm font-medium text-gray-700">Jobs Per Minute</label>
+            <span className="text-sm font-semibold text-blue-600">{limits.jobsPerMinute}</span>
           </div>
           <input
             type="range"
@@ -150,16 +141,15 @@ export function RateLimitControls() {
             <span>300</span>
           </div>
           <p className="mt-2 text-xs text-gray-500">
-            Maximum number of jobs processed per minute by BullMQ. Controls overall experiment throughput.
+            Maximum number of jobs processed per minute by BullMQ. Controls overall experiment
+            throughput.
           </p>
         </div>
 
         {/* LLM Requests Per Minute */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-medium text-gray-700">
-              LLM Requests Per Minute
-            </label>
+            <label className="text-sm font-medium text-gray-700">LLM Requests Per Minute</label>
             <span className="text-sm font-semibold text-blue-600">
               {limits.llmRequestsPerMinute}
             </span>
@@ -178,7 +168,8 @@ export function RateLimitControls() {
             <span>1000</span>
           </div>
           <p className="mt-2 text-xs text-gray-500">
-            Maximum API requests to LLM providers per minute. Stay within provider rate limits to avoid throttling.
+            Maximum API requests to LLM providers per minute. Stay within provider rate limits to
+            avoid throttling.
           </p>
         </div>
       </div>
@@ -189,8 +180,8 @@ export function RateLimitControls() {
           <div className="text-sm text-yellow-800">
             <p className="font-medium">Important:</p>
             <p className="mt-1">
-              Changes to rate limits will take effect after the next worker restart. 
-              Adjust carefully to balance throughput with resource constraints and provider limits.
+              Changes to rate limits will take effect after the next worker restart. Adjust
+              carefully to balance throughput with resource constraints and provider limits.
             </p>
           </div>
         </div>

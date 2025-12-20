@@ -8,14 +8,14 @@ model User {
   email     String   @unique
   name      String?
   credits   Int      @default(0) // Credit balance in credits (1 credit = $0.001)
-  
+
   // Relations
   experiments        MAACExperiment[]
   creditTransactions CreditTransaction[]
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   @@index([email])
 }
 
@@ -23,20 +23,20 @@ model CreditTransaction {
   id          String   @id @default(cuid())
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   type        TransactionType // PURCHASE, USAGE, REFUND, ADJUSTMENT
   amount      Int             // Credits (positive for purchase/refund, negative for usage)
   description String
-  
+
   // JSON metadata for detailed tracking
   metadata    Json?   // { experimentId, tier, provider, model, inputTokens, outputTokens }
-  
+
   // Stripe payment info (for purchases)
   stripePaymentId     String?
   stripeCheckoutId    String?
-  
+
   createdAt   DateTime @default(now())
-  
+
   @@index([userId, createdAt])
   @@index([type])
 }
@@ -51,14 +51,14 @@ enum TransactionType {
 // Add to existing MAACExperiment model:
 model MAACExperiment {
   // ... existing fields ...
-  
+
   // Billing fields
   userId           String?
   user             User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
   apiKeyMode       String  @default("system") // "own" or "system"
   creditsUsed      Int     @default(0) // Total credits consumed
   estimatedCredits Int?    // Pre-run estimate
-  
+
   // ... rest of existing fields ...
 }
 ```

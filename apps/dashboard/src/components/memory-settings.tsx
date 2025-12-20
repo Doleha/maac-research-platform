@@ -43,13 +43,13 @@ export function MemoryServiceSettings() {
 
   const fetchGraphStats = async () => {
     if (!settings.enabled) return;
-    
+
     setLoadingStats(true);
     try {
       const response = await fetch('http://localhost:3001/api/memory/stats');
       if (response.ok) {
         const data = await response.json();
-        setSettings(prev => ({ ...prev, neo4jStats: data.stats }));
+        setSettings((prev) => ({ ...prev, neo4jStats: data.stats }));
       }
     } catch (err) {
       console.error('Failed to fetch graph stats', err);
@@ -67,7 +67,7 @@ export function MemoryServiceSettings() {
       const response = await fetch('http://localhost:3001/api/settings/memory', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ settings })
+        body: JSON.stringify({ settings }),
       });
 
       if (!response.ok) {
@@ -133,7 +133,7 @@ export function MemoryServiceSettings() {
             <input
               type="checkbox"
               checked={settings.enabled}
-              onChange={(e) => setSettings(prev => ({ ...prev, enabled: e.target.checked }))}
+              onChange={(e) => setSettings((prev) => ({ ...prev, enabled: e.target.checked }))}
               className="peer sr-only"
             />
             <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300"></div>
@@ -148,7 +148,7 @@ export function MemoryServiceSettings() {
           <input
             type="text"
             value={settings.webhookUrl}
-            onChange={(e) => setSettings(prev => ({ ...prev, webhookUrl: e.target.value }))}
+            onChange={(e) => setSettings((prev) => ({ ...prev, webhookUrl: e.target.value }))}
             placeholder="https://your-graphiti-instance.com/webhook"
             disabled={!settings.enabled}
             className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
@@ -157,13 +157,11 @@ export function MemoryServiceSettings() {
 
         {/* Group ID */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Group ID
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Group ID</label>
           <input
             type="text"
             value={settings.groupId}
-            onChange={(e) => setSettings(prev => ({ ...prev, groupId: e.target.value }))}
+            onChange={(e) => setSettings((prev) => ({ ...prev, groupId: e.target.value }))}
             placeholder="maac-research-group"
             disabled={!settings.enabled}
             className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
@@ -186,11 +184,7 @@ export function MemoryServiceSettings() {
                 disabled={loadingStats}
                 className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loadingStats ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  'Refresh'
-                )}
+                {loadingStats ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Refresh'}
               </button>
             </div>
 
@@ -225,9 +219,7 @@ export function MemoryServiceSettings() {
                 )}
               </div>
             ) : (
-              <p className="text-sm text-gray-500">
-                Click Refresh to load graph statistics
-              </p>
+              <p className="text-sm text-gray-500">Click Refresh to load graph statistics</p>
             )}
           </div>
         )}

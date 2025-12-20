@@ -56,9 +56,9 @@ export function ExperimentForm() {
   useEffect(() => {
     // Fetch user's credit balance
     fetch('http://localhost:3001/api/billing/credits')
-      .then(res => res.json())
-      .then(data => setUserCredits(data.balance?.remainingCredits || 0))
-      .catch(err => console.error('Failed to fetch credits', err));
+      .then((res) => res.json())
+      .then((data) => setUserCredits(data.balance?.remainingCredits || 0))
+      .catch((err) => console.error('Failed to fetch credits', err));
   }, []);
 
   const [formData, setFormData] = useState<FormData>({
@@ -184,12 +184,12 @@ export function ExperimentForm() {
   const handleChange = (field: string, value: string | number) => {
     setFormData((prev) => {
       const newData = { ...prev, [field]: value };
-      
+
       // Force system credits for Tier 1a and 1b
       if (field === 'tier' && (value === '1a' || value === '1b')) {
         newData.apiKeyMode = 'system';
       }
-      
+
       return newData;
     });
     // Clear error for this field
@@ -373,7 +373,9 @@ export function ExperimentForm() {
       {formData.tier === '2' && (
         <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-gray-900">API Key Mode</h2>
-          <p className="mt-1 text-sm text-gray-500">Choose how to authenticate with LLM providers</p>
+          <p className="mt-1 text-sm text-gray-500">
+            Choose how to authenticate with LLM providers
+          </p>
 
           <div className="mt-6">
             <APIKeyModeSelector
@@ -393,8 +395,18 @@ export function ExperimentForm() {
         <div className="rounded-lg border border-blue-200 bg-blue-50 p-6">
           <div className="flex items-start gap-3">
             <div className="rounded-lg bg-blue-100 p-2">
-              <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="h-5 w-5 text-blue-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
             </div>
             <div className="flex-1">
@@ -402,15 +414,16 @@ export function ExperimentForm() {
                 {formData.tier === '1a' ? 'Tier 1a: Paid Service' : 'Tier 1b: Paid Service'}
               </h3>
               <p className="mt-1 text-sm text-blue-800">
-                {formData.tier === '1a' 
+                {formData.tier === '1a'
                   ? 'Scenario generation requires system credits. Base fee: 10 credits per scenario + token usage.'
-                  : 'MIMIC Engine execution requires system credits. Base fee: 50 credits per experiment + token usage.'
-                }
+                  : 'MIMIC Engine execution requires system credits. Base fee: 50 credits per experiment + token usage.'}
               </p>
               <p className="mt-2 text-xs text-blue-700">
                 Your balance: {userCredits.toLocaleString()} credits
                 {userCredits < 100 && (
-                  <span className="ml-2 font-semibold">• Low balance - consider purchasing more credits</span>
+                  <span className="ml-2 font-semibold">
+                    • Low balance - consider purchasing more credits
+                  </span>
                 )}
               </p>
             </div>

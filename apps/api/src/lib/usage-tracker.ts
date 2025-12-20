@@ -7,8 +7,7 @@
 import { PrismaClient } from '@prisma/client';
 import { calculateCreditCost, getTierBaseFee } from './charge-matrix';
 
-// TODO: Uncomment when User and CreditTransaction models are added to Prisma schema
-// const prisma = new PrismaClient();
+const prisma = new PrismaClient();
 
 export interface UsageRecord {
   experimentId: string;
@@ -24,13 +23,14 @@ export interface UsageRecord {
 
 /**
  * Track LLM usage and deduct credits
- * 
+ *
  * TODO: Requires Prisma schema additions:
  * - User model with credits field
  * - CreditTransaction model for audit log
  */
 export async function trackUsageAndDeduct(record: UsageRecord): Promise<void> {
-  const { userId, creditsCharged, experimentId, tier, provider, model, inputTokens, outputTokens } = record;
+  const { userId, creditsCharged, experimentId, tier, provider, model, inputTokens, outputTokens } =
+    record;
 
   // TODO: Implement once User and CreditTransaction models are added to Prisma schema
   console.log('[Usage Tracker] Recording usage:', {
@@ -90,7 +90,7 @@ export async function estimateExperimentCost(
   provider: string,
   model: string,
   estimatedTrials: number,
-  avgTokensPerTrial: { input: number; output: number }
+  avgTokensPerTrial: { input: number; output: number },
 ): Promise<{
   totalCredits: number;
   breakdown: {
@@ -104,7 +104,7 @@ export async function estimateExperimentCost(
     provider,
     model,
     avgTokensPerTrial.input,
-    avgTokensPerTrial.output
+    avgTokensPerTrial.output,
   );
   const totalTokenCost = perTrialTokenCost * estimatedTrials;
   const totalCredits = baseFee + totalTokenCost;
@@ -121,19 +121,19 @@ export async function estimateExperimentCost(
 
 /**
  * Check if user has sufficient credits
- * 
+ *
  * TODO: Implement once User model is added to Prisma schema
  */
 export async function checkSufficientCredits(
   userId: string,
-  requiredCredits: number
+  requiredCredits: number,
 ): Promise<boolean> {
   // TODO: Implement once User model exists
   console.log('[Usage Tracker] Checking credits:', { userId, requiredCredits });
-  
+
   // Placeholder - always returns true for now
   return true;
-  
+
   /*
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -156,7 +156,7 @@ export async function trackLLMCall<T>(
   llmCall: () => Promise<{
     result: T;
     usage: { inputTokens: number; outputTokens: number };
-  }>
+  }>,
 ): Promise<T> {
   // Execute LLM call
   const { result, usage } = await llmCall();
@@ -166,7 +166,7 @@ export async function trackLLMCall<T>(
     provider,
     model,
     usage.inputTokens,
-    usage.outputTokens
+    usage.outputTokens,
   );
 
   // Track and deduct

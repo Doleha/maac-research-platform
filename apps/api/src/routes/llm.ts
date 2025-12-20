@@ -1,67 +1,25 @@
 /**
  * LLM Provider Routes
  *
- * Endpoints for fetching available LLM models from providers
+ * Dynamically fetches available LLM models from actual provider APIs
  */
 
 import type { FastifyInstance } from 'fastify';
-
-// Model mappings for each provider
-// These would ideally be fetched from the provider APIs dynamically
-const PROVIDER_MODELS: Record<string, Array<{ value: string; label: string }>> = {
-  openai: [
-    { value: 'gpt-4o', label: 'GPT-4o' },
-    { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
-    { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
-    { value: 'gpt-4', label: 'GPT-4' },
-    { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' },
-  ],
-  anthropic: [
-    { value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet' },
-    { value: 'claude-3-5-haiku-20241022', label: 'Claude 3.5 Haiku' },
-    { value: 'claude-3-opus-20240229', label: 'Claude 3 Opus' },
-    { value: 'claude-3-sonnet-20240229', label: 'Claude 3 Sonnet' },
-    { value: 'claude-3-haiku-20240307', label: 'Claude 3 Haiku' },
-  ],
-  deepseek: [
-    { value: 'deepseek-chat', label: 'DeepSeek Chat' },
-    { value: 'deepseek-coder', label: 'DeepSeek Coder' },
-  ],
-  openrouter: [
-    { value: 'anthropic/claude-3.5-sonnet', label: 'Claude 3.5 Sonnet (OpenRouter)' },
-    { value: 'openai/gpt-4-turbo', label: 'GPT-4 Turbo (OpenRouter)' },
-    { value: 'google/gemini-pro-1.5', label: 'Gemini Pro 1.5 (OpenRouter)' },
-    { value: 'meta-llama/llama-3.1-405b-instruct', label: 'Llama 3.1 405B (OpenRouter)' },
-  ],
-  grok: [
-    { value: 'grok-2-1212', label: 'Grok 2' },
-    { value: 'grok-2-vision-1212', label: 'Grok 2 Vision' },
-    { value: 'grok-beta', label: 'Grok Beta' },
-  ],
-  gemini: [
-    { value: 'gemini-2.0-flash-exp', label: 'Gemini 2.0 Flash' },
-    { value: 'gemini-exp-1206', label: 'Gemini Experimental' },
-    { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
-    { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
-  ],
-  llama: [
-    { value: 'meta-llama/Meta-Llama-3.1-405B-Instruct', label: 'Llama 3.1 405B Instruct' },
-    { value: 'meta-llama/Meta-Llama-3.1-70B-Instruct', label: 'Llama 3.1 70B Instruct' },
-    { value: 'meta-llama/Meta-Llama-3.1-8B-Instruct', label: 'Llama 3.1 8B Instruct' },
-    { value: 'meta-llama/Llama-3.2-90B-Vision-Instruct', label: 'Llama 3.2 90B Vision' },
-  ],
-};
+import { getModelsForProvider, getAllProviders, clearModelCache } from '../lib/model-fetcher.js';
 
 export async function llmRoutes(fastify: FastifyInstance) {
   /**
    * GET /api/llm/models
    *
    * Get available models for a specific provider
+   * Query params:
+   * - provider: The LLM provider (required)
+   * - refresh: Set to 'true' to bypass cache and fetch fresh data
    */
   fastify.get<{
-    Querystring: { provider?: string };
+    Querystring: { provider?: string; refresh?: string };
   }>('/models', async (request, reply) => {
-    const { provider } = request.query;
+    const { provider, refresh } = request.query;
 
     if (!provider) {
       return reply.status(400).send({
@@ -69,16 +27,27 @@ export async function llmRoutes(fastify: FastifyInstance) {
       });
     }
 
-    const models = PROVIDER_MODELS[provider.toLowerCase()];
+    try {
+      const forceRefresh = refresh === 'true';
+      const modelIds = await getModelsForProvider(provider.toLowerCase(), forceRefresh);
 
-    if (!models) {
+      // Convert to { value, label } format for frontend compatibility
+      const models = modelIds.map((id) => ({
+        value: id,
+        label: id,
+      }));
+
+      return {
+        models,
+        count: models.length,
+        cached: !forceRefresh,
+      };
+    } catch (error: any) {
       return reply.status(404).send({
-        error: `Unknown provider: ${provider}`,
-        availableProviders: Object.keys(PROVIDER_MODELS),
+        error: error.message,
+        availableProviders: getAllProviders(),
       });
     }
-
-    return { models };
   });
 
   /**
@@ -87,12 +56,40 @@ export async function llmRoutes(fastify: FastifyInstance) {
    * Get list of all available providers
    */
   fastify.get('/providers', async () => {
-    const providers = Object.keys(PROVIDER_MODELS).map((key) => ({
-      value: key,
-      label: key.charAt(0).toUpperCase() + key.slice(1),
+    const providerIds = getAllProviders();
+    
+    const providers = providerIds.map((id) => ({
+      value: id,
+      label: id.charAt(0).toUpperCase() + id.slice(1),
     }));
 
-    return { providers };
+    return {
+      providers,
+      total: providers.length,
+    };
+  });
+
+  /**
+   * POST /api/llm/refresh-cache
+   *
+   * Clear model cache for a provider or all providers
+   * Body: { provider?: string }
+   */
+  fastify.post<{
+    Body: { provider?: string };
+  }>('/refresh-cache', async (request) => {
+    const { provider } = request.body;
+
+    if (provider) {
+      clearModelCache(provider.toLowerCase());
+      return {
+        message: `Cache cleared for provider: ${provider}`,
+      };
+    } else {
+      clearModelCache();
+      return {
+        message: 'Cache cleared for all providers',
+      };
+    }
   });
 }
-
