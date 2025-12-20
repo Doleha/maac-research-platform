@@ -300,9 +300,9 @@ async function main() {
         api: { status: 'running', version: '0.1.0' },
         database: dbStatus,
         redis: { status: 'connected', host: config.redis.host, port: config.redis.port },
-        llm: { 
-          status: 'configured', 
-          provider: config.llm.provider, 
+        llm: {
+          status: 'configured',
+          provider: config.llm.provider,
           model: config.llm.model,
         },
         cognitiveSystem: {

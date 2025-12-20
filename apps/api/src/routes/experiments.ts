@@ -762,7 +762,7 @@ export async function experimentRoutes(
       reply.raw.writeHead(200, {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
+        Connection: 'keep-alive',
         'Access-Control-Allow-Origin': '*',
       });
 
@@ -779,9 +779,10 @@ export async function experimentRoutes(
         totalTrials: experiment.totalTrials,
         completedTrials: experiment.completedTrials,
         failedTrials: experiment.failedTrials,
-        progress: experiment.totalTrials > 0 
-          ? Math.round((experiment.completedTrials / experiment.totalTrials) * 100) 
-          : 0,
+        progress:
+          experiment.totalTrials > 0
+            ? Math.round((experiment.completedTrials / experiment.totalTrials) * 100)
+            : 0,
       });
 
       // Poll for updates every 2 seconds
@@ -821,10 +822,11 @@ export async function experimentRoutes(
             totalTrials: current.totalTrials,
             completedTrials: current.completedTrials,
             failedTrials: current.failedTrials,
-            progress: current.totalTrials > 0 
-              ? Math.round((current.completedTrials / current.totalTrials) * 100) 
-              : 0,
-            recentTrials: recentTrials.map(t => ({
+            progress:
+              current.totalTrials > 0
+                ? Math.round((current.completedTrials / current.totalTrials) * 100)
+                : 0,
+            recentTrials: recentTrials.map((t) => ({
               ...t,
               maacOverallScore: t.maacOverallScore ? Number(t.maacOverallScore) : null,
             })),
@@ -926,7 +928,7 @@ export async function experimentRoutes(
    * GET /experiments/:id/export
    * Export experiment results to JSON or CSV
    */
-  fastify.get<{ 
+  fastify.get<{
     Params: { id: string };
     Querystring: { format?: 'json' | 'csv' };
   }>(
@@ -948,10 +950,13 @@ export async function experimentRoutes(
         },
       },
     },
-    async (request: FastifyRequest<{ 
-      Params: { id: string };
-      Querystring: { format?: 'json' | 'csv' };
-    }>, reply: FastifyReply) => {
+    async (
+      request: FastifyRequest<{
+        Params: { id: string };
+        Querystring: { format?: 'json' | 'csv' };
+      }>,
+      reply: FastifyReply,
+    ) => {
       const { id } = request.params;
       const format = request.query.format || 'json';
 
@@ -973,36 +978,51 @@ export async function experimentRoutes(
         if (format === 'csv') {
           // Generate CSV
           const headers = [
-            'trialId', 'domain', 'tier', 'modelId', 'configId',
-            'maacOverallScore', 'maacCognitiveLoad', 'maacToolExecution',
-            'maacContentQuality', 'maacMemoryIntegration', 'maacComplexityHandling',
-            'maacHallucinationControl', 'maacKnowledgeTransfer', 'maacProcessingEfficiency',
-            'maacConstructValidity', 'processingTime', 'wordCount', 'createdAt'
+            'trialId',
+            'domain',
+            'tier',
+            'modelId',
+            'configId',
+            'maacOverallScore',
+            'maacCognitiveLoad',
+            'maacToolExecution',
+            'maacContentQuality',
+            'maacMemoryIntegration',
+            'maacComplexityHandling',
+            'maacHallucinationControl',
+            'maacKnowledgeTransfer',
+            'maacProcessingEfficiency',
+            'maacConstructValidity',
+            'processingTime',
+            'wordCount',
+            'createdAt',
           ];
-          
-          const rows = trials.map(t => [
-            t.trialId,
-            t.domain,
-            t.tier,
-            t.modelId,
-            t.configId,
-            t.maacOverallScore?.toString() || '',
-            t.maacCognitiveLoad?.toString() || '',
-            t.maacToolExecution?.toString() || '',
-            t.maacContentQuality?.toString() || '',
-            t.maacMemoryIntegration?.toString() || '',
-            t.maacComplexityHandling?.toString() || '',
-            t.maacHallucinationControl?.toString() || '',
-            t.maacKnowledgeTransfer?.toString() || '',
-            t.maacProcessingEfficiency?.toString() || '',
-            t.maacConstructValidity?.toString() || '',
-            t.processingTime.toString(),
-            t.wordCount.toString(),
-            t.createdAt.toISOString(),
-          ].join(','));
+
+          const rows = trials.map((t) =>
+            [
+              t.trialId,
+              t.domain,
+              t.tier,
+              t.modelId,
+              t.configId,
+              t.maacOverallScore?.toString() || '',
+              t.maacCognitiveLoad?.toString() || '',
+              t.maacToolExecution?.toString() || '',
+              t.maacContentQuality?.toString() || '',
+              t.maacMemoryIntegration?.toString() || '',
+              t.maacComplexityHandling?.toString() || '',
+              t.maacHallucinationControl?.toString() || '',
+              t.maacKnowledgeTransfer?.toString() || '',
+              t.maacProcessingEfficiency?.toString() || '',
+              t.maacConstructValidity?.toString() || '',
+              t.processingTime.toString(),
+              t.wordCount.toString(),
+              t.createdAt.toISOString(),
+            ].join(','),
+          );
 
           const csv = [headers.join(','), ...rows].join('\n');
-          
+
           reply.header('Content-Type', 'text/csv');
           reply.header('Content-Disposition', `attachment; filename="${id}-results.csv"`);
           return csv;
@@ -1025,7 +1045,7 @@ export async function experimentRoutes(
             startedAt: experiment.startedAt,
             completedAt: experiment.completedAt,
           },
-          trials: trials.map(t => ({
+          trials: trials.map((t) => ({
             trialId: t.trialId,
             domain: t.domain,
             tier: t.tier,
@@ -1037,10 +1057,16 @@ export async function experimentRoutes(
               toolExecution: t.maacToolExecution ? Number(t.maacToolExecution) : null,
               contentQuality: t.maacContentQuality ? Number(t.maacContentQuality) : null,
               memoryIntegration: t.maacMemoryIntegration ? Number(t.maacMemoryIntegration) : null,
-              complexityHandling: t.maacComplexityHandling ? Number(t.maacComplexityHandling) : null,
-              hallucinationControl: t.maacHallucinationControl ? Number(t.maacHallucinationControl) : null,
+              complexityHandling: t.maacComplexityHandling
+                ? Number(t.maacComplexityHandling)
+                : null,
+              hallucinationControl: t.maacHallucinationControl
+                ? Number(t.maacHallucinationControl)
+                : null,
               knowledgeTransfer: t.maacKnowledgeTransfer ? Number(t.maacKnowledgeTransfer) : null,
-              processingEfficiency: t.maacProcessingEfficiency ? Number(t.maacProcessingEfficiency) : null,
+              processingEfficiency: t.maacProcessingEfficiency
+                ? Number(t.maacProcessingEfficiency)
+                : null,
               constructValidity: t.maacConstructValidity ? Number(t.maacConstructValidity) : null,
             },
             processingTime: t.processingTime,
@@ -1049,12 +1075,15 @@ export async function experimentRoutes(
           })),
           summary: {
             totalTrials: trials.length,
-            avgOverallScore: trials.length > 0 
-              ? trials.reduce((sum, t) => sum + (Number(t.maacOverallScore) || 0), 0) / trials.length 
-              : null,
-            avgProcessingTime: trials.length > 0
-              ? trials.reduce((sum, t) => sum + t.processingTime, 0) / trials.length
-              : null,
+            avgOverallScore:
+              trials.length > 0
+                ? trials.reduce((sum, t) => sum + (Number(t.maacOverallScore) || 0), 0) /
+                  trials.length
+                : null,
+            avgProcessingTime:
+              trials.length > 0
+                ? trials.reduce((sum, t) => sum + t.processingTime, 0) / trials.length
+                : null,
           },
         };
 

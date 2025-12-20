@@ -1133,7 +1133,15 @@ export async function scenarioRoutes(
               type: 'array',
               items: {
                 type: 'object',
-                required: ['domain', 'tier', 'taskTitle', 'taskDescription', 'businessContext', 'successCriteria', 'expectedInsights'],
+                required: [
+                  'domain',
+                  'tier',
+                  'taskTitle',
+                  'taskDescription',
+                  'businessContext',
+                  'successCriteria',
+                  'expectedInsights',
+                ],
                 properties: {
                   domain: { type: 'string' },
                   tier: { type: 'string' },
@@ -1265,7 +1273,7 @@ export async function scenarioRoutes(
       } = request.body;
 
       const scenarioCount = domains.length * tiers.length * repetitions * models.length;
-      
+
       // Estimate tokens per scenario (based on typical MAAC scenario size)
       const inputTokensPerScenario = 2000; // Prompt tokens
       const outputTokensPerScenario = 1500; // Response tokens
@@ -1275,10 +1283,10 @@ export async function scenarioRoutes(
 
       // Cost estimates per 1M tokens (as of 2025)
       const costs: Record<string, { input: number; output: number }> = {
-        gpt_4o: { input: 2.50, output: 10.00 },
-        sonnet_37: { input: 3.00, output: 15.00 },
-        deepseek_v3: { input: 0.27, output: 1.10 },
-        llama_maverick: { input: 0.20, output: 0.20 },
+        gpt_4o: { input: 2.5, output: 10.0 },
+        sonnet_37: { input: 3.0, output: 15.0 },
+        deepseek_v3: { input: 0.27, output: 1.1 },
+        llama_maverick: { input: 0.2, output: 0.2 },
       };
 
       const estimatedCostByModel: Record<string, number> = {};
