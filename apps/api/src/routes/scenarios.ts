@@ -947,6 +947,360 @@ export async function scenarioRoutes(
       };
     },
   );
+
+  // ==========================================================================
+  // UPDATE SCENARIO
+  // ==========================================================================
+
+  /**
+   * PUT /scenarios/:id
+   * Update an existing scenario
+   */
+  fastify.put<{
+    Params: { id: string };
+    Body: {
+      taskTitle?: string;
+      taskDescription?: string;
+      businessContext?: string;
+      successCriteria?: object;
+      expectedInsights?: object;
+    };
+  }>(
+    '/scenarios/:id',
+    {
+      schema: {
+        params: {
+          type: 'object',
+          required: ['id'],
+          properties: {
+            id: { type: 'string' },
+          },
+        },
+        body: {
+          type: 'object',
+          properties: {
+            taskTitle: { type: 'string' },
+            taskDescription: { type: 'string' },
+            businessContext: { type: 'string' },
+            successCriteria: { type: 'object' },
+            expectedInsights: { type: 'object' },
+          },
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              message: { type: 'string' },
+              scenario: { type: 'object' },
+            },
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      const { id } = request.params;
+      const updates = request.body;
+
+      try {
+        const scenario = await prisma.mAACExperimentScenario.findFirst({
+          where: { scenarioId: id },
+        });
+
+        if (!scenario) {
+          return reply.code(404).send({ error: 'Scenario not found' });
+        }
+
+        const updated = await prisma.mAACExperimentScenario.update({
+          where: { id: scenario.id },
+          data: {
+            taskTitle: updates.taskTitle ?? scenario.taskTitle,
+            taskDescription: updates.taskDescription ?? scenario.taskDescription,
+            businessContext: updates.businessContext ?? scenario.businessContext,
+            successCriteria: (updates.successCriteria ?? scenario.successCriteria) as object,
+            expectedInsights: (updates.expectedInsights ?? scenario.expectedInsights) as object,
+          },
+        });
+
+        return {
+          message: 'Scenario updated',
+          scenario: {
+            id: updated.id,
+            scenarioId: updated.scenarioId,
+            domain: updated.domain,
+            tier: updated.tier,
+            taskTitle: updated.taskTitle,
+          },
+        };
+      } catch (error) {
+        fastify.log.error(error);
+        return reply.code(500).send({ error: 'Failed to update scenario' });
+      }
+    },
+  );
+
+  // ==========================================================================
+  // DELETE SCENARIO
+  // ==========================================================================
+
+  /**
+   * DELETE /scenarios/:id
+   * Delete a scenario
+   */
+  fastify.delete<{ Params: { id: string } }>(
+    '/scenarios/:id',
+    {
+      schema: {
+        params: {
+          type: 'object',
+          required: ['id'],
+          properties: {
+            id: { type: 'string' },
+          },
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              message: { type: 'string' },
+              scenarioId: { type: 'string' },
+            },
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      const { id } = request.params;
+
+      try {
+        const scenario = await prisma.mAACExperimentScenario.findFirst({
+          where: { scenarioId: id },
+        });
+
+        if (!scenario) {
+          return reply.code(404).send({ error: 'Scenario not found' });
+        }
+
+        await prisma.mAACExperimentScenario.delete({
+          where: { id: scenario.id },
+        });
+
+        return {
+          message: 'Scenario deleted',
+          scenarioId: id,
+        };
+      } catch (error) {
+        fastify.log.error(error);
+        return reply.code(500).send({ error: 'Failed to delete scenario' });
+      }
+    },
+  );
+
+  // ==========================================================================
+  // BULK IMPORT SCENARIOS
+  // ==========================================================================
+
+  /**
+   * POST /scenarios/bulk-import
+   * Import multiple scenarios from JSON array
+   */
+  fastify.post<{
+    Body: {
+      scenarios: Array<{
+        domain: string;
+        tier: string;
+        taskTitle: string;
+        taskDescription: string;
+        businessContext: string;
+        successCriteria: object;
+        expectedCalculations?: object;
+        expectedInsights: object;
+        scenarioRequirements?: object;
+        dataElements?: object;
+      }>;
+      experimentId?: string;
+      configId?: string;
+      modelId?: string;
+    };
+  }>(
+    '/scenarios/bulk-import',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          required: ['scenarios'],
+          properties: {
+            scenarios: {
+              type: 'array',
+              items: {
+                type: 'object',
+                required: ['domain', 'tier', 'taskTitle', 'taskDescription', 'businessContext', 'successCriteria', 'expectedInsights'],
+                properties: {
+                  domain: { type: 'string' },
+                  tier: { type: 'string' },
+                  taskTitle: { type: 'string' },
+                  taskDescription: { type: 'string' },
+                  businessContext: { type: 'string' },
+                  successCriteria: { type: 'object' },
+                  expectedCalculations: { type: 'object' },
+                  expectedInsights: { type: 'object' },
+                  scenarioRequirements: { type: 'object' },
+                  dataElements: { type: 'object' },
+                },
+              },
+              minItems: 1,
+            },
+            experimentId: { type: 'string' },
+            configId: { type: 'string' },
+            modelId: { type: 'string' },
+          },
+        },
+        response: {
+          201: {
+            type: 'object',
+            properties: {
+              message: { type: 'string' },
+              imported: { type: 'integer' },
+              scenarioIds: { type: 'array', items: { type: 'string' } },
+            },
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      const { scenarios, experimentId, configId, modelId } = request.body;
+
+      try {
+        const imported: string[] = [];
+        const expId = experimentId || crypto.randomUUID();
+        const config = configId || 'imported';
+        const model = modelId || 'imported';
+
+        for (let i = 0; i < scenarios.length; i++) {
+          const s = scenarios[i];
+          const scenarioId = `${s.domain}-${s.tier}-${String(i).padStart(3, '0')}-${Date.now()}`;
+
+          await prisma.mAACExperimentScenario.create({
+            data: {
+              experimentId: expId,
+              scenarioId,
+              domain: s.domain,
+              tier: s.tier,
+              repetition: i + 1,
+              configId: config,
+              modelId: model,
+              taskTitle: s.taskTitle,
+              taskDescription: s.taskDescription,
+              businessContext: s.businessContext,
+              successCriteria: s.successCriteria,
+              expectedCalculations: s.expectedCalculations || {},
+              expectedInsights: s.expectedInsights,
+              scenarioRequirements: s.scenarioRequirements || {},
+              dataElements: s.dataElements || undefined,
+              completed: false,
+            },
+          });
+
+          imported.push(scenarioId);
+        }
+
+        return reply.code(201).send({
+          message: `Imported ${imported.length} scenarios`,
+          imported: imported.length,
+          scenarioIds: imported,
+        });
+      } catch (error) {
+        fastify.log.error(error);
+        return reply.code(500).send({ error: 'Failed to import scenarios' });
+      }
+    },
+  );
+
+  // ==========================================================================
+  // COST ESTIMATION
+  // ==========================================================================
+
+  /**
+   * POST /scenarios/generate/estimate
+   * Estimate tokens and cost for scenario generation
+   */
+  fastify.post<{
+    Body: {
+      domains?: string[];
+      tiers?: string[];
+      repetitions?: number;
+      models?: string[];
+    };
+  }>(
+    '/scenarios/generate/estimate',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          properties: {
+            domains: { type: 'array', items: { type: 'string' } },
+            tiers: { type: 'array', items: { type: 'string' } },
+            repetitions: { type: 'integer', minimum: 1 },
+            models: { type: 'array', items: { type: 'string' } },
+          },
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              scenarioCount: { type: 'integer' },
+              estimatedInputTokens: { type: 'integer' },
+              estimatedOutputTokens: { type: 'integer' },
+              estimatedCost: { type: 'object' },
+            },
+          },
+        },
+      },
+    },
+    async (request) => {
+      const {
+        domains = ['analytical', 'planning', 'communication', 'problem_solving'],
+        tiers = ['simple', 'moderate', 'complex'],
+        repetitions = 10,
+        models = ['gpt_4o'],
+      } = request.body;
+
+      const scenarioCount = domains.length * tiers.length * repetitions * models.length;
+      
+      // Estimate tokens per scenario (based on typical MAAC scenario size)
+      const inputTokensPerScenario = 2000; // Prompt tokens
+      const outputTokensPerScenario = 1500; // Response tokens
+
+      const totalInputTokens = scenarioCount * inputTokensPerScenario;
+      const totalOutputTokens = scenarioCount * outputTokensPerScenario;
+
+      // Cost estimates per 1M tokens (as of 2025)
+      const costs: Record<string, { input: number; output: number }> = {
+        gpt_4o: { input: 2.50, output: 10.00 },
+        sonnet_37: { input: 3.00, output: 15.00 },
+        deepseek_v3: { input: 0.27, output: 1.10 },
+        llama_maverick: { input: 0.20, output: 0.20 },
+      };
+
+      const estimatedCostByModel: Record<string, number> = {};
+      for (const model of models) {
+        const modelCost = costs[model] || costs['gpt_4o'];
+        const inputCost = (totalInputTokens / 1_000_000) * modelCost.input;
+        const outputCost = (totalOutputTokens / 1_000_000) * modelCost.output;
+        estimatedCostByModel[model] = Math.round((inputCost + outputCost) * 100) / 100;
+      }
+
+      return {
+        scenarioCount,
+        estimatedInputTokens: totalInputTokens,
+        estimatedOutputTokens: totalOutputTokens,
+        estimatedCost: {
+          byModel: estimatedCostByModel,
+          total: Object.values(estimatedCostByModel).reduce((a, b) => a + b, 0),
+          currency: 'USD',
+        },
+      };
+    },
+  );
 }
 
 export default scenarioRoutes;

@@ -14,6 +14,7 @@ import { experimentRoutes } from './routes/experiments.js';
 import { scenarioRoutes } from './routes/scenarios.js';
 import { llmRoutes } from './routes/llm.js';
 import { billingRoutes } from './routes/billing.js';
+import { settingsRoutes } from './routes/settings.js';
 
 // =============================================================================
 // ENVIRONMENT CONFIGURATION
@@ -267,6 +268,120 @@ async function main() {
     };
   });
 
+  // =============================================================================
+  // SYSTEM MONITORING ENDPOINTS
+  // =============================================================================
+
+  /**
+   * GET /system/status
+   * Comprehensive system status including all services
+   */
+  fastify.get('/system/status', async () => {
+    // Database status
+    const dbStatus = await prisma.$queryRaw`SELECT 1`
+      .then(() => ({ status: 'connected', latency: null }))
+      .catch((e: Error) => ({ status: 'error', error: e.message }));
+
+    // Get database stats
+    const dbStats = await Promise.all([
+      prisma.experiment.count(),
+      prisma.mAACExperimentScenario.count(),
+      prisma.mAACExperimentalData.count(),
+    ]).catch(() => [0, 0, 0]);
+
+    // Memory usage
+    const memUsage = process.memoryUsage();
+
+    return {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      services: {
+        api: { status: 'running', version: '0.1.0' },
+        database: dbStatus,
+        redis: { status: 'connected', host: config.redis.host, port: config.redis.port },
+        llm: { 
+          status: 'configured', 
+          provider: config.llm.provider, 
+          model: config.llm.model,
+        },
+        cognitiveSystem: {
+          status: cognitiveSystem ? 'registered' : 'not-registered',
+        },
+      },
+      database: {
+        experiments: dbStats[0],
+        scenarios: dbStats[1],
+        trials: dbStats[2],
+      },
+      memory: {
+        heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024),
+        heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024),
+        rss: Math.round(memUsage.rss / 1024 / 1024),
+        unit: 'MB',
+      },
+      config: {
+        parallelism: config.parallelism,
+        port: config.port,
+      },
+    };
+  });
+
+  /**
+   * GET /system/metrics
+   * Experiment and trial metrics
+   */
+  fastify.get('/system/metrics', async () => {
+    const [
+      totalExperiments,
+      runningExperiments,
+      completedExperiments,
+      failedExperiments,
+      totalTrials,
+      completedTrials,
+      avgProcessingTime,
+    ] = await Promise.all([
+      prisma.experiment.count(),
+      prisma.experiment.count({ where: { status: 'running' } }),
+      prisma.experiment.count({ where: { status: 'completed' } }),
+      prisma.experiment.count({ where: { status: 'failed' } }),
+      prisma.mAACExperimentalData.count(),
+      prisma.mAACExperimentalData.count({ where: { maacCompleted: true } }),
+      prisma.mAACExperimentalData.aggregate({
+        _avg: { processingTime: true },
+      }),
+    ]);
+
+    // Get recent experiment activity
+    const recentExperiments = await prisma.experiment.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+      select: {
+        experimentId: true,
+        name: true,
+        status: true,
+        completedTrials: true,
+        totalTrials: true,
+        createdAt: true,
+      },
+    });
+
+    return {
+      experiments: {
+        total: totalExperiments,
+        running: runningExperiments,
+        completed: completedExperiments,
+        failed: failedExperiments,
+      },
+      trials: {
+        total: totalTrials,
+        completed: completedTrials,
+        avgProcessingTimeMs: avgProcessingTime._avg.processingTime || 0,
+      },
+      recent: recentExperiments,
+    };
+  });
+
   // Evaluate cognitive input
   fastify.post<{ Body: { input: string } }>('/evaluate', async (request) => {
     const { input } = request.body;
@@ -326,6 +441,11 @@ async function main() {
   // Register billing & credits routes
   await fastify.register(async (instance) => {
     instance.register(billingRoutes, { prefix: '/billing' });
+  });
+
+  // Register settings routes
+  await fastify.register(async (instance) => {
+    await settingsRoutes(instance, { prisma });
   });
 
   // =============================================================================

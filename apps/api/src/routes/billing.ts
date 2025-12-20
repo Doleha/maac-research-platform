@@ -80,7 +80,7 @@ export async function billingRoutes(fastify: FastifyInstance) {
       // Initialize Stripe
       const stripe = (await import('stripe')).default;
       const stripeClient = new stripe(process.env.STRIPE_SECRET_KEY!, {
-        apiVersion: '2024-12-18.acacia',
+        apiVersion: '2025-02-24.acacia',
       });
 
       // Create checkout session
@@ -136,7 +136,7 @@ export async function billingRoutes(fastify: FastifyInstance) {
     try {
       const stripe = (await import('stripe')).default;
       const stripeClient = new stripe(process.env.STRIPE_SECRET_KEY!, {
-        apiVersion: '2024-12-18.acacia',
+        apiVersion: '2025-02-24.acacia',
       });
 
       // Verify webhook signature
