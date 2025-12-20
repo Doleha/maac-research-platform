@@ -23,14 +23,14 @@ export function DataUpload({ onDataParsed, onClear }: DataUploadProps) {
   const [uploadedFile, setUploadedFile] = useState<ParsedData | null>(null);
 
   const parseCSV = (text: string): { headers: string[]; rows: any[] } => {
-    const lines = text.split('\n').filter(line => line.trim());
+    const lines = text.split('\n').filter((line) => line.trim());
     if (lines.length === 0) {
       throw new Error('Empty CSV file');
     }
 
-    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+    const headers = lines[0].split(',').map((h) => h.trim().replace(/^"|"$/g, ''));
     const rows = lines.slice(1).map((line, index) => {
-      const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+      const values = line.split(',').map((v) => v.trim().replace(/^"|"$/g, ''));
       const row: any = { _lineNumber: index + 2 };
       headers.forEach((header, i) => {
         row[header] = values[i] || '';
@@ -43,7 +43,7 @@ export function DataUpload({ onDataParsed, onClear }: DataUploadProps) {
 
   const parseJSON = (text: string): { headers: string[]; rows: any[] } => {
     const data = JSON.parse(text);
-    
+
     if (!Array.isArray(data)) {
       throw new Error('JSON must be an array of objects');
     }
@@ -68,7 +68,7 @@ export function DataUpload({ onDataParsed, onClear }: DataUploadProps) {
     try {
       const text = await file.text();
       const fileType = file.name.endsWith('.json') ? 'json' : 'csv';
-      
+
       let parsed;
       if (fileType === 'json') {
         parsed = parseJSON(text);
@@ -141,7 +141,8 @@ export function DataUpload({ onDataParsed, onClear }: DataUploadProps) {
             <div>
               <h3 className="font-semibold text-green-900">File Uploaded Successfully</h3>
               <p className="mt-1 text-sm text-green-700">
-                <span className="font-medium">{uploadedFile.fileName}</span> ({uploadedFile.totalRows.toLocaleString()} rows)
+                <span className="font-medium">{uploadedFile.fileName}</span> (
+                {uploadedFile.totalRows.toLocaleString()} rows)
               </p>
               <p className="mt-1 text-xs text-green-600">
                 Type: {uploadedFile.fileType.toUpperCase()} • {uploadedFile.headers.length} columns
@@ -223,8 +224,12 @@ export function DataUpload({ onDataParsed, onClear }: DataUploadProps) {
           <div className="flex-1 text-sm text-gray-600">
             <p className="font-medium text-gray-700">Supported Formats:</p>
             <ul className="mt-2 space-y-1 text-xs">
-              <li>• <strong>CSV:</strong> Comma-separated values with header row</li>
-              <li>• <strong>JSON:</strong> Array of objects with consistent properties</li>
+              <li>
+                • <strong>CSV:</strong> Comma-separated values with header row
+              </li>
+              <li>
+                • <strong>JSON:</strong> Array of objects with consistent properties
+              </li>
             </ul>
           </div>
         </div>

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { DataUpload } from '@/components/data-upload';
 import { DataPreview } from '@/components/data-preview';
 import { ScenarioValidator } from '@/components/scenario-validator';
+import { TemplateDownload } from '@/components/template-download';
 import { CheckCircle } from 'lucide-react';
 
 interface ParsedData {
@@ -71,6 +72,9 @@ export default function DataPage() {
         <p className="mt-2 text-gray-600">Upload and validate scenario data</p>
 
         <div className="mt-8 space-y-6">
+          {/* Template Download Section */}
+          <TemplateDownload />
+
           {/* Upload Section */}
           <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
             <h2 className="text-xl font-semibold text-gray-900">Upload Scenarios</h2>
@@ -109,9 +113,7 @@ export default function DataPage() {
               <div className="flex items-center gap-3">
                 <CheckCircle className="h-8 w-8 text-green-600" />
                 <div>
-                  <h3 className="text-lg font-semibold text-green-900">
-                    Import Successful!
-                  </h3>
+                  <h3 className="text-lg font-semibold text-green-900">Import Successful!</h3>
                   <p className="mt-1 text-sm text-green-700">
                     {parsedData?.totalRows} scenarios have been imported to the database.
                   </p>

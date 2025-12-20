@@ -11,7 +11,13 @@ interface DataPreviewProps {
   maxRows?: number;
 }
 
-export function DataPreview({ headers, rows, totalRows, fileName, maxRows = 50 }: DataPreviewProps) {
+export function DataPreview({
+  headers,
+  rows,
+  totalRows,
+  fileName,
+  maxRows = 50,
+}: DataPreviewProps) {
   const [editingCell, setEditingCell] = useState<{ row: number; col: string } | null>(null);
   const [editValue, setEditValue] = useState('');
   const [localData, setLocalData] = useState(rows);

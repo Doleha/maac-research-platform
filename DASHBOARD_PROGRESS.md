@@ -86,7 +86,9 @@
   - Parse and validate files
   - Preview table (50 rows)
   - Cell editing capability
-  - **Files:** `src/app/data/page.tsx`, `src/components/data-upload.tsx`, `src/components/data-preview.tsx`
+  - Downloadable CSV/JSON templates with example data
+  - Schema documentation
+  - **Files:** `src/app/data/page.tsx`, `src/components/data-upload.tsx`, `src/components/data-preview.tsx`, `src/components/template-download.tsx`
 
 - [x] **3.2 Implement scenario validation & import** ✅
   - Zod schema validation
@@ -278,9 +280,9 @@
 
 ### Dependencies to Add
 
-- `react-dropzone` - File upload
+- `react-dropzone` - File upload (not needed - implemented with native HTML5 drag-drop)
 - `date-fns` - Date formatting
-- `zod` - Schema validation (already in shared-types)
+- `zod` (^3.22.4) - Schema validation ✅ Added
 - `jspdf` (optional) - PDF generation
 
 ---
@@ -316,4 +318,5 @@
 - ✅ Built data preview table with cell editing (50 row preview)
 - ✅ Created scenario validator with Zod schema and error reporting
 - ✅ Connected bulk import to API with success feedback
+- ✅ Added downloadable CSV/JSON templates with schema documentation
 - ⏳ Next: Phase 4 - Execution controls and real-time monitoring

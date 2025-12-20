@@ -4,17 +4,42 @@ import { useState } from 'react';
 import { CheckCircle, AlertTriangle, XCircle, Loader2 } from 'lucide-react';
 import { z } from 'zod';
 
-// Scenario validation schema
+// Scenario validation schema - matches MAAC system requirements
 const scenarioSchema = z.object({
   task_id: z.string().min(1, 'task_id is required'),
+  task_title: z.string().min(1, 'task_title is required'),
+  task_description: z.string().min(1, 'task_description is required'),
+  business_context: z.string().min(1, 'business_context is required'),
   domain: z.enum(['problem_solving', 'creative_writing', 'data_analysis', 'technical_reasoning'], {
     errorMap: () => ({ message: 'Invalid domain' }),
   }),
-  prompt: z.string().min(1, 'prompt is required'),
-  expected_output: z.string().optional(),
-  difficulty: z.enum(['easy', 'medium', 'hard', 'expert']).optional(),
-  tags: z.union([z.array(z.string()), z.string()]).optional(),
-  metadata: z.record(z.any()).optional(),
+  scenario_type: z.enum(['control', 'test'], {
+    errorMap: () => ({ message: 'scenario_type must be "control" or "test"' }),
+  }),
+  requirements: z.union([z.array(z.string()), z.string()]).refine(
+    (val) => (Array.isArray(val) ? val.length > 0 : val.length > 0),
+    { message: 'requirements is required' }
+  ),
+  success_criteria: z.union([z.array(z.string()), z.string()]).refine(
+    (val) => (Array.isArray(val) ? val.length > 0 : val.length > 0),
+    { message: 'success_criteria is required' }
+  ),
+  complexity_level: z.enum(['simple', 'moderate', 'complex'], {
+    errorMap: () => ({ message: 'complexity_level must be "simple", "moderate", or "complex"' }),
+  }),
+  estimated_duration: z.string().min(1, 'estimated_duration is required'),
+  expected_calculations: z.union([z.record(z.any()), z.string()]).refine(
+    (val) => (typeof val === 'object' && Object.keys(val).length > 0) || (typeof val === 'string' && val.length > 0),
+    { message: 'expected_calculations is required' }
+  ),
+  expected_insights: z.union([z.array(z.string()), z.string()]).refine(
+    (val) => (Array.isArray(val) ? val.length > 0 : val.length > 0),
+    { message: 'expected_insights is required' }
+  ),
+  metadata: z.union([z.record(z.any()), z.string()]).refine(
+    (val) => (typeof val === 'object' && Object.keys(val).length > 0) || (typeof val === 'string' && val.length > 0),
+    { message: 'metadata is required' }
+  ),
 });
 
 interface ValidationError {
@@ -30,7 +55,11 @@ interface ScenarioValidatorProps {
   onImport: () => void;
 }
 
-export function ScenarioValidator({ data, onValidationComplete, onImport }: ScenarioValidatorProps) {
+export function ScenarioValidator({
+  data,
+  onValidationComplete,
+  onImport,
+}: ScenarioValidatorProps) {
   const [isValidating, setIsValidating] = useState(false);
   const [validationResults, setValidationResults] = useState<{
     valid: number;
@@ -41,8 +70,8 @@ export function ScenarioValidator({ data, onValidationComplete, onImport }: Scen
 
   const validateData = async () => {
     setIsValidating(true);
-    
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate processing
+
+    await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate processing
 
     const errors: ValidationError[] = [];
     const warnings: ValidationError[] = [];
@@ -101,7 +130,7 @@ export function ScenarioValidator({ data, onValidationComplete, onImport }: Scen
 
   const handleImport = async () => {
     setIsImporting(true);
-    
+
     try {
       // Call the onImport callback which will handle the API call
       await onImport();
@@ -121,9 +150,7 @@ export function ScenarioValidator({ data, onValidationComplete, onImport }: Scen
       <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">Scenario Validation</h3>
-          <p className="text-sm text-gray-600">
-            Validate data before importing to the database
-          </p>
+          <p className="text-sm text-gray-600">Validate data before importing to the database</p>
         </div>
         <button
           onClick={validateData}
@@ -160,7 +187,9 @@ export function ScenarioValidator({ data, onValidationComplete, onImport }: Scen
               <div className="flex items-center gap-3">
                 <XCircle className="h-6 w-6 text-red-600" />
                 <div>
-                  <p className="text-2xl font-bold text-red-900">{validationResults.errors.length}</p>
+                  <p className="text-2xl font-bold text-red-900">
+                    {validationResults.errors.length}
+                  </p>
                   <p className="text-sm text-red-700">Errors</p>
                 </div>
               </div>
@@ -170,7 +199,9 @@ export function ScenarioValidator({ data, onValidationComplete, onImport }: Scen
               <div className="flex items-center gap-3">
                 <AlertTriangle className="h-6 w-6 text-yellow-600" />
                 <div>
-                  <p className="text-2xl font-bold text-yellow-900">{validationResults.warnings.length}</p>
+                  <p className="text-2xl font-bold text-yellow-900">
+                    {validationResults.warnings.length}
+                  </p>
                   <p className="text-sm text-yellow-700">Warnings</p>
                 </div>
               </div>

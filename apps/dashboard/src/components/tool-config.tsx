@@ -70,9 +70,7 @@ export function ToolConfiguration({ value, onChange }: ToolConfigProps) {
 
   // Generate 6-bit configuration string
   const getBitString = () => {
-    return tools
-      .map((tool) => (value[tool.key] ? '1' : '0'))
-      .join('');
+    return tools.map((tool) => (value[tool.key] ? '1' : '0')).join('');
   };
 
   const enabledCount = Object.values(value).filter(Boolean).length;
@@ -121,7 +119,10 @@ export function ToolConfiguration({ value, onChange }: ToolConfigProps) {
               className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
             <div className="flex-1">
-              <label htmlFor={tool.key} className="block cursor-pointer text-sm font-medium text-gray-900">
+              <label
+                htmlFor={tool.key}
+                className="block cursor-pointer text-sm font-medium text-gray-900"
+              >
                 {tool.label}
               </label>
               <p className="text-xs text-gray-500">{tool.description}</p>

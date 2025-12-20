@@ -4,7 +4,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { LLMSelector, type LLMConfig } from './llm-selector';
 import { ToolConfiguration, type ToolConfig } from './tool-config';
-import { ControlExpectations, type ControlExpectations as ControlExpectationsType } from './control-expectations';
+import {
+  ControlExpectations,
+  type ControlExpectations as ControlExpectationsType,
+} from './control-expectations';
 
 const domains = [
   { value: 'problem_solving', label: 'Problem Solving' },
@@ -145,7 +148,7 @@ export function ExperimentForm() {
       }
 
       const result = await response.json();
-      
+
       // Redirect to experiment detail page
       router.push(`/experiments/${result.id}`);
     } catch (error) {

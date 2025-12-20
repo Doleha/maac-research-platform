@@ -121,7 +121,10 @@ export function LLMSelector({ value, onChange, errors = {} }: LLMSelectorProps) 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {/* Temperature */}
         <div>
-          <label htmlFor="temperature" className="flex items-center gap-1 text-sm font-medium text-gray-700">
+          <label
+            htmlFor="temperature"
+            className="flex items-center gap-1 text-sm font-medium text-gray-700"
+          >
             Temperature
             <span title="Controls randomness (0.0 = deterministic, 2.0 = very random)">
               <Info className="h-4 w-4 text-gray-400" />
@@ -142,7 +145,10 @@ export function LLMSelector({ value, onChange, errors = {} }: LLMSelectorProps) 
 
         {/* Max Tokens */}
         <div>
-          <label htmlFor="max_tokens" className="flex items-center gap-1 text-sm font-medium text-gray-700">
+          <label
+            htmlFor="max_tokens"
+            className="flex items-center gap-1 text-sm font-medium text-gray-700"
+          >
             Max Tokens
             <span title="Maximum number of tokens to generate">
               <Info className="h-4 w-4 text-gray-400" />
@@ -163,7 +169,10 @@ export function LLMSelector({ value, onChange, errors = {} }: LLMSelectorProps) 
 
         {/* Top P */}
         <div>
-          <label htmlFor="top_p" className="flex items-center gap-1 text-sm font-medium text-gray-700">
+          <label
+            htmlFor="top_p"
+            className="flex items-center gap-1 text-sm font-medium text-gray-700"
+          >
             Top P
             <span title="Nucleus sampling threshold">
               <Info className="h-4 w-4 text-gray-400" />

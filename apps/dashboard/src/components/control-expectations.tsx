@@ -206,7 +206,10 @@ export function ControlExpectations({ value, onChange, errors = {} }: ControlExp
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {calculationFields.map((field) => (
             <div key={field.key}>
-              <label htmlFor={field.key} className="flex items-center gap-1 text-sm font-medium text-gray-700">
+              <label
+                htmlFor={field.key}
+                className="flex items-center gap-1 text-sm font-medium text-gray-700"
+              >
                 {field.label}
                 <span title={field.description}>
                   <HelpCircle className="h-3 w-3 text-gray-400" />
@@ -225,7 +228,9 @@ export function ControlExpectations({ value, onChange, errors = {} }: ControlExp
                     : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
                 }`}
               />
-              {errors[field.key] && <p className="mt-1 text-xs text-red-600">{errors[field.key]}</p>}
+              {errors[field.key] && (
+                <p className="mt-1 text-xs text-red-600">{errors[field.key]}</p>
+              )}
             </div>
           ))}
         </div>
@@ -243,7 +248,10 @@ export function ControlExpectations({ value, onChange, errors = {} }: ControlExp
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {thresholdFields.map((field) => (
             <div key={field.key}>
-              <label htmlFor={field.key} className="flex items-center gap-1 text-sm font-medium text-gray-700">
+              <label
+                htmlFor={field.key}
+                className="flex items-center gap-1 text-sm font-medium text-gray-700"
+              >
                 {field.label}
                 <span title={field.description}>
                   <HelpCircle className="h-3 w-3 text-gray-400" />
@@ -263,7 +271,9 @@ export function ControlExpectations({ value, onChange, errors = {} }: ControlExp
                     : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
                 }`}
               />
-              {errors[field.key] && <p className="mt-1 text-xs text-red-600">{errors[field.key]}</p>}
+              {errors[field.key] && (
+                <p className="mt-1 text-xs text-red-600">{errors[field.key]}</p>
+              )}
             </div>
           ))}
         </div>
