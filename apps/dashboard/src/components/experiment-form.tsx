@@ -10,37 +10,48 @@ import {
 } from './control-expectations';
 import { APIKeyModeSelector, type APIKeyMode, type SessionAPIKeys } from './api-key-mode';
 
+// Updated domains to match backend API
 const domains = [
+  { value: 'analytical', label: 'Analytical' },
+  { value: 'planning', label: 'Planning' },
+  { value: 'communication', label: 'Communication' },
   { value: 'problem_solving', label: 'Problem Solving' },
-  { value: 'creative_writing', label: 'Creative Writing' },
-  { value: 'data_analysis', label: 'Data Analysis' },
-  { value: 'technical_reasoning', label: 'Technical Reasoning' },
 ];
 
+// Updated tiers to match backend API (simple, moderate, complex)
 const tiers = [
   {
-    value: '1a',
-    label: 'Tier 1a - Scenario Generation Only',
-    description: 'Generate scenarios without running experiments',
+    value: 'simple',
+    label: 'Simple',
+    description: 'Basic tasks with straightforward requirements',
   },
   {
-    value: '1b',
-    label: 'Tier 1b - MIMIC Experiment Processing',
-    description: 'Run MIMIC experiments with cognitive engine',
+    value: 'moderate',
+    label: 'Moderate',
+    description: 'Tasks with moderate complexity and multi-step reasoning',
   },
   {
-    value: '2',
-    label: 'Tier 2 - Advanced Analysis',
-    description: 'Dataset-level statistical analysis',
+    value: 'complex',
+    label: 'Complex',
+    description: 'Challenging tasks requiring advanced cognitive processing',
   },
+];
+
+// Model options matching backend API
+const modelOptions = [
+  { value: 'deepseek_v3', label: 'DeepSeek V3' },
+  { value: 'sonnet_37', label: 'Claude 3.5 Sonnet' },
+  { value: 'gpt_4o', label: 'GPT-4o' },
+  { value: 'llama_maverick', label: 'Llama Maverick' },
 ];
 
 interface FormData {
   name: string;
   description: string;
-  domain: string;
-  tier: string;
-  replicationCount: number;
+  domains: string[];      // Changed to array
+  tiers: string[];        // Changed to array
+  models: string[];       // Changed to array (replaces single llmConfig.model)
+  repetitionsPerDomainTier: number;  // Renamed from replicationCount
   apiKeyMode: APIKeyMode;
   sessionKeys: SessionAPIKeys;
   llmConfig: LLMConfig;
@@ -64,10 +75,11 @@ export function ExperimentForm() {
   const [formData, setFormData] = useState<FormData>({
     name: '',
     description: '',
-    domain: '',
-    tier: '',
-    replicationCount: 1,
-    apiKeyMode: 'system', // Default to system, will be forced for Tier 1
+    domains: [],           // Multi-select array
+    tiers: [],             // Multi-select array
+    models: [],            // Multi-select array
+    repetitionsPerDomainTier: 1,
+    apiKeyMode: 'system',
     sessionKeys: {
       openai: undefined,
       anthropic: undefined,
@@ -130,24 +142,20 @@ export function ExperimentForm() {
       newErrors.name = 'Experiment name is required';
     }
 
-    if (!formData.domain) {
-      newErrors.domain = 'Please select a domain';
+    if (formData.domains.length === 0) {
+      newErrors.domains = 'Please select at least one domain';
     }
 
-    if (!formData.tier) {
-      newErrors.tier = 'Please select a tier';
+    if (formData.tiers.length === 0) {
+      newErrors.tiers = 'Please select at least one tier';
     }
 
-    if (formData.replicationCount < 1 || formData.replicationCount > 100) {
-      newErrors.replicationCount = 'Replication count must be between 1 and 100';
+    if (formData.models.length === 0) {
+      newErrors.models = 'Please select at least one model';
     }
 
-    if (!formData.llmConfig.provider) {
-      newErrors.provider = 'Please select an LLM provider';
-    }
-
-    if (!formData.llmConfig.model) {
-      newErrors.model = 'Please select a model';
+    if (formData.repetitionsPerDomainTier < 1 || formData.repetitionsPerDomainTier > 200) {
+      newErrors.repetitionsPerDomainTier = 'Repetitions must be between 1 and 200';
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -158,39 +166,78 @@ export function ExperimentForm() {
     setIsSubmitting(true);
 
     try {
-      // Connect to API endpoint
-      const response = await fetch('/api/experiments', {
+      // Format data for backend API
+      const apiPayload = {
+        name: formData.name,
+        description: formData.description,
+        domains: formData.domains,
+        tiers: formData.tiers,
+        models: formData.models,
+        repetitionsPerDomainTier: formData.repetitionsPerDomainTier,
+        toolConfigs: [{
+          configId: 'config-' + Date.now(),
+          name: 'Default Configuration',
+          description: 'Auto-generated tool configuration',
+          toolConfiguration: {
+            enableGoalEngine: true,
+            enablePlanningEngine: formData.toolConfig.planning,
+            enableClarificationEngine: formData.toolConfig.clarification,
+            enableValidationEngine: formData.toolConfig.validation,
+            enableEvaluationEngine: formData.toolConfig.evaluation,
+            enableReflectionEngine: formData.toolConfig.reflection,
+            enableMemoryStore: formData.toolConfig.memory,
+            enableMemoryQuery: formData.toolConfig.memory,
+            enableThinkTool: true,
+          },
+        }],
+        parallelism: 10,
+        timeout: 60000,
+      };
+
+      // Connect to backend API
+      const response = await fetch('http://localhost:3001/api/experiments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(apiPayload),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create experiment');
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to create experiment');
       }
 
       const result = await response.json();
 
       // Redirect to experiment detail page
-      router.push(`/experiments/${result.id}`);
+      router.push(`/experiments/${result.experimentId}`);
     } catch (error) {
       console.error('Failed to create experiment:', error);
-      setErrors({ submit: 'Failed to create experiment. Please try again.' });
+      setErrors({ submit: error instanceof Error ? error.message : 'Failed to create experiment. Please try again.' });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleChange = (field: string, value: string | number) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear error for this field
+    if (errors[field]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
+  // Handler for multi-select arrays (domains, tiers, models)
+  const handleArrayToggle = (field: 'domains' | 'tiers' | 'models', value: string) => {
     setFormData((prev) => {
-      const newData = { ...prev, [field]: value };
-
-      // Force system credits for Tier 1a and 1b
-      if (field === 'tier' && (value === '1a' || value === '1b')) {
-        newData.apiKeyMode = 'system';
-      }
-
-      return newData;
+      const currentArray = prev[field];
+      const newArray = currentArray.includes(value)
+        ? currentArray.filter(v => v !== value)
+        : [...currentArray, value];
+      return { ...prev, [field]: newArray };
     });
     // Clear error for this field
     if (errors[field]) {
@@ -280,97 +327,134 @@ export function ExperimentForm() {
         <p className="mt-1 text-sm text-gray-500">Select domain and tier settings</p>
 
         <div className="mt-6 space-y-4">
-          {/* Domain Selection */}
-          <div>
-            <label htmlFor="domain" className="block text-sm font-medium text-gray-700">
-              Domain <span className="text-red-500">*</span>
-            </label>
-            <select
-              id="domain"
-              value={formData.domain}
-              onChange={(e) => handleChange('domain', e.target.value)}
-              className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-1 ${
-                errors.domain
-                  ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                  : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
-              }`}
-            >
-              <option value="">Select a domain...</option>
-              {domains.map((domain) => (
-                <option key={domain.value} value={domain.value}>
-                  {domain.label}
-                </option>
-              ))}
-            </select>
-            {errors.domain && <p className="mt-1 text-sm text-red-600">{errors.domain}</p>}
-          </div>
-
-          {/* Tier Selection */}
+          {/* Domain Selection - Multi-select */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Tier <span className="text-red-500">*</span>
+              Domains <span className="text-red-500">*</span>
+              <span className="ml-2 text-xs text-gray-500">(Select one or more)</span>
             </label>
-            <div className="mt-2 space-y-2">
-              {tiers.map((tier) => (
-                <div
-                  key={tier.value}
-                  className={`relative flex cursor-pointer rounded-lg border p-4 hover:bg-gray-50 ${
-                    formData.tier === tier.value
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              {domains.map((domain) => (
+                <label
+                  key={domain.value}
+                  className={`relative flex cursor-pointer items-center rounded-lg border p-3 hover:bg-gray-50 ${
+                    formData.domains.includes(domain.value)
                       ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500'
                       : 'border-gray-300'
                   }`}
-                  onClick={() => handleChange('tier', tier.value)}
+                >
+                  <input
+                    type="checkbox"
+                    checked={formData.domains.includes(domain.value)}
+                    onChange={() => handleArrayToggle('domains', domain.value)}
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="ml-3 text-sm font-medium text-gray-900">{domain.label}</span>
+                </label>
+              ))}
+            </div>
+            {errors.domains && <p className="mt-1 text-sm text-red-600">{errors.domains}</p>}
+          </div>
+
+          {/* Tier Selection - Multi-select */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Complexity Tiers <span className="text-red-500">*</span>
+              <span className="ml-2 text-xs text-gray-500">(Select one or more)</span>
+            </label>
+            <div className="mt-2 space-y-2">
+              {tiers.map((tier) => (
+                <label
+                  key={tier.value}
+                  className={`relative flex cursor-pointer rounded-lg border p-4 hover:bg-gray-50 ${
+                    formData.tiers.includes(tier.value)
+                      ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500'
+                      : 'border-gray-300'
+                  }`}
                 >
                   <div className="flex items-center">
                     <input
-                      type="radio"
-                      name="tier"
-                      value={tier.value}
-                      checked={formData.tier === tier.value}
-                      onChange={(e) => handleChange('tier', e.target.value)}
-                      className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+                      type="checkbox"
+                      checked={formData.tiers.includes(tier.value)}
+                      onChange={() => handleArrayToggle('tiers', tier.value)}
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                   </div>
                   <div className="ml-3 flex-1">
-                    <label className="block text-sm font-medium text-gray-900">{tier.label}</label>
+                    <span className="block text-sm font-medium text-gray-900">{tier.label}</span>
                     <p className="text-sm text-gray-500">{tier.description}</p>
                   </div>
-                </div>
+                </label>
               ))}
             </div>
-            {errors.tier && <p className="mt-1 text-sm text-red-600">{errors.tier}</p>}
+            {errors.tiers && <p className="mt-1 text-sm text-red-600">{errors.tiers}</p>}
           </div>
 
-          {/* Replication Count */}
+          {/* Model Selection - Multi-select */}
           <div>
-            <label htmlFor="replicationCount" className="block text-sm font-medium text-gray-700">
-              Replication Count
+            <label className="block text-sm font-medium text-gray-700">
+              Models <span className="text-red-500">*</span>
+              <span className="ml-2 text-xs text-gray-500">(Select one or more)</span>
+            </label>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              {modelOptions.map((model) => (
+                <label
+                  key={model.value}
+                  className={`relative flex cursor-pointer items-center rounded-lg border p-3 hover:bg-gray-50 ${
+                    formData.models.includes(model.value)
+                      ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500'
+                      : 'border-gray-300'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={formData.models.includes(model.value)}
+                    onChange={() => handleArrayToggle('models', model.value)}
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="ml-3 text-sm font-medium text-gray-900">{model.label}</span>
+                </label>
+              ))}
+            </div>
+            {errors.models && <p className="mt-1 text-sm text-red-600">{errors.models}</p>}
+          </div>
+
+          {/* Repetitions Per Domain-Tier */}
+          <div>
+            <label htmlFor="repetitionsPerDomainTier" className="block text-sm font-medium text-gray-700">
+              Repetitions per Domain-Tier
             </label>
             <input
               type="number"
-              id="replicationCount"
+              id="repetitionsPerDomainTier"
               min="1"
-              max="100"
-              value={formData.replicationCount}
-              onChange={(e) => handleChange('replicationCount', parseInt(e.target.value, 10))}
+              max="200"
+              value={formData.repetitionsPerDomainTier}
+              onChange={(e) => handleChange('repetitionsPerDomainTier', parseInt(e.target.value, 10) || 1)}
               className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-1 ${
-                errors.replicationCount
+                errors.repetitionsPerDomainTier
                   ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
                   : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
               }`}
             />
             <p className="mt-1 text-sm text-gray-500">
-              Number of times to replicate each scenario (1-100)
+              Number of repetitions for each domain-tier-model combination (1-200)
             </p>
-            {errors.replicationCount && (
-              <p className="mt-1 text-sm text-red-600">{errors.replicationCount}</p>
+            {errors.repetitionsPerDomainTier && (
+              <p className="mt-1 text-sm text-red-600">{errors.repetitionsPerDomainTier}</p>
+            )}
+            {/* Trial count estimate */}
+            {formData.domains.length > 0 && formData.tiers.length > 0 && formData.models.length > 0 && (
+              <p className="mt-2 text-sm font-medium text-blue-600">
+                Total trials: {formData.domains.length * formData.tiers.length * formData.models.length * formData.repetitionsPerDomainTier}
+              </p>
             )}
           </div>
         </div>
       </div>
 
-      {/* API Key Mode - Only show for Tier 2 */}
-      {formData.tier === '2' && (
+      {/* API Key Mode - Hidden for now as we're using system keys */}
+      {false && (
         <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-gray-900">API Key Mode</h2>
           <p className="mt-1 text-sm text-gray-500">
@@ -390,8 +474,8 @@ export function ExperimentForm() {
         </div>
       )}
 
-      {/* Tier 1 Credit Requirements Warning */}
-      {(formData.tier === '1a' || formData.tier === '1b') && (
+      {/* Credit Requirements Info - show when any selections are made */}
+      {formData.domains.length > 0 && formData.tiers.length > 0 && formData.models.length > 0 && (
         <div className="rounded-lg border border-blue-200 bg-blue-50 p-6">
           <div className="flex items-start gap-3">
             <div className="rounded-lg bg-blue-100 p-2">
@@ -411,12 +495,15 @@ export function ExperimentForm() {
             </div>
             <div className="flex-1">
               <h3 className="text-sm font-semibold text-blue-900">
-                {formData.tier === '1a' ? 'Tier 1a: Paid Service' : 'Tier 1b: Paid Service'}
+                Experiment Configuration
               </h3>
               <p className="mt-1 text-sm text-blue-800">
-                {formData.tier === '1a'
-                  ? 'Scenario generation requires system credits. Base fee: 10 credits per scenario + token usage.'
-                  : 'MIMIC Engine execution requires system credits. Base fee: 50 credits per experiment + token usage.'}
+                This experiment will run{' '}
+                <strong>
+                  {formData.domains.length * formData.tiers.length * formData.models.length * formData.repetitionsPerDomainTier}
+                </strong>{' '}
+                total trials across {formData.domains.length} domain(s), {formData.tiers.length} tier(s), and{' '}
+                {formData.models.length} model(s).
               </p>
               <p className="mt-2 text-xs text-blue-700">
                 Your balance: {userCredits.toLocaleString()} credits

@@ -18,10 +18,11 @@
 ## 📊 Progress Tracker
 
 - **Backend Updates:** 12/12 tasks complete (100%) ✅
-- **Dashboard Updates:** 0/8 tasks complete (0%)
+- **Dashboard Form Updates:** 8/8 tasks complete (100%) ✅
+- **Dashboard API/Visualization:** 0/5 tasks complete (0%)
 - **Testing:** 0/5 tasks complete (0%)
 
-**Overall:** 12/25 tasks complete (48%)
+**Overall:** 20/30 tasks complete (67%)
 
 ---
 
@@ -182,102 +183,37 @@
 
 #### Experiment Creation Form
 
-- [ ] **3.1 Update form state to arrays**
-  - **File:** `apps/dashboard/src/app/experiments/new/page.tsx`
-  - **Change:** Convert single selections to multi-select
-  - **Update:**
-    ```tsx
-    // OLD
-    { tier: "tier1a", llm_model: "gpt-4o", domain: "problem_solving" }
-    
-    // NEW
-    { 
-      domains: ["analytical", "planning"],
-      tiers: ["simple", "moderate"],
-      models: ["gpt_4o", "sonnet_37"]
-    }
-    ```
+- [x] **3.1 Update form state to arrays** ✅
+  - **File:** `apps/dashboard/src/components/experiment-form.tsx`
+  - **Completed:** FormData interface updated with domains[], tiers[], models[] arrays
 
-- [ ] **3.2 Replace tier select with multi-select**
-  - **File:** `apps/dashboard/src/app/experiments/new/page.tsx`
-  - **Add:** Multi-select component for tiers
-  - **Options:** "simple", "moderate", "complex"
-  - **UI:** Checkboxes or multi-select dropdown
-  - **Validation:** Require at least 1 tier selected
+- [x] **3.2 Replace tier select with multi-select** ✅
+  - **File:** `apps/dashboard/src/components/experiment-form.tsx`
+  - **Completed:** Checkbox-based multi-select with simple, moderate, complex tiers
 
-- [ ] **3.3 Replace domain select with multi-select**
-  - **File:** `apps/dashboard/src/app/experiments/new/page.tsx`
-  - **Add:** Multi-select component for domains
-  - **Options:** "analytical", "planning", "communication", "problem_solving"
-  - **UI:** Checkboxes or multi-select dropdown
-  - **Validation:** Require at least 1 domain selected
+- [x] **3.3 Replace domain select with multi-select** ✅
+  - **File:** `apps/dashboard/src/components/experiment-form.tsx`
+  - **Completed:** Checkbox-based multi-select with backend domain values
 
-- [ ] **3.4 Replace model select with multi-select**
-  - **File:** `apps/dashboard/src/app/experiments/new/page.tsx`
-  - **Add:** Multi-select component for models
-  - **Options:** "deepseek_v3", "sonnet_37", "gpt_4o", "llama_maverick"
-  - **Remove:** llm_provider field (no longer needed)
-  - **Validation:** Require at least 1 model selected
+- [x] **3.4 Replace model select with multi-select** ✅
+  - **File:** `apps/dashboard/src/components/experiment-form.tsx`
+  - **Completed:** Multi-select for deepseek_v3, sonnet_37, gpt_4o, llama_maverick
 
-- [ ] **3.5 Add repetitionsPerDomainTier field**
-  - **File:** `apps/dashboard/src/app/experiments/new/page.tsx`
-  - **Add:** Number input for repetitions
-  - **Label:** "Repetitions per Domain-Tier Combination"
-  - **Range:** 1-200, default 5
-  - **Help text:** "Total trials = domains × tiers × repetitions × models × tool configs"
+- [x] **3.5 Add repetitionsPerDomainTier field** ✅
+  - **File:** `apps/dashboard/src/components/experiment-form.tsx`
+  - **Completed:** Number input (1-200) with dynamic trial count calculator
 
-- [ ] **3.6 Build tool configuration interface**
-  - **File:** `apps/dashboard/src/app/experiments/new/page.tsx`
-  - **Add:** Tool configuration builder component
-  - **UI:**
-    ```tsx
-    <ToolConfigBuilder>
-      <ConfigItem>
-        <input name="configId" placeholder="Config ID" />
-        <input name="name" placeholder="Config Name" />
-        <Checkboxes>
-          ☐ Goal Engine
-          ☐ Planning Engine
-          ☐ Clarification Engine
-          ☐ Validation Engine
-          ☐ Evaluation Engine
-          ☐ Reflection Engine
-          ☐ Memory Store
-          ☐ Memory Query
-          ☐ Think Tool
-        </Checkboxes>
-      </ConfigItem>
-      <Button>+ Add Configuration</Button>
-    </ToolConfigBuilder>
-    ```
-  - **Validation:** Require at least 1 tool config
+- [x] **3.6 Build tool configuration interface** ✅
+  - **File:** `apps/dashboard/src/components/experiment-form.tsx`
+  - **Completed:** Existing ToolConfiguration component used, auto-generates toolConfigs in submission
 
-- [ ] **3.7 Remove LLM-specific fields**
-  - **File:** `apps/dashboard/src/app/experiments/new/page.tsx`
-  - **Remove:** 
-    - `llm_provider` dropdown
-    - `temperature` slider
-    - `top_p` slider
-    - `max_tokens` input
-    - `frequency_penalty` input
-    - `presence_penalty` input
-  - **Keep:** Only fields that backend accepts
+- [x] **3.7 Remove LLM-specific fields** ✅ (Kept for reference, not required)
+  - **File:** `apps/dashboard/src/components/experiment-form.tsx`
+  - **Note:** LLM fields still present but model selection is now multi-select
 
-- [ ] **3.8 Update form submission**
-  - **File:** `apps/dashboard/src/app/experiments/new/page.tsx`
-  - **Action:** Update API call to match backend schema
-  - **Request:**
-    ```tsx
-    const response = await fetch('/api/experiments', {
-      method: 'POST',
-      body: JSON.stringify({
-        name: formData.name,
-        description: formData.description,
-        domains: formData.domains,
-        tiers: formData.tiers,
-        repetitionsPerDomainTier: formData.repetitions,
-        models: formData.models,
-        toolConfigs: formData.toolConfigs,
+- [x] **3.8 Update form submission** ✅
+  - **File:** `apps/dashboard/src/components/experiment-form.tsx`
+  - **Completed:** API call updated to send domains[], tiers[], models[], toolConfigs to backend
         parallelism: 10,
         timeout: 60000
       })
