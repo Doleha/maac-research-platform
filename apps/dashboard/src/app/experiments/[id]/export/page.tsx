@@ -61,32 +61,23 @@ export default function ExperimentExportPage({ params }: { params: { id: string 
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Export Experiment Data</h1>
-              {experiment && (
-                <p className="mt-1 text-gray-600">{experiment.name}</p>
-              )}
+              {experiment && <p className="mt-1 text-gray-600">{experiment.name}</p>}
             </div>
           </div>
         </div>
 
         {/* Export Options */}
         <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Export Options
-          </h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Export Options</h2>
           {experiment && (
-            <ExportButtons 
-              experimentId={params.id} 
-              experimentName={experiment.name}
-            />
+            <ExportButtons experimentId={params.id} experimentName={experiment.name} />
           )}
         </div>
 
         {/* Information */}
         {experiment && (
           <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Experiment Summary
-            </h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Experiment Summary</h2>
             <dl className="space-y-3">
               <div>
                 <dt className="text-sm font-medium text-gray-500">Name</dt>
@@ -114,18 +105,21 @@ export default function ExperimentExportPage({ params }: { params: { id: string 
 
         {/* Export Guide */}
         <div className="rounded-lg border border-blue-200 bg-blue-50 p-6">
-          <h3 className="text-sm font-semibold text-blue-900 mb-2">
-            Export Guide
-          </h3>
+          <h3 className="text-sm font-semibold text-blue-900 mb-2">Export Guide</h3>
           <div className="space-y-2 text-sm text-blue-800">
             <p>
-              <span className="font-medium">CSV:</span> Best for spreadsheet analysis and statistical tools. Includes trial IDs, scenarios, models, configurations, and all MAAC dimensional scores.
+              <span className="font-medium">CSV:</span> Best for spreadsheet analysis and
+              statistical tools. Includes trial IDs, scenarios, models, configurations, and all MAAC
+              dimensional scores.
             </p>
             <p>
-              <span className="font-medium">JSON:</span> Complete structured data including metadata, configurations, and nested results. Ideal for programmatic analysis and re-import.
+              <span className="font-medium">JSON:</span> Complete structured data including
+              metadata, configurations, and nested results. Ideal for programmatic analysis and
+              re-import.
             </p>
             <p>
-              <span className="font-medium">PDF:</span> Human-readable report with executive summary, visualizations, and detailed results. Perfect for sharing and presentations.
+              <span className="font-medium">PDF:</span> Human-readable report with executive
+              summary, visualizations, and detailed results. Perfect for sharing and presentations.
             </p>
           </div>
         </div>

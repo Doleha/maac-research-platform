@@ -2,17 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { 
-  BarChart3, 
-  Loader2, 
-  XCircle, 
-  CheckSquare, 
+import {
+  BarChart3,
+  Loader2,
+  XCircle,
+  CheckSquare,
   Square,
   TrendingUp,
   TrendingDown,
   Minus,
   Plus,
-  Search
+  Search,
 } from 'lucide-react';
 
 interface ExperimentSummary {
@@ -66,7 +66,7 @@ export default function ExperimentComparePage() {
 
   useEffect(() => {
     fetchExperiments();
-    
+
     // Pre-select experiments from URL params
     const ids = searchParams?.get('ids')?.split(',').filter(Boolean);
     if (ids?.length) {
@@ -102,20 +102,20 @@ export default function ExperimentComparePage() {
 
   const compareExperiments = async () => {
     if (selectedIds.size < 2) return;
-    
+
     setComparing(true);
     try {
       const ids = Array.from(selectedIds);
       const response = await fetch('http://localhost:3001/api/experiments/compare', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ experimentIds: ids })
+        body: JSON.stringify({ experimentIds: ids }),
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to compare experiments');
       }
-      
+
       const data = await response.json();
       setComparisonData(data.experiments || []);
       setError(null);
@@ -140,13 +140,18 @@ export default function ExperimentComparePage() {
     return 'bg-red-100';
   };
 
-  const getDifference = (exp1: ExperimentSummary, exp2: ExperimentSummary, key: keyof ExperimentSummary['dimensionalScores']) => {
+  const getDifference = (
+    exp1: ExperimentSummary,
+    exp2: ExperimentSummary,
+    key: keyof ExperimentSummary['dimensionalScores'],
+  ) => {
     return exp1.dimensionalScores[key] - exp2.dimensionalScores[key];
   };
 
-  const filteredExperiments = experiments.filter(exp =>
-    exp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    exp.experimentId.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredExperiments = experiments.filter(
+    (exp) =>
+      exp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      exp.experimentId.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   if (loading) {
@@ -216,7 +221,7 @@ export default function ExperimentComparePage() {
               {filteredExperiments.map((exp) => {
                 const isSelected = selectedIds.has(exp.experimentId);
                 const canSelect = isSelected || selectedIds.size < 5;
-                
+
                 return (
                   <button
                     key={exp.experimentId}
@@ -343,7 +348,11 @@ export default function ExperimentComparePage() {
                         {comparisonData.length === 2 && (
                           <td className="whitespace-nowrap px-6 py-4 text-sm">
                             {(() => {
-                              const diff = getDifference(comparisonData[0], comparisonData[1], dim.key);
+                              const diff = getDifference(
+                                comparisonData[0],
+                                comparisonData[1],
+                                dim.key,
+                              );
                               const absDiff = Math.abs(diff);
                               return (
                                 <span className="flex items-center gap-1">
@@ -354,8 +363,17 @@ export default function ExperimentComparePage() {
                                   ) : (
                                     <Minus className="h-4 w-4 text-gray-400" />
                                   )}
-                                  <span className={diff > 0 ? 'text-green-600' : diff < 0 ? 'text-red-600' : 'text-gray-600'}>
-                                    {diff > 0 ? '+' : ''}{diff.toFixed(2)}
+                                  <span
+                                    className={
+                                      diff > 0
+                                        ? 'text-green-600'
+                                        : diff < 0
+                                          ? 'text-red-600'
+                                          : 'text-gray-600'
+                                    }
+                                  >
+                                    {diff > 0 ? '+' : ''}
+                                    {diff.toFixed(2)}
                                   </span>
                                 </span>
                               );
@@ -372,9 +390,7 @@ export default function ExperimentComparePage() {
             {/* Statistical Summary */}
             <div className="rounded-lg border border-gray-200 bg-white shadow-sm overflow-hidden">
               <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Statistical Summary
-                </h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Statistical Summary</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full">
