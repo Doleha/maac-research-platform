@@ -15,6 +15,7 @@ import { scenarioRoutes } from './routes/scenarios.js';
 import { llmRoutes } from './routes/llm.js';
 import { billingRoutes } from './routes/billing.js';
 import { settingsRoutes } from './routes/settings.js';
+import { logsRoutes, logger } from './routes/logs.js';
 
 // =============================================================================
 // ENVIRONMENT CONFIGURATION
@@ -448,12 +449,39 @@ async function main() {
     await settingsRoutes(instance, { prisma });
   });
 
+  // Register logs routes
+  await fastify.register(async (instance) => {
+    await logsRoutes(instance);
+  });
+
+  // =============================================================================
+  // REQUEST LOGGING HOOK
+  // =============================================================================
+
+  fastify.addHook('onRequest', async (request) => {
+    logger.debug('api', `${request.method} ${request.url}`, {
+      ip: request.ip,
+      headers: request.headers['user-agent'],
+    });
+  });
+
+  fastify.addHook('onResponse', async (request, reply) => {
+    const level = reply.statusCode >= 400 ? 'error' : 'info';
+    logger[level]('api', `${request.method} ${request.url} - ${reply.statusCode}`, {
+      statusCode: reply.statusCode,
+      responseTime: reply.elapsedTime,
+    });
+  });
+
   // =============================================================================
   // START SERVER
   // =============================================================================
 
   try {
     await fastify.listen({ port: config.port, host: '0.0.0.0' });
+    logger.info('server', `MAAC API started on port ${config.port}`);
+    logger.info('server', `LLM Provider: ${config.llm.provider}/${config.llm.model}`);
+    logger.info('server', `Redis: ${config.redis.host}:${config.redis.port}`);
     console.log(`🚀 MAAC API running on port ${config.port}`);
     console.log(`   LLM: ${config.llm.provider}/${config.llm.model}`);
     console.log(`   Redis: ${config.redis.host}:${config.redis.port}`);

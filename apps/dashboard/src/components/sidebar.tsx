@@ -11,6 +11,7 @@ import {
   BarChart3,
   Layers,
   Activity,
+  ScrollText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -22,6 +23,7 @@ const navigation = [
   { name: 'Scenarios', href: '/scenarios/generate', icon: Layers },
   { name: 'Compare', href: '/experiments/compare', icon: BarChart3 },
   { name: 'System Health', href: '/system', icon: Activity },
+  { name: 'Logs', href: '/logs', icon: ScrollText },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 

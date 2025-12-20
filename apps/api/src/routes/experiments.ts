@@ -17,6 +17,7 @@ import {
   CreateExperimentInput,
 } from '@maac/experiment-orchestrator';
 import type { Domain, Tier } from '@maac/types';
+import { logger } from './logs.js';
 
 /**
  * Register experiment routes
@@ -138,6 +139,13 @@ export async function experimentRoutes(
           validated.models.length *
           validated.toolConfigs.length;
 
+        logger.info('experiment', `Creating experiment: ${validated.name}`, {
+          experimentId,
+          totalTrials,
+          domains: validated.domains,
+          tiers: validated.tiers,
+          models: validated.models,
+        });
         fastify.log.info(`Creating experiment ${experimentId} with ${totalTrials} trials`);
 
         // Save experiment metadata to database
