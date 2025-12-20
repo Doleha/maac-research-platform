@@ -6,7 +6,7 @@
 
 ---
 
-## 📊 Overall Progress: 15/25 (60%)
+## 📊 Overall Progress: 17/25 (68%)
 
 ---
 
@@ -141,23 +141,31 @@
 
 ---
 
-## Phase 5: Analysis & Comparison (0/2)
+## Phase 5: Analysis & Comparison (2/2) ✅
 
 **Goal:** Advanced results analysis and export
 
-### 📋 Todo
+### ✅ Completed
 
-- [ ] **5.1 Create experiment comparison view**
-  - Multi-select (2-5 experiments)
-  - Side-by-side radar charts
-  - Statistical tables
+- [x] **5.1 Create experiment comparison view** ✅
+  - Multi-select experiments (2-5)
+  - Search and filter functionality
+  - Overall MAAC score comparison cards
+  - Dimensional scores comparison table (9 dimensions)
+  - Statistical summary table (mean, median, std dev, min, max)
+  - Head-to-head difference indicators (2 experiments)
+  - Color-coded score indicators
   - **Files:** `src/app/experiments/compare/page.tsx`
 
-- [ ] **5.2 Implement results export functionality**
-  - CSV/JSON/PDF export
-  - GET `/api/experiments/{id}/export?format=`
-  - Browser download
-  - **Files:** `src/components/export-buttons.tsx`
+- [x] **5.2 Implement results export functionality** ✅
+  - Export buttons component with 3 formats
+  - CSV export (trial data + MAAC scores)
+  - JSON export (complete structured data)
+  - PDF export (formatted report)
+  - Browser download with auto-naming
+  - Export status feedback (loading, success, error)
+  - Export guide with format descriptions
+  - **Files:** `src/components/export-buttons.tsx`, `src/app/experiments/[id]/export/page.tsx`
 
 ---
 
