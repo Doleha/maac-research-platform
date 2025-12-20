@@ -14,6 +14,7 @@ import {
   BarChart3,
   FileText,
 } from 'lucide-react';
+import { LiveProgress } from '@/components/live-progress';
 
 interface ExperimentDetails {
   experimentId: string;
@@ -176,6 +177,15 @@ export default function ExperimentDetailPage({ params }: { params: { id: string 
             )}
           </div>
         </div>
+
+        {/* Live Progress Tracking */}
+        {(experiment.status === 'running' || experiment.status === 'paused') && (
+          <LiveProgress
+            experimentId={experiment.experimentId}
+            totalTrials={experiment.totalTrials}
+            onComplete={fetchExperiment}
+          />
+        )}
 
         {/* Control Panel */}
         <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
