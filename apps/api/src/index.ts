@@ -309,6 +309,7 @@ async function main() {
           return value;
         },
       }),
+      prisma,
     });
   });
 
