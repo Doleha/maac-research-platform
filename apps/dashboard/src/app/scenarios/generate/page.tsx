@@ -191,9 +191,7 @@ export default function GenerateScenariosPage() {
                   }
                   className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
-                <p className="mt-1 text-xs text-gray-500">
-                  Higher = more creative (0.0 - 2.0)
-                </p>
+                <p className="mt-1 text-xs text-gray-500">Higher = more creative (0.0 - 2.0)</p>
               </div>
 
               {/* Provider */}

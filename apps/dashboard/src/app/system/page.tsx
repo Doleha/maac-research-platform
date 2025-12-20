@@ -95,12 +95,12 @@ export default function SystemHealthPage() {
 
   const handleContainerAction = async (
     containerName: string,
-    action: 'start' | 'stop' | 'restart'
+    action: 'start' | 'stop' | 'restart',
   ) => {
     try {
       const response = await fetch(
         `http://localhost:3001/api/system/containers/${containerName}/${action}`,
-        { method: 'POST' }
+        { method: 'POST' },
       );
 
       if (!response.ok) {
@@ -291,7 +291,9 @@ export default function SystemHealthPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-gray-600">{service.latency_ms}ms</span>
-                  <span className={`rounded px-2 py-1 text-xs font-medium ${getStatusColor(service.status)}`}>
+                  <span
+                    className={`rounded px-2 py-1 text-xs font-medium ${getStatusColor(service.status)}`}
+                  >
                     {service.status}
                   </span>
                 </div>

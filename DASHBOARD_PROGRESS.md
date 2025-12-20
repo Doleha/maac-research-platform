@@ -430,17 +430,19 @@ All 27 planned dashboard tasks have been successfully implemented across 9 phase
 ✅ **Phase 6: Settings (3/3)** - API keys, UI preferences, billing  
 ✅ **Phase 7: Browse & Search (2/2)** - Experiments list, scenario browser  
 ✅ **Phase 8: Advanced Features (3/3)** - Live progress, scenario generation, system health  
-✅ **Phase 9: Polish (2/2)** - Notifications, accessibility, error boundaries  
+✅ **Phase 9: Polish (2/2)** - Notifications, accessibility, error boundaries
 
 ### 📦 Deliverables
 
 **27 Components/Pages:**
+
 - 8 Full pages (experiments, new, detail, compare, data, scenarios/generate, system, settings)
 - 12 Reusable components (sidebar, status-card, maac-viz, live-progress, toast, form-field, etc.)
 - 4 Infrastructure pieces (API client, notification context, error boundary, loading states)
 - 3 Data handling utilities (CSV parser, file upload, validation)
 
 **Key Features:**
+
 - Real-time experiment monitoring with SSE
 - Advanced filtering and search
 - Scenario generation via LLM

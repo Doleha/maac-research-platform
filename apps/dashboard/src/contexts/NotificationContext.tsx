@@ -13,11 +13,7 @@ export interface Notification {
 
 interface NotificationContextType {
   notifications: Notification[];
-  addNotification: (
-    type: NotificationType,
-    message: string,
-    duration?: number
-  ) => void;
+  addNotification: (type: NotificationType, message: string, duration?: number) => void;
   removeNotification: (id: string) => void;
   success: (message: string, duration?: number) => void;
   error: (message: string, duration?: number) => void;
@@ -48,35 +44,35 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         }, duration);
       }
     },
-    [removeNotification]
+    [removeNotification],
   );
 
   const success = useCallback(
     (message: string, duration?: number) => {
       addNotification('success', message, duration);
     },
-    [addNotification]
+    [addNotification],
   );
 
   const error = useCallback(
     (message: string, duration?: number) => {
       addNotification('error', message, duration);
     },
-    [addNotification]
+    [addNotification],
   );
 
   const warning = useCallback(
     (message: string, duration?: number) => {
       addNotification('warning', message, duration);
     },
-    [addNotification]
+    [addNotification],
   );
 
   const info = useCallback(
     (message: string, duration?: number) => {
       addNotification('info', message, duration);
     },
-    [addNotification]
+    [addNotification],
   );
 
   return (

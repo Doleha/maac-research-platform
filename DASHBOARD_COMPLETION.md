@@ -9,53 +9,62 @@ All 27 planned tasks across 9 development phases have been successfully implemen
 ## 📊 Phase Breakdown
 
 ### Phase 1: Foundation (4/4) ✅
+
 - Multi-page routing with Next.js App Router
 - Sidebar navigation with active state highlighting
 - API client for experiments and analysis
 - Base page structure for all routes
 
 ### Phase 2: Experiment Creation (3/3) ✅
+
 - Complete form with validation (Zod schemas)
 - Dynamic LLM provider/model selector
 - Tier selection and configuration
 - API integration for experiment submission
 
 ### Phase 3: Data Management (3/3) ✅
+
 - Drag-and-drop file upload
 - CSV parsing and validation
 - Bulk scenario import
 - File preview and error handling
 
 ### Phase 4: Experiment Dashboard (3/3) ✅
+
 - Real-time status cards
 - MAAC score visualization (radar charts)
 - Statistical results display
 - Trial-level details
 
 ### Phase 5: Experiment Control (4/4) ✅
+
 - Start/pause/stop controls
 - Retry failed trials
 - Results export (JSON/CSV)
 - BullMQ queue status monitoring
 
 ### Phase 6: Settings (3/3) ✅
+
 - API credentials management (LLM providers)
 - UI preferences (refresh intervals)
 - Billing overview (usage tracking)
 
 ### Phase 7: Browse & Search (2/2) ✅
+
 - Experiments list with advanced filtering
 - Scenario browser with CRUD operations
 - Search, sort, and pagination
 - Bulk operations support
 
 ### Phase 8: Advanced Features (3/3) ✅
+
 - Live progress tracking (SSE)
 - AI scenario generation UI
 - System health dashboard
 - Docker container management
 
 ### Phase 9: Polish (2/2) ✅
+
 - Toast notification system
 - Form validation components
 - Error boundaries
@@ -68,6 +77,7 @@ All 27 planned tasks across 9 development phases have been successfully implemen
 ## 🛠️ Technical Stack
 
 ### Frontend
+
 - **Framework:** Next.js 14.2.35 (App Router)
 - **Styling:** Tailwind CSS
 - **Icons:** Lucide React
@@ -76,6 +86,7 @@ All 27 planned tasks across 9 development phases have been successfully implemen
 - **Real-time:** Server-Sent Events (SSE)
 
 ### Components (19 total)
+
 1. `sidebar.tsx` - Main navigation
 2. `status-card.tsx` - Experiment status display
 3. `maac-visualization.tsx` - Radar chart for MAAC scores
@@ -89,6 +100,7 @@ All 27 planned tasks across 9 development phases have been successfully implemen
 11. Plus 9 more utility components
 
 ### Pages (8 total)
+
 1. `/` - Dashboard home
 2. `/experiments` - List all experiments
 3. `/experiments/new` - Create new experiment
@@ -106,6 +118,7 @@ All 27 planned tasks across 9 development phases have been successfully implemen
 The frontend is complete and ready for backend integration. Required endpoints:
 
 ### Experiments
+
 - `POST /api/experiments` - Create
 - `GET /api/experiments` - List with filters
 - `GET /api/experiments/{id}` - Get details
@@ -117,6 +130,7 @@ The frontend is complete and ready for backend integration. Required endpoints:
 - `GET /api/experiments/{id}/export` - Export results
 
 ### Scenarios
+
 - `GET /api/scenarios` - List with filters
 - `POST /api/scenarios` - Create
 - `PUT /api/scenarios/{id}` - Update
@@ -126,6 +140,7 @@ The frontend is complete and ready for backend integration. Required endpoints:
 - `POST /api/scenarios/generate/estimate` - Cost estimate
 
 ### System
+
 - `GET /api/system/containers` - Docker container status
 - `GET /api/system/services` - Service health checks
 - `GET /api/system/metrics` - CPU/memory/disk usage
@@ -134,6 +149,7 @@ The frontend is complete and ready for backend integration. Required endpoints:
 - `POST /api/system/containers/{name}/restart` - Restart container
 
 ### Settings
+
 - `GET /api/settings` - Get all settings
 - `PUT /api/settings/credentials` - Update API keys
 - `PUT /api/settings/preferences` - Update preferences
@@ -144,11 +160,13 @@ The frontend is complete and ready for backend integration. Required endpoints:
 ## 🎨 Key Features
 
 ### Real-Time Updates
+
 - Server-Sent Events for live experiment progress
 - Auto-refresh intervals (configurable)
 - Connection status indicators
 
 ### Accessibility
+
 - ARIA labels on all interactive elements
 - Keyboard navigation support
 - Focus rings on focusable elements
@@ -156,6 +174,7 @@ The frontend is complete and ready for backend integration. Required endpoints:
 - Semantic HTML structure
 
 ### User Experience
+
 - Toast notifications (success/error/warning/info)
 - Form validation with inline errors
 - Loading states for async operations
@@ -164,6 +183,7 @@ The frontend is complete and ready for backend integration. Required endpoints:
 - Responsive design for all screen sizes
 
 ### Data Management
+
 - CSV import with validation
 - Drag-and-drop file upload
 - Bulk operations support
@@ -171,6 +191,7 @@ The frontend is complete and ready for backend integration. Required endpoints:
 - File preview before import
 
 ### System Monitoring
+
 - Docker container management
 - Resource usage tracking (CPU/memory/disk)
 - Service health checks (PostgreSQL, Redis, Neo4j)
@@ -224,6 +245,7 @@ apps/dashboard/src/
 ## 🚀 Next Steps
 
 ### Backend Development
+
 1. Implement all API endpoints listed above
 2. Set up SSE streaming for live progress
 3. Integrate with experiment orchestrator
@@ -231,12 +253,14 @@ apps/dashboard/src/
 5. Implement Docker container management APIs
 
 ### Testing
+
 1. Unit tests for components
 2. Integration tests for API client
 3. E2E tests for critical flows
 4. Accessibility testing (axe-core)
 
 ### Deployment
+
 1. Configure environment variables
 2. Set up Docker containers
 3. Deploy to Fly.io (configuration already created)
@@ -276,12 +300,13 @@ apps/dashboard/src/
 ## 🎓 Usage Examples
 
 ### Using Toast Notifications
+
 ```tsx
 import { useNotification } from '@/contexts/NotificationContext';
 
 function MyComponent() {
   const { success, error } = useNotification();
-  
+
   const handleSave = async () => {
     try {
       await saveData();
@@ -294,30 +319,23 @@ function MyComponent() {
 ```
 
 ### Using Form Components
+
 ```tsx
 import { FormField, Input } from '@/components/form-field';
 
 function MyForm() {
   const [errors, setErrors] = useState({});
-  
+
   return (
-    <FormField
-      label="Experiment Name"
-      required
-      error={errors.name}
-      helpText="Enter a unique name"
-    >
-      <Input
-        name="name"
-        error={!!errors.name}
-        onChange={handleChange}
-      />
+    <FormField label="Experiment Name" required error={errors.name} helpText="Enter a unique name">
+      <Input name="name" error={!!errors.name} onChange={handleChange} />
     </FormField>
   );
 }
 ```
 
 ### Using Empty States
+
 ```tsx
 import { EmptyState } from '@/components/empty-state';
 import { FileX } from 'lucide-react';

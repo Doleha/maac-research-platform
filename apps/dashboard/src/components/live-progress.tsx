@@ -209,9 +209,7 @@ export function LiveProgress({ experimentId, totalTrials, onComplete }: LiveProg
                 <span className="text-sm font-medium">Avg Score</span>
               </div>
               <div className="mt-2 text-2xl font-bold text-green-900">
-                {progress.average_score !== undefined
-                  ? progress.average_score.toFixed(2)
-                  : '—'}
+                {progress.average_score !== undefined ? progress.average_score.toFixed(2) : '—'}
               </div>
             </div>
 
@@ -267,9 +265,7 @@ export function LiveProgress({ experimentId, totalTrials, onComplete }: LiveProg
                         <span>Started: {new Date(trial.started_at).toLocaleTimeString()}</span>
                       )}
                       {trial.completed_at && (
-                        <span>
-                          Completed: {new Date(trial.completed_at).toLocaleTimeString()}
-                        </span>
+                        <span>Completed: {new Date(trial.completed_at).toLocaleTimeString()}</span>
                       )}
                       {trial.error_message && (
                         <span className="text-red-600">Error: {trial.error_message}</span>
