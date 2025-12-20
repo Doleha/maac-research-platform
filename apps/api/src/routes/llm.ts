@@ -57,7 +57,7 @@ export async function llmRoutes(fastify: FastifyInstance) {
    */
   fastify.get('/providers', async () => {
     const providerIds = getAllProviders();
-    
+
     const providers = providerIds.map((id) => ({
       value: id,
       label: id.charAt(0).toUpperCase() + id.slice(1),

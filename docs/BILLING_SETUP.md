@@ -15,6 +15,7 @@ npx prisma generate
 ```
 
 This creates:
+
 - `users` table with credit balances
 - `credit_transactions` audit log
 - `TransactionType` enum
@@ -29,6 +30,7 @@ npm run db:seed
 ```
 
 This creates:
+
 - `test@maac-research.com` - 50,000 credits ($50)
 - `admin@maac-research.com` - 500,000 credits ($500)
 
@@ -50,6 +52,7 @@ This adds the `stripe` package dependency.
      - `payment_intent.payment_failed`
 
 2. **Copy webhook secret** to `.env`:
+
    ```bash
    STRIPE_WEBHOOK_SECRET=whsec_...
    ```
@@ -112,15 +115,17 @@ npx prisma studio
 ### Key Metrics to Watch
 
 1. **Credit Balance Alerts**
+
    ```sql
-   SELECT email, credits 
-   FROM users 
+   SELECT email, credits
+   FROM users
    WHERE credits < 1000;
    ```
 
 2. **Daily Revenue**
+
    ```sql
-   SELECT 
+   SELECT
      DATE(created_at) as date,
      SUM(amount) as credits_purchased
    FROM credit_transactions
@@ -130,7 +135,7 @@ npx prisma studio
 
 3. **Top Spenders**
    ```sql
-   SELECT 
+   SELECT
      u.email,
      SUM(CASE WHEN type = 'USAGE' THEN -amount ELSE 0 END) as total_spent
    FROM credit_transactions ct

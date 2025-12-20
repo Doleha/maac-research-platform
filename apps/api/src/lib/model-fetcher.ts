@@ -1,6 +1,6 @@
 /**
  * Dynamic Model Fetcher
- * 
+ *
  * Fetches available models from actual LLM provider APIs.
  * Implements caching to reduce API calls and improve performance.
  */
@@ -35,7 +35,7 @@ async function fetchOpenAIModels(apiKey?: string): Promise<string[]> {
 
     const response = await fetch('https://api.openai.com/v1/models', {
       headers: {
-        'Authorization': `Bearer ${key}`,
+        Authorization: `Bearer ${key}`,
       },
     });
 
@@ -43,7 +43,7 @@ async function fetchOpenAIModels(apiKey?: string): Promise<string[]> {
       throw new Error(`OpenAI API error: ${response.status}`);
     }
 
-    const data = await response.json() as { data: ModelInfo[] };
+    const data = (await response.json()) as { data: ModelInfo[] };
     const models = data.data
       .filter((model: ModelInfo) => model.id.includes('gpt'))
       .map((model: ModelInfo) => model.id)
@@ -78,7 +78,7 @@ async function fetchDeepSeekModels(apiKey?: string): Promise<string[]> {
 
     const response = await fetch('https://api.deepseek.com/models', {
       headers: {
-        'Authorization': `Bearer ${key}`,
+        Authorization: `Bearer ${key}`,
       },
     });
 
@@ -86,7 +86,7 @@ async function fetchDeepSeekModels(apiKey?: string): Promise<string[]> {
       throw new Error(`DeepSeek API error: ${response.status}`);
     }
 
-    const data = await response.json() as { data?: ModelInfo[] };
+    const data = (await response.json()) as { data?: ModelInfo[] };
     const models = data.data?.map((model: ModelInfo) => model.id).sort() || [];
 
     return models.length > 0 ? models : getDefaultDeepSeekModels();
@@ -102,21 +102,21 @@ async function fetchDeepSeekModels(apiKey?: string): Promise<string[]> {
 async function fetchOpenRouterModels(apiKey?: string): Promise<string[]> {
   try {
     const key = apiKey || process.env.OPENROUTER_API_KEY;
-    
+
     const response = await fetch('https://openrouter.ai/api/v1/models', {
-      headers: key ? {
-        'Authorization': `Bearer ${key}`,
-      } : {},
+      headers: key
+        ? {
+            Authorization: `Bearer ${key}`,
+          }
+        : {},
     });
 
     if (!response.ok) {
       throw new Error(`OpenRouter API error: ${response.status}`);
     }
 
-    const data = await response.json() as { data?: any[] };
-    const models = data.data
-      ?.map((model: any) => model.id)
-      .sort() || [];
+    const data = (await response.json()) as { data?: any[] };
+    const models = data.data?.map((model: any) => model.id).sort() || [];
 
     return models.length > 0 ? models : getDefaultOpenRouterModels();
   } catch (error) {
@@ -138,7 +138,7 @@ async function fetchGrokModels(apiKey?: string): Promise<string[]> {
 
     const response = await fetch('https://api.x.ai/v1/models', {
       headers: {
-        'Authorization': `Bearer ${key}`,
+        Authorization: `Bearer ${key}`,
       },
     });
 
@@ -146,7 +146,7 @@ async function fetchGrokModels(apiKey?: string): Promise<string[]> {
       throw new Error(`Grok API error: ${response.status}`);
     }
 
-    const data = await response.json() as { data?: ModelInfo[] };
+    const data = (await response.json()) as { data?: ModelInfo[] };
     const models = data.data?.map((model: ModelInfo) => model.id).sort() || [];
 
     return models.length > 0 ? models : getDefaultGrokModels();
@@ -167,17 +167,20 @@ async function fetchGeminiModels(apiKey?: string): Promise<string[]> {
       return getDefaultGeminiModels();
     }
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models?key=${key}`,
+    );
 
     if (!response.ok) {
       throw new Error(`Gemini API error: ${response.status}`);
     }
 
-    const data = await response.json() as { models?: any[] };
-    const models = data.models
-      ?.filter((model: any) => model.name.includes('gemini'))
-      .map((model: any) => model.name.replace('models/', ''))
-      .sort() || [];
+    const data = (await response.json()) as { models?: any[] };
+    const models =
+      data.models
+        ?.filter((model: any) => model.name.includes('gemini'))
+        .map((model: any) => model.name.replace('models/', ''))
+        .sort() || [];
 
     return models.length > 0 ? models : getDefaultGeminiModels();
   } catch (error) {
@@ -192,22 +195,25 @@ async function fetchGeminiModels(apiKey?: string): Promise<string[]> {
 async function fetchLlamaModels(apiKey?: string): Promise<string[]> {
   try {
     const key = apiKey || process.env.OPENROUTER_API_KEY;
-    
+
     const response = await fetch('https://openrouter.ai/api/v1/models', {
-      headers: key ? {
-        'Authorization': `Bearer ${key}`,
-      } : {},
+      headers: key
+        ? {
+            Authorization: `Bearer ${key}`,
+          }
+        : {},
     });
 
     if (!response.ok) {
       throw new Error(`OpenRouter API error: ${response.status}`);
     }
 
-    const data = await response.json() as { data?: any[] };
-    const llamaModels = data.data
-      ?.filter((model: any) => model.id.toLowerCase().includes('llama'))
-      .map((model: any) => model.id)
-      .sort() || [];
+    const data = (await response.json()) as { data?: any[] };
+    const llamaModels =
+      data.data
+        ?.filter((model: any) => model.id.toLowerCase().includes('llama'))
+        .map((model: any) => model.id)
+        .sort() || [];
 
     return llamaModels.length > 0 ? llamaModels : getDefaultLlamaModels();
   } catch (error) {
@@ -220,13 +226,7 @@ async function fetchLlamaModels(apiKey?: string): Promise<string[]> {
  * Default model lists (fallback when API calls fail)
  */
 function getDefaultOpenAIModels(): string[] {
-  return [
-    'gpt-4o',
-    'gpt-4o-mini',
-    'gpt-4-turbo',
-    'gpt-4',
-    'gpt-3.5-turbo',
-  ];
+  return ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-4', 'gpt-3.5-turbo'];
 }
 
 function getDefaultAnthropicModels(): string[] {
@@ -240,10 +240,7 @@ function getDefaultAnthropicModels(): string[] {
 }
 
 function getDefaultDeepSeekModels(): string[] {
-  return [
-    'deepseek-chat',
-    'deepseek-coder',
-  ];
+  return ['deepseek-chat', 'deepseek-coder'];
 }
 
 function getDefaultOpenRouterModels(): string[] {
@@ -256,19 +253,11 @@ function getDefaultOpenRouterModels(): string[] {
 }
 
 function getDefaultGrokModels(): string[] {
-  return [
-    'grok-beta',
-    'grok-2',
-  ];
+  return ['grok-beta', 'grok-2'];
 }
 
 function getDefaultGeminiModels(): string[] {
-  return [
-    'gemini-2.0-flash-exp',
-    'gemini-exp-1206',
-    'gemini-1.5-pro',
-    'gemini-1.5-flash',
-  ];
+  return ['gemini-2.0-flash-exp', 'gemini-exp-1206', 'gemini-1.5-pro', 'gemini-1.5-flash'];
 }
 
 function getDefaultLlamaModels(): string[] {
@@ -285,7 +274,7 @@ function getDefaultLlamaModels(): string[] {
  */
 export async function getModelsForProvider(
   provider: string,
-  forceRefresh: boolean = false
+  forceRefresh: boolean = false,
 ): Promise<string[]> {
   // Check cache first
   if (!forceRefresh) {
@@ -337,15 +326,7 @@ export async function getModelsForProvider(
  * Get all providers
  */
 export function getAllProviders(): string[] {
-  return [
-    'openai',
-    'anthropic',
-    'deepseek',
-    'openrouter',
-    'grok',
-    'gemini',
-    'llama',
-  ];
+  return ['openai', 'anthropic', 'deepseek', 'openrouter', 'grok', 'gemini', 'llama'];
 }
 
 /**

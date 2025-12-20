@@ -143,7 +143,7 @@ export async function billingRoutes(fastify: FastifyInstance) {
       const event = stripeClient.webhooks.constructEvent(
         request.body as string | Buffer,
         sig,
-        process.env.STRIPE_WEBHOOK_SECRET!
+        process.env.STRIPE_WEBHOOK_SECRET!,
       );
 
       // Handle different event types
