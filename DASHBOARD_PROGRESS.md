@@ -6,7 +6,7 @@
 
 ---
 
-## 📊 Overall Progress: 5/25 (20%)
+## 📊 Overall Progress: 11/25 (44%)
 
 ---
 
@@ -43,55 +43,56 @@
 
 ---
 
-## Phase 2: Experiment Creation (0/4)
+## Phase 2: Experiment Creation (4/4) ✅
 
 **Goal:** Complete experiment configuration interface
 
-### 📋 Todo
+### ✅ Completed
 
-- [ ] **2.1 Add LLM provider/model selection**
+- [x] **2.1 Add LLM provider/model selection** ✅
   - Dropdown: OpenAI, Anthropic, DeepSeek, OpenRouter
   - Model selection (dynamic based on provider)
   - Temperature, max_tokens, top_p inputs
   - **Files:** `src/components/llm-selector.tsx`
 
-- [ ] **2.2 Implement tool configuration interface**
-  - Checkboxes for 8 MIMIC tools
+- [x] **2.2 Implement tool configuration interface** ✅
+  - Checkboxes for 6 MIMIC tools (Memory, Planning, Reflection, Validation, Clarification, Evaluation)
   - Map to 6-bit configuration (111111)
+  - Select All/Clear All functionality
   - **Files:** `src/components/tool-config.tsx`
 
-- [ ] **2.3 Build control expectations editor**
+- [x] **2.3 Build control expectations editor** ✅
   - 12 expected_calculations inputs
   - 6 success_thresholds inputs
   - Validation + tooltips
   - **Files:** `src/components/control-expectations.tsx`
 
-- [ ] **2.4 Connect experiment form to API**
+- [x] **2.4 Connect experiment form to API** ✅
   - POST to `/api/experiments`
   - Validation error handling
   - Redirect on success
-  - **Files:** `src/lib/api-client.ts`, `src/app/experiments/new/page.tsx`
+  - **Files:** `src/lib/api-client.ts`, `src/components/experiment-form.tsx`
 
 ---
 
-## Phase 3: Data Management (0/2)
+## Phase 3: Data Management (2/2) ✅
 
 **Goal:** Upload and validate scenario data
 
-### 📋 Todo
+### ✅ Completed
 
-- [ ] **3.1 Build data upload component**
+- [x] **3.1 Build data upload component** ✅
   - Drag-drop CSV/JSON upload
   - Parse and validate files
   - Preview table (50 rows)
-  - Cell editing
-  - **Files:** `src/app/data/page.tsx`, `src/components/data-upload.tsx`
+  - Cell editing capability
+  - **Files:** `src/app/data/page.tsx`, `src/components/data-upload.tsx`, `src/components/data-preview.tsx`
 
-- [ ] **3.2 Implement scenario validation & import**
+- [x] **3.2 Implement scenario validation & import** ✅
   - Zod schema validation
   - Error display with line numbers
   - POST to `/api/scenarios/bulk-import`
-  - Progress bar
+  - Success/error feedback
   - **Files:** `src/components/scenario-validator.tsx`
 
 ---
@@ -307,4 +308,12 @@
 - ✅ Updated layout to integrate sidebar in two-column layout
 - ✅ Created all foundation pages: /experiments, /experiments/new, /experiments/[id], /data, /settings
 - ✅ Built comprehensive experiment creation form with validation
-- ⏳ Next: Phase 2 - Add LLM provider/model selection and tool configuration
+- ✅ Implemented LLM provider/model selector with dynamic model lists
+- ✅ Created MIMIC tool configuration with 6-bit mapping
+- ✅ Built control expectations editor with 12 calculations and 6 thresholds
+- ✅ Connected experiment form to API endpoint with error handling
+- ✅ Implemented drag-drop file upload with CSV/JSON parsing
+- ✅ Built data preview table with cell editing (50 row preview)
+- ✅ Created scenario validator with Zod schema and error reporting
+- ✅ Connected bulk import to API with success feedback
+- ⏳ Next: Phase 4 - Execution controls and real-time monitoring

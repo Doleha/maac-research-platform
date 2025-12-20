@@ -2,6 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { LLMSelector, type LLMConfig } from './llm-selector';
+import { ToolConfiguration, type ToolConfig } from './tool-config';
+import { ControlExpectations, type ControlExpectations as ControlExpectationsType } from './control-expectations';
 
 const domains = [
   { value: 'problem_solving', label: 'Problem Solving' },
@@ -11,63 +14,140 @@ const domains = [
 ];
 
 const tiers = [
-  { value: '1a', label: 'Tier 1a - Scenario Generation Only', description: 'Generate scenarios without running experiments' },
-  { value: '1b', label: 'Tier 1b - MIMIC Experiment Processing', description: 'Run MIMIC experiments with cognitive engine' },
-  { value: '2', label: 'Tier 2 - Advanced Analysis', description: 'Dataset-level statistical analysis' },
+  {
+    value: '1a',
+    label: 'Tier 1a - Scenario Generation Only',
+    description: 'Generate scenarios without running experiments',
+  },
+  {
+    value: '1b',
+    label: 'Tier 1b - MIMIC Experiment Processing',
+    description: 'Run MIMIC experiments with cognitive engine',
+  },
+  {
+    value: '2',
+    label: 'Tier 2 - Advanced Analysis',
+    description: 'Dataset-level statistical analysis',
+  },
 ];
+
+interface FormData {
+  name: string;
+  description: string;
+  domain: string;
+  tier: string;
+  replicationCount: number;
+  llmConfig: LLMConfig;
+  toolConfig: ToolConfig;
+  controlExpectations: ControlExpectationsType;
+}
 
 export function ExperimentForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const [formData, setFormData] = useState({
+
+  const [formData, setFormData] = useState<FormData>({
     name: '',
     description: '',
     domain: '',
     tier: '',
     replicationCount: 1,
+    llmConfig: {
+      provider: '',
+      model: '',
+      temperature: 0.7,
+      max_tokens: 4096,
+      top_p: 1.0,
+    },
+    toolConfig: {
+      memory: true,
+      planning: true,
+      reflection: true,
+      validation: true,
+      clarification: true,
+      evaluation: true,
+    },
+    controlExpectations: {
+      expected_calculations: {
+        memory_retrievals: 10,
+        planning_steps: 5,
+        reflections: 3,
+        validations: 5,
+        clarifications: 2,
+        evaluations: 3,
+        goal_updates: 2,
+        error_corrections: 1,
+        total_token_usage: 10000,
+        avg_response_time_ms: 2000,
+        context_switches: 3,
+        backtracking_events: 1,
+      },
+      success_thresholds: {
+        min_accuracy: 0.8,
+        max_error_rate: 0.2,
+        min_completeness: 0.9,
+        max_token_budget: 50000,
+        max_time_seconds: 300,
+        min_efficiency_score: 0.7,
+      },
+    },
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Basic validation
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.name.trim()) {
       newErrors.name = 'Experiment name is required';
     }
-    
+
     if (!formData.domain) {
       newErrors.domain = 'Please select a domain';
     }
-    
+
     if (!formData.tier) {
       newErrors.tier = 'Please select a tier';
     }
-    
+
     if (formData.replicationCount < 1 || formData.replicationCount > 100) {
       newErrors.replicationCount = 'Replication count must be between 1 and 100';
     }
-    
+
+    if (!formData.llmConfig.provider) {
+      newErrors.provider = 'Please select an LLM provider';
+    }
+
+    if (!formData.llmConfig.model) {
+      newErrors.model = 'Please select a model';
+    }
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-    
+
     setIsSubmitting(true);
-    
+
     try {
-      // TODO: Connect to API endpoint
-      console.log('Submitting experiment:', formData);
+      // Connect to API endpoint
+      const response = await fetch('/api/experiments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create experiment');
+      }
+
+      const result = await response.json();
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Redirect to experiments list
-      router.push('/experiments');
+      // Redirect to experiment detail page
+      router.push(`/experiments/${result.id}`);
     } catch (error) {
       console.error('Failed to create experiment:', error);
       setErrors({ submit: 'Failed to create experiment. Please try again.' });
@@ -77,15 +157,34 @@ export function ExperimentForm() {
   };
 
   const handleChange = (field: string, value: string | number) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear error for this field
     if (errors[field]) {
-      setErrors(prev => {
+      setErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors[field];
         return newErrors;
       });
     }
+  };
+
+  const handleLLMChange = (config: LLMConfig) => {
+    setFormData((prev) => ({ ...prev, llmConfig: config }));
+    // Clear LLM-related errors
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors.provider;
+      delete newErrors.model;
+      return newErrors;
+    });
+  };
+
+  const handleToolChange = (config: ToolConfig) => {
+    setFormData((prev) => ({ ...prev, toolConfig: config }));
+  };
+
+  const handleExpectationsChange = (expectations: ControlExpectationsType) => {
+    setFormData((prev) => ({ ...prev, controlExpectations: expectations }));
   };
 
   return (
@@ -94,7 +193,7 @@ export function ExperimentForm() {
       <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-gray-900">Basic Information</h2>
         <p className="mt-1 text-sm text-gray-500">Provide details about your experiment</p>
-        
+
         <div className="mt-6 space-y-4">
           {/* Experiment Name */}
           <div>
@@ -137,7 +236,7 @@ export function ExperimentForm() {
       <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-gray-900">Configuration</h2>
         <p className="mt-1 text-sm text-gray-500">Select domain and tier settings</p>
-        
+
         <div className="mt-6 space-y-4">
           {/* Domain Selection */}
           <div>
@@ -191,9 +290,7 @@ export function ExperimentForm() {
                     />
                   </div>
                   <div className="ml-3 flex-1">
-                    <label className="block text-sm font-medium text-gray-900">
-                      {tier.label}
-                    </label>
+                    <label className="block text-sm font-medium text-gray-900">{tier.label}</label>
                     <p className="text-sm text-gray-500">{tier.description}</p>
                   </div>
                 </div>
@@ -227,6 +324,42 @@ export function ExperimentForm() {
               <p className="mt-1 text-sm text-red-600">{errors.replicationCount}</p>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* LLM Configuration */}
+      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-gray-900">LLM Configuration</h2>
+        <p className="mt-1 text-sm text-gray-500">Select language model and parameters</p>
+
+        <div className="mt-6">
+          <LLMSelector value={formData.llmConfig} onChange={handleLLMChange} errors={errors} />
+        </div>
+      </div>
+
+      {/* Tool Configuration */}
+      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-gray-900">MIMIC Tool Configuration</h2>
+        <p className="mt-1 text-sm text-gray-500">Enable cognitive engines for this experiment</p>
+
+        <div className="mt-6">
+          <ToolConfiguration value={formData.toolConfig} onChange={handleToolChange} />
+        </div>
+      </div>
+
+      {/* Control Expectations */}
+      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-gray-900">Control Expectations</h2>
+        <p className="mt-1 text-sm text-gray-500">
+          Define expected performance metrics and success thresholds
+        </p>
+
+        <div className="mt-6">
+          <ControlExpectations
+            value={formData.controlExpectations}
+            onChange={handleExpectationsChange}
+            errors={errors}
+          />
         </div>
       </div>
 

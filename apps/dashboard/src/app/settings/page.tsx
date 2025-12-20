@@ -4,7 +4,7 @@ export default function SettingsPage() {
       <div className="mx-auto max-w-4xl">
         <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
         <p className="mt-2 text-gray-600">Configure system settings and credentials</p>
-        
+
         <div className="mt-8 space-y-6">
           {/* LLM Credentials */}
           <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
@@ -33,7 +33,9 @@ export default function SettingsPage() {
           {/* Database Configuration */}
           <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
             <h2 className="text-xl font-semibold text-gray-900">Database Configuration</h2>
-            <p className="mt-2 text-gray-500">Connection settings for PostgreSQL, Neo4j, and Redis</p>
+            <p className="mt-2 text-gray-500">
+              Connection settings for PostgreSQL, Neo4j, and Redis
+            </p>
           </div>
 
           {/* Rate Limiting */}
