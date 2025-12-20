@@ -295,7 +295,13 @@ export async function experimentRoutes(
       },
     },
     async (request, reply) => {
-      const { status, sortBy = 'createdAt', sortOrder = 'desc', limit = 50, offset = 0 } = request.query;
+      const {
+        status,
+        sortBy = 'createdAt',
+        sortOrder = 'desc',
+        limit = 50,
+        offset = 0,
+      } = request.query;
 
       // Build where clause
       const where = status ? { status } : {};
@@ -362,10 +368,7 @@ export async function experimentRoutes(
 
       const experiment = await prisma.experiment.findFirst({
         where: {
-          OR: [
-            { experimentId: id },
-            { id: isNaN(Number(id)) ? -1 : Number(id) },
-          ],
+          OR: [{ experimentId: id }, { id: isNaN(Number(id)) ? -1 : Number(id) }],
         },
       });
 
@@ -580,10 +583,7 @@ export async function experimentRoutes(
         // Update experiment status to failed/stopped
         const experiment = await prisma.experiment.findFirst({
           where: {
-            OR: [
-              { experimentId: id },
-              { id: isNaN(Number(id)) ? -1 : Number(id) },
-            ],
+            OR: [{ experimentId: id }, { id: isNaN(Number(id)) ? -1 : Number(id) }],
           },
         });
 
@@ -654,7 +654,7 @@ export async function experimentRoutes(
           where: { experimentId: id },
           data: { status: 'paused' },
         });
-        
+
         await orchestrator.pauseExperiment();
         return {
           message: 'Experiment paused',
@@ -709,7 +709,7 @@ export async function experimentRoutes(
           where: { experimentId: id },
           data: { status: 'running' },
         });
-        
+
         await orchestrator.resumeExperiment();
         return {
           message: 'Experiment resumed',

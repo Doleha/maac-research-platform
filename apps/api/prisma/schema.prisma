@@ -98,6 +98,72 @@ model MAACExperimentalData {
   @@map("maac_experimental_data")
 }
 
+// =============================================================================
+// EXPERIMENT TRACKING MODEL
+// =============================================================================
+
+model Experiment {
+  id            Int      @id @default(autoincrement())
+  experimentId  String   @unique @map("experiment_id")
+  name          String
+  description   String?
+  status        String   @default("pending")
+  
+  // Configuration arrays
+  domains       String[]
+  tiers         String[]
+  models        String[]
+  
+  // Tool configurations (JSON for flexibility)
+  toolConfigs   Json     @map("tool_configs")
+  
+  // Trial settings
+  repetitionsPerDomainTier Int @default(1) @map("repetitions_per_domain_tier")
+  parallelism              Int @default(10)
+  timeout                  Int @default(60000)
+  totalTrials              Int @map("total_trials")
+  completedTrials          Int @default(0) @map("completed_trials")
+  failedTrials             Int @default(0) @map("failed_trials")
+  
+  // Timestamps
+  createdAt    DateTime  @default(now()) @map("created_at")
+  startedAt    DateTime? @map("started_at")
+  completedAt  DateTime? @map("completed_at")
+  
+  @@index([experimentId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("experiments")
+}
+
+model Scenario {
+  id              String   @id @default(cuid())
+  scenarioId      String   @unique @map("scenario_id")
+  domain          String
+  tier            String
+  taskTitle       String   @map("task_title")
+  taskDescription String?  @map("task_description")
+  expectedOutcome String?  @map("expected_outcome")
+  metadata        Json?
+  createdAt       DateTime @default(now()) @map("created_at")
+  
+  @@index([domain])
+  @@index([tier])
+  @@index([scenarioId])
+  @@map("scenarios")
+}
+
+model Setting {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     String
+  encrypted Boolean  @default(false)
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  @@index([key])
+  @@map("settings")
+}
+
 // Scenario definitions
 model MAACExperimentScenario {
   id Int @id @default(autoincrement())

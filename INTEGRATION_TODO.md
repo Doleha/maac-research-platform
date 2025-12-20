@@ -33,7 +33,7 @@
 - [x] **1.1 Add Experiment metadata model** ✅
   - **File:** `apps/api/prisma/schema.prisma`
   - **Action:** Add `Experiment` model to store experiment metadata
-  - **Fields:** 
+  - **Fields:**
     - `id`, `experimentId`, `name`, `description`
     - `status` (pending, running, completed, failed, paused)
     - `domains[]`, `tiers[]`, `models[]`
@@ -85,17 +85,19 @@
   - **Response:**
     ```json
     {
-      "experiments": [{
-        "experimentId": "uuid",
-        "name": "string",
-        "status": "running",
-        "domains": ["analytical"],
-        "tiers": ["simple"],
-        "models": ["gpt_4o"],
-        "totalTrials": 100,
-        "completedTrials": 45,
-        "createdAt": "ISO8601"
-      }],
+      "experiments": [
+        {
+          "experimentId": "uuid",
+          "name": "string",
+          "status": "running",
+          "domains": ["analytical"],
+          "tiers": ["simple"],
+          "models": ["gpt_4o"],
+          "totalTrials": 100,
+          "completedTrials": 45,
+          "createdAt": "ISO8601"
+        }
+      ],
       "pagination": { "total": 156, "page": 1, "limit": 50 }
     }
     ```
@@ -103,7 +105,7 @@
 - [x] **2.3 Add GET /api/experiments/:id (full details)** ✅
   - **File:** `apps/api/src/routes/experiments.ts`
   - **Endpoint:** `GET /api/experiments/:id`
-  - **Action:** 
+  - **Action:**
     1. Get experiment from `Experiment` table
     2. Get status from orchestrator
     3. Get aggregate MAAC scores from `MAACExperimentalData`
@@ -143,7 +145,7 @@
 - [x] **2.4 Add POST /api/experiments/:id/stop** ✅
   - **File:** `apps/api/src/routes/experiments.ts`
   - **Endpoint:** `POST /api/experiments/:id/stop`
-  - **Action:** 
+  - **Action:**
     1. Stop orchestrator execution
     2. Update status in `Experiment` table to "stopped"
     3. Record `completedAt` timestamp
@@ -214,10 +216,12 @@
 - [x] **3.8 Update form submission** ✅
   - **File:** `apps/dashboard/src/components/experiment-form.tsx`
   - **Completed:** API call updated to send domains[], tiers[], models[], toolConfigs to backend
-        parallelism: 10,
-        timeout: 60000
-      })
+    parallelism: 10,
+    timeout: 60000
+    })
     });
+    ```
+
     ```
 
 ---
@@ -314,7 +318,7 @@
 ## 🧪 Testing & Validation (5 tasks)
 
 - [ ] **7.1 Test experiment creation flow**
-  - **Action:** 
+  - **Action:**
     1. Create experiment with multiple domains/tiers/models
     2. Verify stored in database
     3. Verify orchestrator starts execution
@@ -369,6 +373,7 @@
 ## 🎯 Success Criteria
 
 ### Phase 1 Complete When:
+
 - [x] Can create experiment from dashboard
 - [x] Experiment appears in list with correct status
 - [x] Can view experiment details with all metadata
@@ -378,6 +383,7 @@
 - [x] All data persists in database
 
 ### Phase 2 Goals:
+
 - [ ] Real-time progress with SSE
 - [ ] Export results to JSON/CSV
 - [ ] Retry failed trials
@@ -390,6 +396,7 @@
 ## 📅 Timeline Estimate
 
 **Phase 1: Core Integration**
+
 - Database Schema: 2 hours
 - Backend Endpoints: 8 hours
 - Dashboard Updates: 10 hours
@@ -397,6 +404,7 @@
 - **Total: ~24 hours (3 days)**
 
 **Phase 2: Advanced Features**
+
 - SSE Implementation: 6 hours
 - Export/Retry: 4 hours
 - Scenario CRUD: 3 hours
@@ -410,6 +418,7 @@
 **Ready to Start:** Task 1.1 - Add Experiment metadata model to Prisma schema
 
 **Next Steps:**
+
 1. Update `apps/api/prisma/schema.prisma`
 2. Run migration
 3. Update experiment creation endpoint

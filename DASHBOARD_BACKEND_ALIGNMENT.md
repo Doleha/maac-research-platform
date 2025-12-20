@@ -11,8 +11,10 @@
 ### Experiment Routes (`/api/experiments`)
 
 #### ✅ POST /api/experiments
+
 **Exists:** Yes  
 **Request Body:**
+
 ```json
 {
   "name": "string",
@@ -49,8 +51,10 @@
 ---
 
 #### ✅ GET /api/experiments/:id/status
+
 **Exists:** Yes  
 **Response:**
+
 ```json
 {
   "experimentId": "uuid",
@@ -69,9 +73,11 @@
 ---
 
 #### ✅ GET /api/experiments/:id/results
+
 **Exists:** Yes  
 **Query Params:** `?limit=100&offset=0&domain=analytical&tier=simple`  
 **Response:**
+
 ```json
 {
   "experimentId": "uuid",
@@ -101,8 +107,10 @@
 ---
 
 #### ✅ POST /api/experiments/:id/pause
+
 **Exists:** Yes  
 **Response:**
+
 ```json
 {
   "message": "Experiment paused",
@@ -113,8 +121,10 @@
 ---
 
 #### ✅ POST /api/experiments/:id/resume
+
 **Exists:** Yes  
 **Response:**
+
 ```json
 {
   "message": "Experiment resumed",
@@ -125,6 +135,7 @@
 ---
 
 #### ❌ Missing Endpoints (Dashboard expects but don't exist)
+
 - `GET /api/experiments` - List all experiments
 - `GET /api/experiments/:id` - Full experiment details
 - `POST /api/experiments/:id/stop` - Stop experiment
@@ -137,8 +148,10 @@
 ### Scenario Routes (`/api/scenarios`)
 
 #### ✅ POST /api/scenarios/generate
+
 **Exists:** Yes  
 **Request Body:**
+
 ```json
 {
   "domains": ["analytical", "planning"],
@@ -151,6 +164,7 @@
 ```
 
 **Response:**
+
 ```json
 {
   "message": "Generated scenarios",
@@ -170,6 +184,7 @@
 ---
 
 #### ❌ Missing Endpoints
+
 - `GET /api/scenarios` - List all scenarios
 - `POST /api/scenarios` - Create single scenario
 - `PUT /api/scenarios/:id` - Update scenario
@@ -192,6 +207,7 @@ Need to check what exists here for model fetching.
 **File:** `apps/dashboard/src/app/experiments/new/page.tsx`
 
 **Changes Needed:**
+
 1. Support multiple domains (array selection)
 2. Support multiple tiers (array selection)
 3. Support multiple models (array selection)
@@ -202,12 +218,13 @@ Need to check what exists here for model fetching.
 8. Remove fields not in backend: `llm_provider`, `temperature`, `top_p`, `max_tokens`
 
 **New Form Structure:**
+
 ```tsx
 {
   name: string;
   description: string;
   domains: Domain[]; // Multi-select
-  tiers: Tier[]; // Multi-select  
+  tiers: Tier[]; // Multi-select
   repetitionsPerDomainTier: number; // 1-200
   models: ModelId[]; // Multi-select
   toolConfigs: ToolConfig[]; // Array builder
@@ -223,6 +240,7 @@ Need to check what exists here for model fetching.
 Since dashboard expects these, we need to add them to backend:
 
 #### Backend TODO - Experiments
+
 - [ ] `GET /api/experiments` - List with filters
 - [ ] `GET /api/experiments/:id` - Full details (not just status)
 - [ ] `POST /api/experiments/:id/stop` - Stop experiment
@@ -231,6 +249,7 @@ Since dashboard expects these, we need to add them to backend:
 - [ ] `GET /api/experiments/:id/progress` - SSE stream
 
 #### Backend TODO - Scenarios
+
 - [ ] `GET /api/scenarios` - List scenarios
 - [ ] `POST /api/scenarios` - Create scenario
 - [ ] `PUT /api/scenarios/:id` - Update scenario
@@ -238,12 +257,14 @@ Since dashboard expects these, we need to add them to backend:
 - [ ] `POST /api/scenarios/bulk-import` - Import CSV
 
 #### Backend TODO - System
+
 - [ ] `GET /api/system/containers` - Docker status
 - [ ] `GET /api/system/services` - Service health
 - [ ] `GET /api/system/metrics` - System metrics
 - [ ] `POST /api/system/containers/:name/{action}` - Container control
 
 #### Backend TODO - Settings
+
 - [ ] `GET /api/settings` - Get settings
 - [ ] `PUT /api/settings/credentials` - Update API keys
 - [ ] `GET /api/billing` - Usage tracking
@@ -255,6 +276,7 @@ Since dashboard expects these, we need to add them to backend:
 **File:** `apps/dashboard/src/app/experiments/[id]/page.tsx`
 
 **Changes:**
+
 1. Call `/api/experiments/:id/results` instead of `/api/experiments/:id`
 2. Parse MAAC scores from results array
 3. Calculate aggregate MAAC scores across trials
@@ -267,6 +289,7 @@ Since dashboard expects these, we need to add them to backend:
 **File:** `apps/dashboard/src/lib/api-client.ts`
 
 **Update all endpoint calls to match backend:**
+
 ```typescript
 // OLD - Dashboard expects
 POST /api/experiments
@@ -292,6 +315,7 @@ POST /api/experiments
 ### Backend → Dashboard Mapping
 
 #### Experiment Status
+
 ```typescript
 // Backend (orchestrator)
 {
@@ -308,7 +332,7 @@ POST /api/experiments
 {
   experimentId: string;
   experimentName: string; // MISSING - need to store
-  status: "pending" | "running" | "completed" | "failed";
+  status: 'pending' | 'running' | 'completed' | 'failed';
   totalTrials: number; // = total
   completedTrials: number; // = completed
   tier: string; // MISSING - need to store
@@ -323,6 +347,7 @@ POST /api/experiments
 ---
 
 #### MAAC Scores
+
 ```typescript
 // Backend (MAACExperimentalData)
 {
@@ -356,6 +381,7 @@ POST /api/experiments
 ## 🗄️ Database Schema Alignment
 
 ### Current Schema: MAACExperimentalData
+
 - Stores trial-level results
 - No experiment-level metadata
 - No scenarios table
@@ -384,9 +410,9 @@ model Experiment {
   createdAt DateTime @default(now())
   startedAt DateTime?
   completedAt DateTime?
-  
+
   trials MAACExperimentalData[]
-  
+
   @@index([status])
   @@index([createdAt])
   @@map("experiments")
@@ -403,7 +429,7 @@ model Scenario {
   expectedOutcome String?
   metadata Json?
   createdAt DateTime @default(now())
-  
+
   @@index([domain, tier])
   @@map("scenarios")
 }
@@ -415,7 +441,7 @@ model Setting {
   value String
   encrypted Boolean @default(false)
   updatedAt DateTime @updatedAt
-  
+
   @@map("settings")
 }
 ```
@@ -425,11 +451,13 @@ model Setting {
 ## ✅ Action Plan
 
 ### Step 1: Update Database Schema
+
 1. Add Experiment, Scenario, Setting models to Prisma schema
 2. Run migration: `npx prisma migrate dev`
 3. Update experiment creation to store metadata
 
 ### Step 2: Add Missing Backend Endpoints
+
 1. Implement `GET /api/experiments` list endpoint
 2. Implement `GET /api/experiments/:id` details endpoint
 3. Implement CRUD endpoints for scenarios
@@ -437,12 +465,14 @@ model Setting {
 5. Implement settings endpoints
 
 ### Step 3: Update Dashboard Forms
+
 1. Update experiment creation form structure
 2. Add tool configuration builder component
 3. Update API client to match backend contracts
 4. Update experiment detail page to parse backend responses
 
 ### Step 4: Test Integration
+
 1. Test experiment creation flow
 2. Test experiment monitoring
 3. Test scenario management

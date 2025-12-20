@@ -3,6 +3,7 @@
 ## Prerequisites
 
 1. Install Fly CLI:
+
    ```bash
    curl -L https://fly.io/install.sh | sh
    ```
@@ -182,6 +183,7 @@ All services communicate via Fly's private network using `.internal` domains:
 ## Environment Variables Summary
 
 ### API (.env)
+
 ```bash
 # Database
 DATABASE_URL=postgresql://user:pass@maac-postgres.internal:5432/maac_research
@@ -214,6 +216,7 @@ API_PORT=3000
 ```
 
 ### Dashboard (.env)
+
 ```bash
 NEXT_PUBLIC_API_URL=https://maac-api.fly.dev
 ```
@@ -259,17 +262,20 @@ fly platform status
 ## Troubleshooting
 
 ### Database connection issues
+
 ```bash
 # Test connection from API
 fly ssh console --app maac-api -C "nc -zv maac-postgres.internal 5432"
 ```
 
 ### Check service health
+
 ```bash
 fly checks list --app maac-api
 ```
 
 ### View resource usage
+
 ```bash
 fly status --app maac-api
 ```
