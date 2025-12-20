@@ -19,6 +19,7 @@ The dashboard frontend is production-ready and requires backend API implementati
 ## 🎯 Implementation Priority
 
 ### Priority 1: Core Experiment Functionality (8 endpoints)
+
 Essential for basic experiment workflow
 
 - [ ] `POST /api/experiments` - Create experiment
@@ -31,11 +32,13 @@ Essential for basic experiment workflow
 - [ ] `POST /api/experiments/{id}/retry` - Retry failed trials
 
 ### Priority 2: Real-Time Progress (1 endpoint)
+
 Critical for live monitoring
 
 - [ ] `GET /api/experiments/{id}/progress` - SSE stream for live updates
 
 ### Priority 3: Scenario Management (6 endpoints)
+
 Data preparation and management
 
 - [ ] `GET /api/scenarios` - List scenarios with filters
@@ -46,12 +49,14 @@ Data preparation and management
 - [ ] `GET /api/models` - Get available LLM models per provider
 
 ### Priority 4: AI Scenario Generation (2 endpoints)
+
 Advanced feature for scenario creation
 
 - [ ] `POST /api/scenarios/generate/estimate` - Cost estimation
 - [ ] `POST /api/scenarios/generate` - Generate with SSE streaming
 
 ### Priority 5: System Monitoring (6 endpoints)
+
 Health and resource monitoring
 
 - [ ] `GET /api/system/containers` - Docker container status
@@ -62,6 +67,7 @@ Health and resource monitoring
 - [ ] `POST /api/system/containers/{name}/restart` - Restart container
 
 ### Priority 6: Settings & Configuration (3 endpoints)
+
 User preferences and credentials
 
 - [ ] `GET /api/settings` - Get all settings
@@ -75,10 +81,12 @@ User preferences and credentials
 ### 1. Experiments API
 
 #### `POST /api/experiments`
+
 **Purpose:** Create new experiment  
 **Frontend:** [apps/dashboard/src/app/experiments/new/page.tsx](apps/dashboard/src/app/experiments/new/page.tsx)
 
 **Request Body:**
+
 ```json
 {
   "experimentName": "string",
@@ -101,6 +109,7 @@ User preferences and credentials
 ```
 
 **Response:**
+
 ```json
 {
   "experimentId": "string",
@@ -111,6 +120,7 @@ User preferences and credentials
 ```
 
 **Implementation Notes:**
+
 - Validate all fields with Zod/Joi schema
 - Store in PostgreSQL experiments table
 - Create initial experiment record with status="created"
@@ -119,10 +129,12 @@ User preferences and credentials
 ---
 
 #### `GET /api/experiments`
+
 **Purpose:** List all experiments with filtering  
 **Frontend:** [apps/dashboard/src/app/experiments/page.tsx](apps/dashboard/src/app/experiments/page.tsx)
 
 **Query Parameters:**
+
 ```
 ?search=string          # Search by name/description
 &status=pending|running|completed|failed|paused
@@ -135,6 +147,7 @@ User preferences and credentials
 ```
 
 **Response:**
+
 ```json
 {
   "experiments": [
@@ -164,18 +177,21 @@ User preferences and credentials
 ```
 
 **Implementation Notes:**
+
 - Support all filter combinations
 - Implement efficient pagination with offset/limit
-- Calculate progress_percent = (completedTrials / totalTrials) * 100
+- Calculate progress_percent = (completedTrials / totalTrials) \* 100
 - Sort by multiple fields
 
 ---
 
 #### `GET /api/experiments/{id}`
+
 **Purpose:** Get detailed experiment information  
 **Frontend:** [apps/dashboard/src/app/experiments/[id]/page.tsx](apps/dashboard/src/app/experiments/[id]/page.tsx)
 
 **Response:**
+
 ```json
 {
   "experimentId": "string",
@@ -222,6 +238,7 @@ User preferences and credentials
 ```
 
 **Implementation Notes:**
+
 - Join experiments, trials, and scenarios tables
 - Calculate aggregate MAAC scores across completed trials
 - Include all trial details for display
@@ -229,10 +246,12 @@ User preferences and credentials
 ---
 
 #### `GET /api/experiments/{id}/progress` (SSE)
+
 **Purpose:** Real-time experiment progress streaming  
 **Frontend:** [apps/dashboard/src/components/live-progress.tsx](apps/dashboard/src/components/live-progress.tsx)
 
 **SSE Event Format:**
+
 ```
 event: progress
 data: {
@@ -245,7 +264,7 @@ data: {
   "trials": [
     {
       "trialId": "string",
-      "scenario_id": "string", 
+      "scenario_id": "string",
       "status": "completed",
       "maac_score": 0.88,
       "completedAt": "ISO8601"
@@ -269,6 +288,7 @@ data: {
 ```
 
 **Implementation Notes:**
+
 - Use Server-Sent Events (SSE) for real-time streaming
 - Push updates whenever a trial completes
 - Calculate ETA based on average trial completion time
@@ -279,12 +299,14 @@ data: {
 ---
 
 #### `POST /api/experiments/{id}/start`
+
 **Purpose:** Start/resume experiment execution  
 **Frontend:** [apps/dashboard/src/app/experiments/[id]/page.tsx](apps/dashboard/src/app/experiments/[id]/page.tsx)
 
 **Request Body:** Empty or optional config overrides
 
 **Response:**
+
 ```json
 {
   "experimentId": "string",
@@ -295,6 +317,7 @@ data: {
 ```
 
 **Implementation Notes:**
+
 - Update experiment status to "running"
 - Enqueue trials to BullMQ job queue
 - Trigger experiment orchestrator
@@ -303,9 +326,11 @@ data: {
 ---
 
 #### `POST /api/experiments/{id}/pause`
+
 **Purpose:** Pause running experiment
 
 **Response:**
+
 ```json
 {
   "experimentId": "string",
@@ -317,6 +342,7 @@ data: {
 ```
 
 **Implementation Notes:**
+
 - Stop processing new trials from queue
 - Allow current trial to complete
 - Update status to "paused"
@@ -324,9 +350,11 @@ data: {
 ---
 
 #### `POST /api/experiments/{id}/stop`
+
 **Purpose:** Stop and cancel experiment
 
 **Response:**
+
 ```json
 {
   "experimentId": "string",
@@ -338,6 +366,7 @@ data: {
 ```
 
 **Implementation Notes:**
+
 - Remove remaining jobs from queue
 - Mark experiment as stopped
 - Cancel any running trials
@@ -345,9 +374,11 @@ data: {
 ---
 
 #### `POST /api/experiments/{id}/retry`
+
 **Purpose:** Retry all failed trials in experiment
 
 **Response:**
+
 ```json
 {
   "experimentId": "string",
@@ -358,6 +389,7 @@ data: {
 ```
 
 **Implementation Notes:**
+
 - Find all trials with status="failed"
 - Re-enqueue to BullMQ with original config
 - Update trial status to "pending"
@@ -365,18 +397,25 @@ data: {
 ---
 
 #### `GET /api/experiments/{id}/export`
+
 **Purpose:** Export experiment results
 
 **Query Parameters:**
+
 ```
 ?format=json|csv
 ```
 
 **Response (JSON):**
+
 ```json
 {
-  "experiment": { /* full experiment object */ },
-  "trials": [ /* all trial details */ ],
+  "experiment": {
+    /* full experiment object */
+  },
+  "trials": [
+    /* all trial details */
+  ],
   "summary": {
     "overall_maac_score": 0.85,
     "total_trials": 100,
@@ -386,12 +425,14 @@ data: {
 ```
 
 **Response (CSV):**
+
 ```csv
 trial_id,scenario_id,status,maac_score,model_alignment,answer_accuracy,adaptability,clarity,response,error
 ...
 ```
 
 **Implementation Notes:**
+
 - Generate CSV with all trial data
 - Include MAAC dimension breakdowns
 - Set appropriate Content-Type and filename headers
@@ -401,10 +442,12 @@ trial_id,scenario_id,status,maac_score,model_alignment,answer_accuracy,adaptabil
 ### 2. Scenarios API
 
 #### `GET /api/scenarios`
+
 **Purpose:** List all scenarios with filtering  
 **Frontend:** [apps/dashboard/src/app/data/scenarios/page.tsx](apps/dashboard/src/app/data/scenarios/page.tsx)
 
 **Query Parameters:**
+
 ```
 ?search=string          # Search task_id, description
 &domain=string
@@ -413,6 +456,7 @@ trial_id,scenario_id,status,maac_score,model_alignment,answer_accuracy,adaptabil
 ```
 
 **Response:**
+
 ```json
 {
   "scenarios": [
@@ -423,7 +467,9 @@ trial_id,scenario_id,status,maac_score,model_alignment,answer_accuracy,adaptabil
       "task_description": "string",
       "baseline_answer": "string",
       "ground_truth": "string",
-      "metadata": { /* optional */ }
+      "metadata": {
+        /* optional */
+      }
     }
   ],
   "pagination": {
@@ -437,9 +483,11 @@ trial_id,scenario_id,status,maac_score,model_alignment,answer_accuracy,adaptabil
 ---
 
 #### `POST /api/scenarios`
+
 **Purpose:** Create single scenario
 
 **Request Body:**
+
 ```json
 {
   "task_id": "string",
@@ -452,6 +500,7 @@ trial_id,scenario_id,status,maac_score,model_alignment,answer_accuracy,adaptabil
 ```
 
 **Response:**
+
 ```json
 {
   "scenario_id": "string",
@@ -462,12 +511,14 @@ trial_id,scenario_id,status,maac_score,model_alignment,answer_accuracy,adaptabil
 ---
 
 #### `PUT /api/scenarios/{id}`
+
 **Purpose:** Update existing scenario  
 **Frontend:** [apps/dashboard/src/app/data/scenarios/page.tsx](apps/dashboard/src/app/data/scenarios/page.tsx) (Edit modal)
 
 **Request Body:** Same as POST, all fields updatable
 
 **Response:**
+
 ```json
 {
   "scenario_id": "string",
@@ -478,10 +529,12 @@ trial_id,scenario_id,status,maac_score,model_alignment,answer_accuracy,adaptabil
 ---
 
 #### `DELETE /api/scenarios/{id}`
+
 **Purpose:** Delete scenario  
 **Frontend:** [apps/dashboard/src/app/data/scenarios/page.tsx](apps/dashboard/src/app/data/scenarios/page.tsx) (Delete button)
 
 **Response:**
+
 ```json
 {
   "message": "Scenario deleted successfully"
@@ -489,6 +542,7 @@ trial_id,scenario_id,status,maac_score,model_alignment,answer_accuracy,adaptabil
 ```
 
 **Implementation Notes:**
+
 - Check if scenario is used in any experiments
 - Optionally prevent deletion if in use
 - Or soft-delete with deleted_at timestamp
@@ -496,17 +550,20 @@ trial_id,scenario_id,status,maac_score,model_alignment,answer_accuracy,adaptabil
 ---
 
 #### `POST /api/scenarios/bulk-import`
+
 **Purpose:** Import multiple scenarios from CSV  
 **Frontend:** [apps/dashboard/src/app/data/page.tsx](apps/dashboard/src/app/data/page.tsx)
 
 **Request:** multipart/form-data with CSV file
 
 **CSV Format:**
+
 ```csv
 task_id,domain,task_description,baseline_answer,ground_truth
 ```
 
 **Response:**
+
 ```json
 {
   "imported": 150,
@@ -521,6 +578,7 @@ task_id,domain,task_description,baseline_answer,ground_truth
 ```
 
 **Implementation Notes:**
+
 - Validate CSV structure
 - Check for duplicate task_ids
 - Bulk insert for performance
@@ -529,15 +587,18 @@ task_id,domain,task_description,baseline_answer,ground_truth
 ---
 
 #### `GET /api/models`
+
 **Purpose:** Get available LLM models per provider  
 **Frontend:** [apps/dashboard/src/app/experiments/new/page.tsx](apps/dashboard/src/app/experiments/new/page.tsx)
 
 **Query Parameters:**
+
 ```
 ?provider=openai|anthropic|deepseek|openrouter
 ```
 
 **Response:**
+
 ```json
 {
   "provider": "openai",
@@ -555,6 +616,7 @@ task_id,domain,task_description,baseline_answer,ground_truth
 ```
 
 **Implementation Notes:**
+
 - Fetch from actual provider APIs (OpenAI, Anthropic, etc.)
 - Cache results for 1 hour to reduce API calls
 - Handle API failures gracefully with fallback to cached data
@@ -564,10 +626,12 @@ task_id,domain,task_description,baseline_answer,ground_truth
 ### 3. AI Scenario Generation API
 
 #### `POST /api/scenarios/generate/estimate`
+
 **Purpose:** Estimate cost before generation  
 **Frontend:** [apps/dashboard/src/app/scenarios/generate/page.tsx](apps/dashboard/src/app/scenarios/generate/page.tsx)
 
 **Request Body:**
+
 ```json
 {
   "domain": "problem_solving",
@@ -580,6 +644,7 @@ task_id,domain,task_description,baseline_answer,ground_truth
 ```
 
 **Response:**
+
 ```json
 {
   "estimated_credits": 0.75,
@@ -596,12 +661,14 @@ task_id,domain,task_description,baseline_answer,ground_truth
 ---
 
 #### `POST /api/scenarios/generate` (SSE)
+
 **Purpose:** Generate scenarios with AI using SSE streaming  
 **Frontend:** [apps/dashboard/src/app/scenarios/generate/page.tsx](apps/dashboard/src/app/scenarios/generate/page.tsx)
 
 **Request Body:** Same as estimate endpoint
 
 **SSE Event Format:**
+
 ```
 event: progress
 data: {
@@ -638,6 +705,7 @@ data: {
 ```
 
 **Implementation Notes:**
+
 - Stream each generated scenario as it's created
 - Use LLM provider SDK for generation
 - Store generated scenarios in database
@@ -648,10 +716,12 @@ data: {
 ### 4. System Monitoring API
 
 #### `GET /api/system/containers`
+
 **Purpose:** Get Docker container status  
 **Frontend:** [apps/dashboard/src/app/system/page.tsx](apps/dashboard/src/app/system/page.tsx)
 
 **Response:**
+
 ```json
 {
   "containers": [
@@ -678,6 +748,7 @@ data: {
 ```
 
 **Implementation Notes:**
+
 - Use Docker SDK/CLI to fetch container stats
 - Parse docker ps and docker stats output
 - Calculate uptime from container start time
@@ -685,9 +756,11 @@ data: {
 ---
 
 #### `GET /api/system/services`
+
 **Purpose:** Health checks for database services
 
 **Response:**
+
 ```json
 {
   "services": [
@@ -714,6 +787,7 @@ data: {
 ```
 
 **Implementation Notes:**
+
 - Ping each service with timeout
 - Measure response time
 - Return connection status
@@ -721,9 +795,11 @@ data: {
 ---
 
 #### `GET /api/system/metrics`
+
 **Purpose:** System resource metrics
 
 **Response:**
+
 ```json
 {
   "cpu_percent": 35.2,
@@ -737,6 +813,7 @@ data: {
 ```
 
 **Implementation Notes:**
+
 - Use os/psutil library to get system stats
 - Calculate percentages
 - Format sizes in human-readable units
@@ -744,9 +821,11 @@ data: {
 ---
 
 #### `POST /api/system/containers/{name}/start`
+
 **Purpose:** Start stopped container
 
 **Response:**
+
 ```json
 {
   "container": "postgres",
@@ -758,11 +837,13 @@ data: {
 ---
 
 #### `POST /api/system/containers/{name}/stop`
+
 **Purpose:** Stop running container
 
 ---
 
 #### `POST /api/system/containers/{name}/restart`
+
 **Purpose:** Restart container
 
 ---
@@ -770,10 +851,12 @@ data: {
 ### 5. Settings & Configuration API
 
 #### `GET /api/settings`
+
 **Purpose:** Get all user settings  
 **Frontend:** [apps/dashboard/src/app/settings/page.tsx](apps/dashboard/src/app/settings/page.tsx)
 
 **Response:**
+
 ```json
 {
   "credentials": {
@@ -790,6 +873,7 @@ data: {
 ```
 
 **Implementation Notes:**
+
 - Mask API keys (show only first 8 and last 3 chars)
 - Store in secure configuration table
 - Support per-user settings if multi-tenant
@@ -797,9 +881,11 @@ data: {
 ---
 
 #### `PUT /api/settings/credentials`
+
 **Purpose:** Update API credentials
 
 **Request Body:**
+
 ```json
 {
   "openai_api_key": "sk-...",
@@ -809,6 +895,7 @@ data: {
 ```
 
 **Response:**
+
 ```json
 {
   "message": "Credentials updated successfully"
@@ -816,6 +903,7 @@ data: {
 ```
 
 **Implementation Notes:**
+
 - Encrypt before storing in database
 - Validate API keys by testing with provider
 - Return error if invalid key
@@ -823,15 +911,17 @@ data: {
 ---
 
 #### `GET /api/billing`
+
 **Purpose:** Get usage and billing information  
 **Frontend:** [apps/dashboard/src/app/settings/page.tsx](apps/dashboard/src/app/settings/page.tsx)
 
 **Response:**
+
 ```json
 {
   "current_month": {
-    "credits_used": 125.50,
-    "credits_limit": 500.00,
+    "credits_used": 125.5,
+    "credits_limit": 500.0,
     "total_tokens": 1500000,
     "total_experiments": 45
   },
@@ -850,7 +940,7 @@ data: {
   "recent_usage": [
     {
       "date": "2025-12-20",
-      "credits": 12.50,
+      "credits": 12.5,
       "experiments": 5
     }
   ]
@@ -862,6 +952,7 @@ data: {
 ## 🗄️ Database Schema Requirements
 
 ### Experiments Table
+
 ```sql
 CREATE TABLE experiments (
   experiment_id UUID PRIMARY KEY,
@@ -889,6 +980,7 @@ CREATE TABLE experiments (
 ```
 
 ### Trials Table
+
 ```sql
 CREATE TABLE trials (
   trial_id UUID PRIMARY KEY,
@@ -910,6 +1002,7 @@ CREATE TABLE trials (
 ```
 
 ### Scenarios Table
+
 ```sql
 CREATE TABLE scenarios (
   scenario_id UUID PRIMARY KEY,
@@ -927,6 +1020,7 @@ CREATE TABLE scenarios (
 ```
 
 ### Settings Table
+
 ```sql
 CREATE TABLE settings (
   id SERIAL PRIMARY KEY,
@@ -938,6 +1032,7 @@ CREATE TABLE settings (
 ```
 
 ### Usage Tracking Table
+
 ```sql
 CREATE TABLE usage_logs (
   id SERIAL PRIMARY KEY,
@@ -958,6 +1053,7 @@ CREATE TABLE usage_logs (
 ## 🔧 Technical Implementation Notes
 
 ### BullMQ Job Queue
+
 - Set up Redis connection
 - Define job types: `experiment-trial`, `scenario-generation`
 - Implement worker processors
@@ -965,6 +1061,7 @@ CREATE TABLE usage_logs (
 - Monitor queue health
 
 ### SSE Implementation
+
 - Use Fastify SSE plugin or manual implementation
 - Set appropriate headers: `Content-Type: text/event-stream`
 - Implement reconnection logic with Last-Event-ID
@@ -972,6 +1069,7 @@ CREATE TABLE usage_logs (
 - Close connections properly on completion
 
 ### LLM Provider Integration
+
 - Abstract provider interface (OpenAI, Anthropic, DeepSeek, OpenRouter)
 - Implement retry logic for rate limits
 - Track token usage for billing
@@ -979,12 +1077,14 @@ CREATE TABLE usage_logs (
 - Cache model lists
 
 ### Docker Management
+
 - Use Dockerode library (Node.js) or Docker SDK
 - Require proper permissions for container control
 - Implement safety checks (don't stop critical containers)
 - Log all container actions
 
 ### Error Handling
+
 - Return consistent error format:
   ```json
   {
@@ -997,6 +1097,7 @@ CREATE TABLE usage_logs (
 - Log errors with context
 
 ### Security
+
 - Encrypt API keys at rest
 - Validate all inputs with schemas
 - Rate limit expensive operations
@@ -1008,18 +1109,21 @@ CREATE TABLE usage_logs (
 ## ✅ Testing Requirements
 
 ### Unit Tests
+
 - [ ] All endpoint handlers
 - [ ] Database queries
 - [ ] LLM provider integrations
 - [ ] Cost calculation logic
 
 ### Integration Tests
+
 - [ ] Full experiment workflow
 - [ ] Scenario CRUD operations
 - [ ] SSE streaming
 - [ ] Docker container management
 
 ### Load Tests
+
 - [ ] Concurrent experiments
 - [ ] High trial counts
 - [ ] Multiple SSE connections
