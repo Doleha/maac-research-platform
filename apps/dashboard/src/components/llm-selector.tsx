@@ -1,6 +1,7 @@
 'use client';
 
-import { Info } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Info, Loader2 } from 'lucide-react';
 
 export interface LLMConfig {
   provider: string;
@@ -21,46 +22,74 @@ const providers = [
   { value: 'anthropic', label: 'Anthropic' },
   { value: 'deepseek', label: 'DeepSeek' },
   { value: 'openrouter', label: 'OpenRouter' },
+  { value: 'grok', label: 'Grok (X.AI)' },
+  { value: 'gemini', label: 'Google Gemini' },
+  { value: 'llama', label: 'Meta Llama' },
 ];
 
-const modelsByProvider: Record<string, Array<{ value: string; label: string }>> = {
-  openai: [
-    { value: 'gpt-4o', label: 'GPT-4o' },
-    { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
-    { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
-    { value: 'gpt-4', label: 'GPT-4' },
-    { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' },
-  ],
-  anthropic: [
-    { value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet' },
-    { value: 'claude-3-5-haiku-20241022', label: 'Claude 3.5 Haiku' },
-    { value: 'claude-3-opus-20240229', label: 'Claude 3 Opus' },
-    { value: 'claude-3-sonnet-20240229', label: 'Claude 3 Sonnet' },
-    { value: 'claude-3-haiku-20240307', label: 'Claude 3 Haiku' },
-  ],
-  deepseek: [
-    { value: 'deepseek-chat', label: 'DeepSeek Chat' },
-    { value: 'deepseek-coder', label: 'DeepSeek Coder' },
-  ],
-  openrouter: [
-    { value: 'openai/gpt-4o', label: 'GPT-4o (via OpenRouter)' },
-    { value: 'anthropic/claude-3.5-sonnet', label: 'Claude 3.5 Sonnet (via OpenRouter)' },
-    { value: 'google/gemini-pro-1.5', label: 'Gemini Pro 1.5' },
-    { value: 'meta-llama/llama-3.1-70b-instruct', label: 'Llama 3.1 70B' },
-  ],
-};
-
 export function LLMSelector({ value, onChange, errors = {} }: LLMSelectorProps) {
-  const availableModels = value.provider ? modelsByProvider[value.provider] || [] : [];
+  const [availableModels, setAvailableModels] = useState<Array<{ value: string; label: string }>>([]);
+  const [loadingModels, setLoadingModels] = useState(false);
+  const [modelError, setModelError] = useState<string | null>(null);
+
+  // Fetch models when provider changes or dropdown is opened
+  const fetchModels = async (provider: string) => {
+    if (!provider) {
+      setAvailableModels([]);
+      return;
+    }
+
+    setLoadingModels(true);
+    setModelError(null);
+
+    try {
+      const response = await fetch(`http://localhost:3001/api/llm/models?provider=${provider}`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch models for ${provider}`);
+      }
+
+      const data = await response.json();
+      setAvailableModels(data.models || []);
+    } catch (err) {
+      console.error('Error fetching models:', err);
+      setModelError(err instanceof Error ? err.message : 'Failed to load models');
+      setAvailableModels([]);
+    } finally {
+      setLoadingModels(false);
+    }
+  };
+
+  // Fetch models when provider changes
+  useEffect(() => {
+    if (value.provider) {
+      fetchModels(value.provider);
+    } else {
+      setAvailableModels([]);
+    }
+  }, [value.provider]);
 
   const handleProviderChange = (provider: string) => {
-    // Reset model when provider changes
-    const defaultModel = modelsByProvider[provider]?.[0]?.value || '';
-    onChange({ ...value, provider, model: defaultModel });
+    // Reset model when provider changes (will be set after models load)
+    onChange({ ...value, provider, model: '' });
   };
+
+  // Auto-select first model when models load
+  useEffect(() => {
+    if (availableModels.length > 0 && !value.model) {
+      onChange({ ...value, model: availableModels[0].value });
+    }
+  }, [availableModels]);
 
   const handleFieldChange = (field: keyof LLMConfig, fieldValue: string | number) => {
     onChange({ ...value, [field]: fieldValue });
+  };
+
+  const handleModelDropdownClick = () => {
+    // Refresh models when dropdown is opened
+    if (value.provider && !loadingModels) {
+      fetchModels(value.provider);
+    }
   };
 
   return (
@@ -96,24 +125,51 @@ export function LLMSelector({ value, onChange, errors = {} }: LLMSelectorProps) 
           <label htmlFor="model" className="block text-sm font-medium text-gray-700">
             Model <span className="text-red-500">*</span>
           </label>
-          <select
-            id="model"
-            value={value.model}
-            onChange={(e) => handleFieldChange('model', e.target.value)}
-            className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-1 ${
-              errors.model
-                ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
-            }`}
-          >
-            <option value="">Select a model...</option>
-            {availableModels.map((model) => (
-              <option key={model.value} value={model.value}>
-                {model.label}
+          <div className="relative">
+            <select
+              id="model"
+              value={value.model}
+              onChange={(e) => handleFieldChange('model', e.target.value)}
+              onClick={handleModelDropdownClick}
+              disabled={loadingModels}
+              className={`mt-1 block w-full rounded-md border px-3 py-2 shadow-sm focus:outline-none focus:ring-1 ${
+                errors.model
+                  ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                  : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'
+              } ${loadingModels ? 'cursor-wait opacity-60' : ''}`}
+            >
+              <option value="">
+                {loadingModels ? 'Loading models...' : 'Select a model...'}
               </option>
-            ))}
-          </select>
+              {availableModels.map((model) => (
+                <option key={model.value} value={model.value}>
+                  {model.label}
+                </option>
+              ))}
+            </select>
+            {loadingModels && (
+              <div className="pointer-events-none absolute right-8 top-1/2 -translate-y-1/2">
+                <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+              </div>
+            )}
+          </div>
           {errors.model && <p className="mt-1 text-sm text-red-600">{errors.model}</p>}
+          {modelError && (
+            <p className="mt-1 text-sm text-red-600">
+              {modelError}
+              <button
+                onClick={() => fetchModels(value.provider)}
+                className="ml-2 text-blue-600 underline hover:text-blue-700"
+              >
+                Retry
+              </button>
+            </p>
+          )}
+          {!loadingModels && availableModels.length === 0 && !modelError && (
+            <p className="mt-1 text-sm text-yellow-600">
+              No models available. Click to refresh.
+            </p>
+          )}
         </div>
       )}
 

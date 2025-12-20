@@ -6,7 +6,7 @@
 
 ---
 
-## 📊 Overall Progress: 17/25 (68%)
+## 📊 Overall Progress: 21/25 (84%) + Enhancements
 
 ---
 
@@ -169,35 +169,106 @@
 
 ---
 
-## Phase 6: Configuration (0/4)
+## Phase 6: Configuration (4/4) ✅
 
 **Goal:** System settings and credentials management
 
-### 📋 Todo
+### ✅ Completed
 
-- [ ] **6.1 Build settings page - LLM credentials**
-  - API key inputs (masked)
-  - Test Connection buttons
-  - POST `/api/settings/credentials`
+- [x] **6.1 Build settings page - LLM credentials** ✅
+  - API key inputs with show/hide toggle
+  - Provider selection (OpenAI, Anthropic, DeepSeek, OpenRouter)
+  - Test connection buttons with status feedback
+  - Masked password inputs
+  - Save functionality with success/error states
   - **Files:** `src/app/settings/page.tsx`
 
-- [ ] **6.2 Add database configuration UI**
-  - PostgreSQL, Neo4j, Redis URLs
-  - Connection status indicators
-  - Test buttons + version info
+- [x] **6.2 Add database configuration UI** ✅
+  - PostgreSQL, Neo4j, Redis connection strings
+  - Connection status badges (connected/disconnected/unknown)
+  - Test connection buttons with version info
+  - Metadata display for connected databases
   - **Files:** `src/components/db-settings.tsx`
 
-- [ ] **6.3 Implement memory service settings**
-  - Graphiti webhook URL, group ID
-  - Enable/disable toggle
-  - Neo4j graph stats
+- [x] **6.3 Implement memory service settings** ✅
+  - Graphiti webhook URL and group ID inputs
+  - Enable/disable toggle switch
+  - Neo4j graph statistics (nodes, relationships, labels)
+  - Refresh stats functionality
   - **Files:** `src/components/memory-settings.tsx`
 
-- [ ] **6.4 Build rate limiting controls**
-  - Max workers, jobs/min, LLM requests/min
-  - Slider components
-  - Update BullMQ config
+- [x] **6.4 Build rate limiting controls** ✅
+  - Slider for max workers (1-20)
+  - Slider for jobs per minute (10-300)
+  - Slider for LLM requests per minute (10-1000)
+  - Real-time value display
+  - Save to update BullMQ configuration
+  - Warning about worker restart requirement
   - **Files:** `src/components/rate-limits.tsx`
+
+### ✨ Phase 6 Enhancements
+
+- [x] **Enhanced LLM Provider Support** ✅
+  - Added 3 new providers: Grok (X.AI), Google Gemini, Meta Llama
+  - Total of 7 providers now supported
+  - Dynamic model fetching from API endpoint (GET /api/llm/models?provider={provider})
+  - Auto-fetch models on provider change
+  - Manual refresh via dropdown click
+  - Loading states with spinner
+  - Error handling with retry button
+  - Updated files: `src/components/llm-selector.tsx`
+
+- [x] **API Key Mode Selection** ✅
+  - Dual authentication modes:
+    1. **Own API Keys**: Session-only keys (not persisted) - **Tier 2 ONLY**
+    2. **System Credits**: Purchase credits via Stripe - **Required for Tier 1a/1b**
+  - Tier-based availability:
+    - **Tier 1a (Scenario Generation)**: System credits REQUIRED (10 credit base fee + tokens)
+    - **Tier 1b (MIMIC Engine)**: System credits REQUIRED (50 credit base fee + tokens)
+    - **Tier 2 (MAAC Assessment)**: Both options available (own keys OR system credits)
+  - User credit balance display with real-time checks
+  - Low balance warnings for Tier 1 (< 100 credits)
+  - Automatic mode forcing based on tier selection
+  - Session key inputs for all 7 providers
+  - Show/hide password toggles
+  - Link to billing page
+  - Updated files: `src/components/api-key-mode.tsx`, `src/components/experiment-form.tsx`
+
+- [x] **Billing & Credits System** ✅
+  - Tabbed settings interface (General | Billing)
+  - Credit balance dashboard with visual cards
+  - 4 credit packages with discounts (10, 50, 100, 250 credits)
+  - Transaction history table
+  - Stripe checkout integration (ready for production)
+  - Credit estimation API
+  - Usage statistics tracking
+  - Files: `src/components/billing-credits.tsx`, `src/app/settings/page.tsx`
+
+- [x] **API Enhancements** ✅
+  - New LLM routes: `/api/llm/models`, `/api/llm/providers`
+  - New billing routes:
+    - `/api/billing/credits` - Get credit balance
+    - `/api/billing/transactions` - Transaction history
+    - `/api/billing/create-checkout` - Stripe session
+    - `/api/billing/estimate` - Tier-aware cost estimation
+    - `/api/billing/info` - Comprehensive billing info
+  - **Charge Matrix System**: Token-based pricing for 7 providers × 30+ models
+  - **Usage Tracking Infrastructure**: 
+    - Real-time token usage tracking with Prisma transactions
+    - Automatic credit deduction on LLM calls
+    - `trackLLMCall()` middleware wrapper for instrumentation
+    - Insufficient balance detection and blocking
+  - **Tier-based Pricing**:
+    - Tier 1a: 10 credit base fee + token costs
+    - Tier 1b: 50 credit base fee + token costs
+    - Tier 2: Token costs only (no base fee)
+  - Fastify route registration
+  - Files: 
+    - `apps/api/src/routes/llm.ts`
+    - `apps/api/src/routes/billing.ts`
+    - `apps/api/src/lib/charge-matrix.ts` ⭐ NEW
+    - `apps/api/src/lib/usage-tracker.ts` ⭐ NEW
+    - `apps/api/src/index.ts`
 
 ---
 

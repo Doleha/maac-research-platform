@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { LLMSelector, type LLMConfig } from './llm-selector';
 import { ToolConfiguration, type ToolConfig } from './tool-config';
@@ -8,6 +8,7 @@ import {
   ControlExpectations,
   type ControlExpectations as ControlExpectationsType,
 } from './control-expectations';
+import { APIKeyModeSelector, type APIKeyMode, type SessionAPIKeys } from './api-key-mode';
 
 const domains = [
   { value: 'problem_solving', label: 'Problem Solving' },
@@ -40,6 +41,8 @@ interface FormData {
   domain: string;
   tier: string;
   replicationCount: number;
+  apiKeyMode: APIKeyMode;
+  sessionKeys: SessionAPIKeys;
   llmConfig: LLMConfig;
   toolConfig: ToolConfig;
   controlExpectations: ControlExpectationsType;
@@ -48,6 +51,15 @@ interface FormData {
 export function ExperimentForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userCredits, setUserCredits] = useState(0);
+
+  useEffect(() => {
+    // Fetch user's credit balance
+    fetch('http://localhost:3001/api/billing/credits')
+      .then(res => res.json())
+      .then(data => setUserCredits(data.balance?.remainingCredits || 0))
+      .catch(err => console.error('Failed to fetch credits', err));
+  }, []);
 
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -55,6 +67,16 @@ export function ExperimentForm() {
     domain: '',
     tier: '',
     replicationCount: 1,
+    apiKeyMode: 'system', // Default to system, will be forced for Tier 1
+    sessionKeys: {
+      openai: undefined,
+      anthropic: undefined,
+      deepseek: undefined,
+      openrouter: undefined,
+      grok: undefined,
+      gemini: undefined,
+      llama: undefined,
+    },
     llmConfig: {
       provider: '',
       model: '',
@@ -160,7 +182,16 @@ export function ExperimentForm() {
   };
 
   const handleChange = (field: string, value: string | number) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => {
+      const newData = { ...prev, [field]: value };
+      
+      // Force system credits for Tier 1a and 1b
+      if (field === 'tier' && (value === '1a' || value === '1b')) {
+        newData.apiKeyMode = 'system';
+      }
+      
+      return newData;
+    });
     // Clear error for this field
     if (errors[field]) {
       setErrors((prev) => {
@@ -188,6 +219,14 @@ export function ExperimentForm() {
 
   const handleExpectationsChange = (expectations: ControlExpectationsType) => {
     setFormData((prev) => ({ ...prev, controlExpectations: expectations }));
+  };
+
+  const handleAPIKeyModeChange = (mode: APIKeyMode) => {
+    setFormData((prev) => ({ ...prev, apiKeyMode: mode }));
+  };
+
+  const handleSessionKeysChange = (keys: SessionAPIKeys) => {
+    setFormData((prev) => ({ ...prev, sessionKeys: keys }));
   };
 
   return (
@@ -329,6 +368,55 @@ export function ExperimentForm() {
           </div>
         </div>
       </div>
+
+      {/* API Key Mode - Only show for Tier 2 */}
+      {formData.tier === '2' && (
+        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-gray-900">API Key Mode</h2>
+          <p className="mt-1 text-sm text-gray-500">Choose how to authenticate with LLM providers</p>
+
+          <div className="mt-6">
+            <APIKeyModeSelector
+              mode={formData.apiKeyMode}
+              sessionKeys={formData.sessionKeys}
+              userCredits={userCredits}
+              selectedProvider={formData.llmConfig.provider}
+              onModeChange={handleAPIKeyModeChange}
+              onSessionKeysChange={handleSessionKeysChange}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Tier 1 Credit Requirements Warning */}
+      {(formData.tier === '1a' || formData.tier === '1b') && (
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-6">
+          <div className="flex items-start gap-3">
+            <div className="rounded-lg bg-blue-100 p-2">
+              <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-semibold text-blue-900">
+                {formData.tier === '1a' ? 'Tier 1a: Paid Service' : 'Tier 1b: Paid Service'}
+              </h3>
+              <p className="mt-1 text-sm text-blue-800">
+                {formData.tier === '1a' 
+                  ? 'Scenario generation requires system credits. Base fee: 10 credits per scenario + token usage.'
+                  : 'MIMIC Engine execution requires system credits. Base fee: 50 credits per experiment + token usage.'
+                }
+              </p>
+              <p className="mt-2 text-xs text-blue-700">
+                Your balance: {userCredits.toLocaleString()} credits
+                {userCredits < 100 && (
+                  <span className="ml-2 font-semibold">• Low balance - consider purchasing more credits</span>
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* LLM Configuration */}
       <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">

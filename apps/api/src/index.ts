@@ -12,6 +12,8 @@ import { StatisticalAnalyzer } from '@maac/statistical-analysis';
 import type { CognitiveSystem, CognitiveResponse, SuccessCriterion } from '@maac/types';
 import { experimentRoutes } from './routes/experiments.js';
 import { scenarioRoutes } from './routes/scenarios.js';
+import { llmRoutes } from './routes/llm.js';
+import { billingRoutes } from './routes/billing.js';
 
 // =============================================================================
 // ENVIRONMENT CONFIGURATION
@@ -313,6 +315,16 @@ async function main() {
   // Register Tier 1a scenario generation routes
   await fastify.register(async (instance) => {
     await scenarioRoutes(instance, { prisma });
+  });
+
+  // Register LLM provider routes
+  await fastify.register(async (instance) => {
+    instance.register(llmRoutes, { prefix: '/llm' });
+  });
+
+  // Register billing & credits routes
+  await fastify.register(async (instance) => {
+    instance.register(billingRoutes, { prefix: '/billing' });
   });
 
   // =============================================================================

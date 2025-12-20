@@ -1,7 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Save, Loader2, CheckCircle2, XCircle, Eye, EyeOff } from 'lucide-react';
+import { Save, Loader2, CheckCircle2, XCircle, Eye, EyeOff, Settings, CreditCard } from 'lucide-react';
+import { DatabaseSettings } from '@/components/db-settings';
+import { MemoryServiceSettings } from '@/components/memory-settings';
+import { RateLimitControls } from '@/components/rate-limits';
+import { BillingCredits } from '@/components/billing-credits';
 
 interface LLMCredentials {
   openai?: string;
@@ -17,6 +21,7 @@ interface TestResult {
 }
 
 export default function SettingsPage() {
+  const [activeTab, setActiveTab] = useState<'general' | 'billing'>('general');
   const [credentials, setCredentials] = useState<LLMCredentials>({});
   const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState(false);
@@ -126,23 +131,53 @@ export default function SettingsPage() {
           <p className="mt-2 text-gray-600">Configure system settings and credentials</p>
         </div>
 
-        {error && (
-          <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-            <div className="flex items-center gap-2">
-              <XCircle className="h-5 w-5 text-red-600" />
-              <span className="font-medium text-red-900">{error}</span>
-            </div>
-          </div>
-        )}
+        {/* Tabs */}
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => setActiveTab('general')}
+              className={`flex items-center gap-2 border-b-2 py-4 px-1 text-sm font-medium transition-colors ${
+                activeTab === 'general'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+              }`}
+            >
+              <Settings className="h-4 w-4" />
+              General Settings
+            </button>
+            <button
+              onClick={() => setActiveTab('billing')}
+              className={`flex items-center gap-2 border-b-2 py-4 px-1 text-sm font-medium transition-colors ${
+                activeTab === 'billing'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+              }`}
+            >
+              <CreditCard className="h-4 w-4" />
+              Billing & Credits
+            </button>
+          </nav>
+        </div>
 
-        {saveSuccess && (
-          <div className="rounded-lg border border-green-200 bg-green-50 p-4">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-green-600" />
-              <span className="font-medium text-green-900">Settings saved successfully</span>
-            </div>
-          </div>
-        )}
+        {activeTab === 'general' ? (
+          <>
+            {error && (
+              <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+                <div className="flex items-center gap-2">
+                  <XCircle className="h-5 w-5 text-red-600" />
+                  <span className="font-medium text-red-900">{error}</span>
+                </div>
+              </div>
+            )}
+
+            {saveSuccess && (
+              <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                  <span className="font-medium text-green-900">Settings saved successfully</span>
+                </div>
+              </div>
+            )}
 
         {/* LLM Credentials */}
         <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
@@ -233,19 +268,19 @@ export default function SettingsPage() {
             </p>
           </div>
         </div>
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-semibold text-gray-900">Database Configuration</h2>
-            <p className="mt-2 text-gray-500">
-              Connection settings for PostgreSQL, Neo4j, and Redis
-            </p>
-          </div>
 
-          {/* Rate Limiting */}
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <h2 className="text-xl font-semibold text-gray-900">Rate Limiting</h2>
-            <p className="mt-2 text-gray-500">Control worker limits and API request rates</p>
-          </div>
-        </div>
+        {/* Database Configuration */}
+        <DatabaseSettings />
+
+        {/* Memory Service */}
+        <MemoryServiceSettings />
+
+        {/* Rate Limiting */}
+        <RateLimitControls />
+          </>
+        ) : (
+          <BillingCredits />
+        )}
       </div>
     </div>
   );

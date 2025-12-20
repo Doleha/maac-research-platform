@@ -250,3 +250,55 @@ model MAACAcademicReport {
   @@index([readyForSubmission])
   @@map("maac_academic_reports")
 }
+
+// =============================================================================
+// BILLING & USER MANAGEMENT MODELS
+// =============================================================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  credits   Int      @default(0) // Credit balance (1 credit = $0.001 USD)
+  
+  // Relations
+  experiments        MAACExperiment[]
+  creditTransactions CreditTransaction[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([email])
+  @@map("users")
+}
+
+model CreditTransaction {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type        TransactionType
+  amount      Int             // Credits (positive for purchase/refund, negative for usage)
+  description String
+  
+  // JSON metadata for detailed tracking
+  metadata    Json?   // { experimentId, tier, provider, model, inputTokens, outputTokens }
+  
+  // Stripe payment info (for purchases)
+  stripePaymentIntentId String? @unique @map("stripe_payment_intent_id")
+  stripeCheckoutSessionId String? @unique @map("stripe_checkout_session_id")
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([userId, createdAt])
+  @@index([type])
+  @@index([stripePaymentIntentId])
+  @@map("credit_transactions")
+}
+
+enum TransactionType {
+  PURCHASE    // User bought credits
+  USAGE       // Credits consumed by experiment
+  REFUND      // Credits returned
+  ADJUSTMENT  // Manual admin adjustment
+}
