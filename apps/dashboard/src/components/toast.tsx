@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
 import { X, CheckCircle, AlertCircle, AlertTriangle, Info } from 'lucide-react';
 import { useNotification, NotificationType } from '@/contexts/NotificationContext';
 

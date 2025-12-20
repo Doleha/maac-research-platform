@@ -38,7 +38,7 @@ interface LiveProgressProps {
   onComplete?: () => void;
 }
 
-export function LiveProgress({ experimentId, totalTrials, onComplete }: LiveProgressProps) {
+export function LiveProgress({ experimentId, totalTrials: _totalTrials, onComplete }: LiveProgressProps) {
   const [isConnected, setIsConnected] = useState(false);
   const [progress, setProgress] = useState<ProgressUpdate | null>(null);
   const [trials, setTrials] = useState<Trial[]>([]);

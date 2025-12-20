@@ -54,20 +54,6 @@ export function WorkerStatus({
   const logsEndRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
 
-  useEffect(() => {
-    fetchWorkerData();
-    if (autoRefresh) {
-      const interval = setInterval(fetchWorkerData, refreshInterval);
-      return () => clearInterval(interval);
-    }
-  }, [autoRefresh, refreshInterval]);
-
-  useEffect(() => {
-    if (autoScroll) {
-      logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [logs, autoScroll]);
-
   const fetchWorkerData = async () => {
     try {
       const [workersRes, logsRes] = await Promise.all([
@@ -79,8 +65,10 @@ export function WorkerStatus({
         throw new Error('Failed to fetch worker data');
       }
 
-      const workersData = await workersRes.json();
-      const logsData = await logsRes.json();
+      const [workersData, logsData] = await Promise.all([
+        workersRes.json(),
+        logsRes.json(),
+      ]);
 
       setWorkers(workersData.workers || []);
       setLogs(logsData.logs || []);
@@ -91,6 +79,22 @@ export function WorkerStatus({
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchWorkerData();
+    if (autoRefresh) {
+      const interval = setInterval(fetchWorkerData, refreshInterval);
+      return () => clearInterval(interval);
+    }
+    return undefined;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRefresh, refreshInterval]);
+
+  useEffect(() => {
+    if (autoScroll) {
+      logsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [logs, autoScroll]);
 
   const getWorkerStatusBadge = (status: WorkerMetrics['status']) => {
     const badges = {

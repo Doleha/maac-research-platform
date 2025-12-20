@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Download, FileText, FileJson, FileImage, Loader2, CheckCircle2 } from 'lucide-react';
+import { FileText, FileJson, FileImage, Loader2, CheckCircle2 } from 'lucide-react';
 
 type ExportFormat = 'csv' | 'json' | 'pdf';
 

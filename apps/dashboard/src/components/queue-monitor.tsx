@@ -53,14 +53,6 @@ export function QueueMonitor({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchQueueData();
-    if (autoRefresh) {
-      const interval = setInterval(fetchQueueData, refreshInterval);
-      return () => clearInterval(interval);
-    }
-  }, [experimentId, autoRefresh, refreshInterval]);
-
   const fetchQueueData = async () => {
     try {
       const url = experimentId
@@ -82,6 +74,16 @@ export function QueueMonitor({
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchQueueData();
+    if (autoRefresh) {
+      const interval = setInterval(fetchQueueData, refreshInterval);
+      return () => clearInterval(interval);
+    }
+    return undefined;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [experimentId, autoRefresh, refreshInterval]);
 
   const getJobStatusBadge = (status: Job['status']) => {
     const badges = {

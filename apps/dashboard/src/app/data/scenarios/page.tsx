@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Edit, Trash2, Loader2, X, Save, Eye, EyeOff } from 'lucide-react';
+import { Search, Edit, Trash2, Loader2, X, Save, Eye } from 'lucide-react';
 
 interface Scenario {
   scenario_id: string;
