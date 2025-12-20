@@ -1,18 +1,18 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { 
-  Play, 
-  Pause, 
-  Square, 
-  RefreshCw, 
-  Clock, 
-  CheckCircle2, 
-  XCircle, 
+import {
+  Play,
+  Pause,
+  Square,
+  RefreshCw,
+  Clock,
+  CheckCircle2,
+  XCircle,
   AlertCircle,
   Loader2,
   BarChart3,
-  FileText
+  FileText,
 } from 'lucide-react';
 
 interface ExperimentDetails {
@@ -71,18 +71,19 @@ export default function ExperimentDetailPage({ params }: { params: { id: string 
   const handleAction = async (action: 'start' | 'pause' | 'resume' | 'stop') => {
     setActionLoading(action);
     try {
-      const endpoint = action === 'start' 
-        ? `/api/experiments/${params.id}/start`
-        : `/api/experiments/${params.id}/${action}`;
-      
+      const endpoint =
+        action === 'start'
+          ? `/api/experiments/${params.id}/start`
+          : `/api/experiments/${params.id}/${action}`;
+
       const response = await fetch(`http://localhost:3001${endpoint}`, {
         method: 'POST',
       });
-      
+
       if (!response.ok) {
         throw new Error(`Failed to ${action} experiment`);
       }
-      
+
       await fetchExperiment();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -127,16 +128,17 @@ export default function ExperimentDetailPage({ params }: { params: { id: string 
     const badge = badges[status];
     const Icon = badge.icon;
     return (
-      <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium ${badge.bg} ${badge.text}`}>
+      <span
+        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium ${badge.bg} ${badge.text}`}
+      >
         <Icon className={`h-4 w-4 ${status === 'running' ? 'animate-spin' : ''}`} />
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
     );
   };
 
-  const progress = experiment.totalTrials > 0 
-    ? (experiment.completedTrials / experiment.totalTrials) * 100 
-    : 0;
+  const progress =
+    experiment.totalTrials > 0 ? (experiment.completedTrials / experiment.totalTrials) * 100 : 0;
 
   return (
     <div className="p-8">
@@ -150,9 +152,7 @@ export default function ExperimentDetailPage({ params }: { params: { id: string 
             </div>
             {getStatusBadge(experiment.status)}
           </div>
-          {experiment.description && (
-            <p className="mt-2 text-gray-600">{experiment.description}</p>
-          )}
+          {experiment.description && <p className="mt-2 text-gray-600">{experiment.description}</p>}
         </div>
 
         {/* Progress Bar */}
@@ -164,7 +164,7 @@ export default function ExperimentDetailPage({ params }: { params: { id: string 
             </span>
           </div>
           <div className="h-3 w-full overflow-hidden rounded-full bg-gray-200">
-            <div 
+            <div
               className="h-full bg-blue-600 transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
@@ -183,7 +183,11 @@ export default function ExperimentDetailPage({ params }: { params: { id: string 
           <div className="flex flex-wrap gap-3">
             <button
               onClick={() => handleAction('start')}
-              disabled={experiment.status === 'running' || experiment.status === 'completed' || actionLoading === 'start'}
+              disabled={
+                experiment.status === 'running' ||
+                experiment.status === 'completed' ||
+                actionLoading === 'start'
+              }
               className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {actionLoading === 'start' ? (
@@ -222,7 +226,11 @@ export default function ExperimentDetailPage({ params }: { params: { id: string 
 
             <button
               onClick={() => handleAction('stop')}
-              disabled={experiment.status === 'completed' || experiment.status === 'failed' || actionLoading === 'stop'}
+              disabled={
+                experiment.status === 'completed' ||
+                experiment.status === 'failed' ||
+                actionLoading === 'stop'
+              }
               className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {actionLoading === 'stop' ? (
@@ -245,7 +253,10 @@ export default function ExperimentDetailPage({ params }: { params: { id: string 
                 <dt className="text-sm font-medium text-gray-500">Domains</dt>
                 <dd className="mt-1 flex flex-wrap gap-2">
                   {experiment.config.domains.map((domain) => (
-                    <span key={domain} className="rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-800">
+                    <span
+                      key={domain}
+                      className="rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-800"
+                    >
                       {domain}
                     </span>
                   ))}
@@ -255,7 +266,10 @@ export default function ExperimentDetailPage({ params }: { params: { id: string 
                 <dt className="text-sm font-medium text-gray-500">Complexity Tiers</dt>
                 <dd className="mt-1 flex flex-wrap gap-2">
                   {experiment.config.tiers.map((tier) => (
-                    <span key={tier} className="rounded-full bg-purple-100 px-3 py-1 text-sm text-purple-800">
+                    <span
+                      key={tier}
+                      className="rounded-full bg-purple-100 px-3 py-1 text-sm text-purple-800"
+                    >
                       {tier}
                     </span>
                   ))}
@@ -265,7 +279,10 @@ export default function ExperimentDetailPage({ params }: { params: { id: string 
                 <dt className="text-sm font-medium text-gray-500">Models</dt>
                 <dd className="mt-1 flex flex-wrap gap-2">
                   {experiment.config.models.map((model) => (
-                    <span key={model} className="rounded-full bg-green-100 px-3 py-1 text-sm text-green-800">
+                    <span
+                      key={model}
+                      className="rounded-full bg-green-100 px-3 py-1 text-sm text-green-800"
+                    >
                       {model}
                     </span>
                   ))}
@@ -273,15 +290,21 @@ export default function ExperimentDetailPage({ params }: { params: { id: string 
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500">Repetitions per Domain/Tier</dt>
-                <dd className="mt-1 text-sm text-gray-900">{experiment.config.repetitionsPerDomainTier}</dd>
+                <dd className="mt-1 text-sm text-gray-900">
+                  {experiment.config.repetitionsPerDomainTier}
+                </dd>
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500">Parallelism</dt>
-                <dd className="mt-1 text-sm text-gray-900">{experiment.config.parallelism} concurrent trials</dd>
+                <dd className="mt-1 text-sm text-gray-900">
+                  {experiment.config.parallelism} concurrent trials
+                </dd>
               </div>
               <div>
                 <dt className="text-sm font-medium text-gray-500">Timeout</dt>
-                <dd className="mt-1 text-sm text-gray-900">{experiment.config.timeout / 1000}s per trial</dd>
+                <dd className="mt-1 text-sm text-gray-900">
+                  {experiment.config.timeout / 1000}s per trial
+                </dd>
               </div>
             </dl>
           </div>
@@ -291,7 +314,10 @@ export default function ExperimentDetailPage({ params }: { params: { id: string 
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Tool Configurations</h3>
             <div className="space-y-3">
               {experiment.config.toolConfigs.map((config) => (
-                <div key={config.configId} className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                <div
+                  key={config.configId}
+                  className="rounded-lg border border-gray-200 bg-gray-50 p-3"
+                >
                   <div className="flex items-start justify-between">
                     <div>
                       <h4 className="font-medium text-gray-900">{config.name}</h4>

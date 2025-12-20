@@ -1,15 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { 
-  Clock, 
-  CheckCircle2, 
-  XCircle, 
-  Loader2, 
-  Timer,
-  Activity,
-  TrendingUp
-} from 'lucide-react';
+import { Clock, CheckCircle2, XCircle, Loader2, Timer, Activity, TrendingUp } from 'lucide-react';
 
 interface Job {
   id: string;
@@ -45,10 +37,10 @@ interface QueueMonitorProps {
   refreshInterval?: number;
 }
 
-export function QueueMonitor({ 
-  experimentId, 
-  autoRefresh = true, 
-  refreshInterval = 2000 
+export function QueueMonitor({
+  experimentId,
+  autoRefresh = true,
+  refreshInterval = 2000,
 }: QueueMonitorProps) {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [stats, setStats] = useState<QueueStats>({
@@ -71,15 +63,15 @@ export function QueueMonitor({
 
   const fetchQueueData = async () => {
     try {
-      const url = experimentId 
+      const url = experimentId
         ? `http://localhost:3001/api/queue?experimentId=${experimentId}`
         : 'http://localhost:3001/api/queue';
-      
+
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Failed to fetch queue data');
       }
-      
+
       const data = await response.json();
       setJobs(data.jobs || []);
       setStats(data.stats || stats);
@@ -102,7 +94,9 @@ export function QueueMonitor({
     const badge = badges[status];
     const Icon = badge.icon;
     return (
-      <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${badge.bg} ${badge.text}`}>
+      <span
+        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${badge.bg} ${badge.text}`}
+      >
         <Icon className={`h-3 w-3 ${status === 'active' ? 'animate-spin' : ''}`} />
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
@@ -200,9 +194,7 @@ export function QueueMonitor({
       {/* Job Cards */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">
-            Recent Jobs ({jobs.length})
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900">Recent Jobs ({jobs.length})</h3>
           <button
             onClick={fetchQueueData}
             className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
@@ -216,7 +208,9 @@ export function QueueMonitor({
           <div className="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
             <Clock className="mx-auto h-12 w-12 text-gray-400" />
             <p className="mt-2 text-sm font-medium text-gray-900">No jobs in queue</p>
-            <p className="mt-1 text-xs text-gray-500">Jobs will appear here when experiments are running</p>
+            <p className="mt-1 text-xs text-gray-500">
+              Jobs will appear here when experiments are running
+            </p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -249,7 +243,7 @@ export function QueueMonitor({
                         <code className="font-mono">{job.data.configId}</code>
                       </div>
                     </div>
-                    
+
                     {job.status === 'active' && typeof job.progress === 'number' && (
                       <div className="mt-3">
                         <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
@@ -257,7 +251,7 @@ export function QueueMonitor({
                           <span>{job.progress}%</span>
                         </div>
                         <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
-                          <div 
+                          <div
                             className="h-full bg-blue-600 transition-all duration-300"
                             style={{ width: `${job.progress}%` }}
                           />
@@ -272,19 +266,13 @@ export function QueueMonitor({
                     )}
 
                     <div className="mt-2 text-xs text-gray-500">
-                      {job.processedOn && (
-                        <span>Started {formatTimestamp(job.processedOn)}</span>
-                      )}
-                      {job.finishedOn && (
-                        <span> • Finished {formatTimestamp(job.finishedOn)}</span>
-                      )}
+                      {job.processedOn && <span>Started {formatTimestamp(job.processedOn)}</span>}
+                      {job.finishedOn && <span> • Finished {formatTimestamp(job.finishedOn)}</span>}
                       {!job.processedOn && !job.finishedOn && (
                         <span>Queued {formatTimestamp(job.timestamp)}</span>
                       )}
                       {job.attemptsMade && job.attemptsMade > 1 && (
-                        <span className="ml-2 text-yellow-600">
-                          • Attempt #{job.attemptsMade}
-                        </span>
+                        <span className="ml-2 text-yellow-600">• Attempt #{job.attemptsMade}</span>
                       )}
                     </div>
                   </div>

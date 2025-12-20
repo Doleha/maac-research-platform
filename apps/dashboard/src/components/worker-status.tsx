@@ -1,17 +1,17 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { 
-  Activity, 
-  CheckCircle2, 
-  XCircle, 
-  Loader2, 
+import {
+  Activity,
+  CheckCircle2,
+  XCircle,
+  Loader2,
   Server,
   Cpu,
   HardDrive,
   Clock,
   AlertTriangle,
-  RefreshCw
+  RefreshCw,
 } from 'lucide-react';
 
 interface WorkerMetrics {
@@ -42,10 +42,10 @@ interface WorkerStatusProps {
   maxLogs?: number;
 }
 
-export function WorkerStatus({ 
-  autoRefresh = true, 
+export function WorkerStatus({
+  autoRefresh = true,
   refreshInterval = 3000,
-  maxLogs = 100 
+  maxLogs = 100,
 }: WorkerStatusProps) {
   const [workers, setWorkers] = useState<WorkerMetrics[]>([]);
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -72,7 +72,7 @@ export function WorkerStatus({
     try {
       const [workersRes, logsRes] = await Promise.all([
         fetch('http://localhost:3001/api/workers'),
-        fetch(`http://localhost:3001/api/workers/logs?limit=${maxLogs}`)
+        fetch(`http://localhost:3001/api/workers/logs?limit=${maxLogs}`),
       ]);
 
       if (!workersRes.ok || !logsRes.ok) {
@@ -102,7 +102,9 @@ export function WorkerStatus({
     const badge = badges[status];
     const Icon = badge.icon;
     return (
-      <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${badge.bg} ${badge.text}`}>
+      <span
+        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${badge.bg} ${badge.text}`}
+      >
         <Icon className={`h-3 w-3 ${status === 'active' ? 'animate-pulse' : ''}`} />
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
@@ -118,7 +120,9 @@ export function WorkerStatus({
     };
     const badge = badges[level];
     return (
-      <span className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${badge.bg} ${badge.text}`}>
+      <span
+        className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${badge.bg} ${badge.text}`}
+      >
         {level.toUpperCase()}
       </span>
     );
@@ -159,7 +163,7 @@ export function WorkerStatus({
     );
   }
 
-  const activeWorkers = workers.filter(w => w.status === 'active').length;
+  const activeWorkers = workers.filter((w) => w.status === 'active').length;
   const totalProcessed = workers.reduce((sum, w) => sum + w.processedJobs, 0);
   const totalFailed = workers.reduce((sum, w) => sum + w.failedJobs, 0);
 
@@ -203,9 +207,7 @@ export function WorkerStatus({
       {/* Worker Cards */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">
-            Workers ({workers.length})
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900">Workers ({workers.length})</h3>
           <button
             onClick={fetchWorkerData}
             className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
@@ -238,7 +240,8 @@ export function WorkerStatus({
                     </div>
                     {worker.currentJob && (
                       <p className="mt-1 text-xs text-gray-600">
-                        Processing: <code className="font-mono">{worker.currentJob.substring(0, 8)}</code>
+                        Processing:{' '}
+                        <code className="font-mono">{worker.currentJob.substring(0, 8)}</code>
                       </p>
                     )}
                   </div>
@@ -279,9 +282,13 @@ export function WorkerStatus({
                           <span>{worker.cpu.toFixed(1)}%</span>
                         </div>
                         <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
-                          <div 
+                          <div
                             className={`h-full transition-all duration-300 ${
-                              worker.cpu > 80 ? 'bg-red-600' : worker.cpu > 60 ? 'bg-yellow-600' : 'bg-green-600'
+                              worker.cpu > 80
+                                ? 'bg-red-600'
+                                : worker.cpu > 60
+                                  ? 'bg-yellow-600'
+                                  : 'bg-green-600'
                             }`}
                             style={{ width: `${worker.cpu}%` }}
                           />
@@ -298,9 +305,13 @@ export function WorkerStatus({
                           <span>{worker.memory.toFixed(1)}%</span>
                         </div>
                         <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
-                          <div 
+                          <div
                             className={`h-full transition-all duration-300 ${
-                              worker.memory > 80 ? 'bg-red-600' : worker.memory > 60 ? 'bg-yellow-600' : 'bg-blue-600'
+                              worker.memory > 80
+                                ? 'bg-red-600'
+                                : worker.memory > 60
+                                  ? 'bg-yellow-600'
+                                  : 'bg-blue-600'
                             }`}
                             style={{ width: `${worker.memory}%` }}
                           />
@@ -325,9 +336,7 @@ export function WorkerStatus({
       {/* Logs Section */}
       <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">
-            Worker Logs (Last {maxLogs})
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900">Worker Logs (Last {maxLogs})</h3>
           <label className="flex items-center gap-2 text-sm text-gray-600">
             <input
               type="checkbox"
@@ -355,7 +364,9 @@ export function WorkerStatus({
                   {log.workerId && (
                     <code className="shrink-0 text-gray-600">[{log.workerId.substring(0, 8)}]</code>
                   )}
-                  <span className={`flex-1 ${log.level === 'error' ? 'text-red-800' : 'text-gray-800'}`}>
+                  <span
+                    className={`flex-1 ${log.level === 'error' ? 'text-red-800' : 'text-gray-800'}`}
+                  >
                     {log.message}
                   </span>
                 </div>

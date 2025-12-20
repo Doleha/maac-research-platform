@@ -1,16 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { 
-  XCircle, 
-  RefreshCw, 
-  Loader2, 
+import {
+  XCircle,
+  RefreshCw,
+  Loader2,
   AlertTriangle,
   ChevronDown,
   ChevronUp,
   CheckSquare,
   Square,
-  ArrowLeft
+  ArrowLeft,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -83,25 +83,25 @@ export default function ExperimentErrorsPage({ params }: { params: { id: string 
     if (selectedTrials.size === trials.length) {
       setSelectedTrials(new Set());
     } else {
-      setSelectedTrials(new Set(trials.map(t => t.trialId)));
+      setSelectedTrials(new Set(trials.map((t) => t.trialId)));
     }
   };
 
   const retryTrial = async (trialId: string) => {
-    setRetryingTrials(prev => new Set(prev).add(trialId));
+    setRetryingTrials((prev) => new Set(prev).add(trialId));
     try {
       const response = await fetch(
         `http://localhost:3001/api/experiments/${params.id}/trials/${trialId}/retry`,
-        { method: 'POST' }
+        { method: 'POST' },
       );
-      
+
       if (!response.ok) {
         throw new Error('Failed to retry trial');
       }
-      
+
       // Refresh the failed trials list
       await fetchFailedTrials();
-      
+
       // Remove from selected if it was selected
       const newSelected = new Set(selectedTrials);
       newSelected.delete(trialId);
@@ -109,7 +109,7 @@ export default function ExperimentErrorsPage({ params }: { params: { id: string 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to retry trial');
     } finally {
-      setRetryingTrials(prev => {
+      setRetryingTrials((prev) => {
         const newSet = new Set(prev);
         newSet.delete(trialId);
         return newSet;
@@ -119,7 +119,7 @@ export default function ExperimentErrorsPage({ params }: { params: { id: string 
 
   const retryBatch = async () => {
     if (selectedTrials.size === 0) return;
-    
+
     setBatchRetrying(true);
     try {
       const response = await fetch(
@@ -127,14 +127,14 @@ export default function ExperimentErrorsPage({ params }: { params: { id: string 
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ trialIds: Array.from(selectedTrials) })
-        }
+          body: JSON.stringify({ trialIds: Array.from(selectedTrials) }),
+        },
       );
-      
+
       if (!response.ok) {
         throw new Error('Failed to retry trials');
       }
-      
+
       await fetchFailedTrials();
       setSelectedTrials(new Set());
     } catch (err) {
@@ -167,9 +167,7 @@ export default function ExperimentErrorsPage({ params }: { params: { id: string 
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Error Logs</h1>
-              <p className="mt-1 text-sm text-gray-500">
-                Experiment ID: {params.id}
-              </p>
+              <p className="mt-1 text-sm text-gray-500">Experiment ID: {params.id}</p>
             </div>
             <button
               onClick={fetchFailedTrials}
@@ -207,9 +205,7 @@ export default function ExperimentErrorsPage({ params }: { params: { id: string 
                   Select All
                 </button>
                 {selectedTrials.size > 0 && (
-                  <span className="text-sm text-gray-600">
-                    {selectedTrials.size} selected
-                  </span>
+                  <span className="text-sm text-gray-600">{selectedTrials.size} selected</span>
                 )}
               </div>
               {selectedTrials.size > 0 && (
@@ -293,9 +289,7 @@ export default function ExperimentErrorsPage({ params }: { params: { id: string 
                                   </span>
                                 </>
                               )}
-                              <span className="text-gray-500">
-                                Attempt #{trial.attemptNumber}
-                              </span>
+                              <span className="text-gray-500">Attempt #{trial.attemptNumber}</span>
                             </div>
                           </div>
 
