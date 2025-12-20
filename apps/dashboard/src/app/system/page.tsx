@@ -44,7 +44,7 @@ interface SystemMetrics {
 
 export default function SystemHealthPage() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-  
+
   const [containers, setContainers] = useState<ContainerStatus[]>([]);
   const [services, setServices] = useState<ServiceHealth[]>([]);
   const [metrics, setMetrics] = useState<SystemMetrics | null>(null);
@@ -100,10 +100,9 @@ export default function SystemHealthPage() {
     action: 'start' | 'stop' | 'restart',
   ) => {
     try {
-      const response = await fetch(
-        `${apiUrl}/system/containers/${containerName}/${action}`,
-        { method: 'POST' },
-      );
+      const response = await fetch(`${apiUrl}/system/containers/${containerName}/${action}`, {
+        method: 'POST',
+      });
 
       if (!response.ok) {
         throw new Error(`Failed to ${action} container`);

@@ -174,7 +174,7 @@ const STORAGE_KEY = 'maac-dashboard-state';
 
 function loadState(): DashboardState {
   if (typeof window === 'undefined') return defaultState;
-  
+
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
@@ -196,7 +196,7 @@ function loadState(): DashboardState {
 
 function saveState(state: DashboardState): void {
   if (typeof window === 'undefined') return;
-  
+
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch (e) {
@@ -228,7 +228,7 @@ export function DashboardStateProvider({ children }: { children: React.ReactNode
 
   // Experiment actions
   const setExperimentFilters = useCallback((filters: Partial<ExperimentsState['filters']>) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       experiments: {
         ...prev.experiments,
@@ -238,7 +238,7 @@ export function DashboardStateProvider({ children }: { children: React.ReactNode
   }, []);
 
   const setSelectedExperiment = useCallback((id: string | null) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       experiments: { ...prev.experiments, selectedExperimentId: id },
     }));
@@ -246,7 +246,7 @@ export function DashboardStateProvider({ children }: { children: React.ReactNode
 
   // Scenario actions
   const setScenarioFilters = useCallback((filters: Partial<ScenariosState['filters']>) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       scenarios: {
         ...prev.scenarios,
@@ -256,7 +256,7 @@ export function DashboardStateProvider({ children }: { children: React.ReactNode
   }, []);
 
   const setScenarioGenerateForm = useCallback((form: Partial<ScenariosState['generateForm']>) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       scenarios: {
         ...prev.scenarios,
@@ -267,14 +267,14 @@ export function DashboardStateProvider({ children }: { children: React.ReactNode
 
   // Experiment form actions
   const setExperimentForm = useCallback((form: Partial<ExperimentFormState>) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       experimentForm: { ...prev.experimentForm, ...form },
     }));
   }, []);
 
   const resetExperimentForm = useCallback(() => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       experimentForm: defaultExperimentFormState,
     }));
@@ -282,7 +282,7 @@ export function DashboardStateProvider({ children }: { children: React.ReactNode
 
   // Logs actions
   const setLogsFilters = useCallback((filters: Partial<LogsState['filters']>) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       logs: {
         ...prev.logs,
@@ -292,7 +292,7 @@ export function DashboardStateProvider({ children }: { children: React.ReactNode
   }, []);
 
   const setLogsAutoScroll = useCallback((autoScroll: boolean) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       logs: { ...prev.logs, autoScroll },
     }));
@@ -300,7 +300,7 @@ export function DashboardStateProvider({ children }: { children: React.ReactNode
 
   // Settings actions
   const setSettingsTab = useCallback((tab: string) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       settings: { ...prev.settings, activeTab: tab },
     }));
@@ -326,11 +326,7 @@ export function DashboardStateProvider({ children }: { children: React.ReactNode
     clearAllState,
   };
 
-  return (
-    <DashboardStateContext.Provider value={value}>
-      {children}
-    </DashboardStateContext.Provider>
-  );
+  return <DashboardStateContext.Provider value={value}>{children}</DashboardStateContext.Provider>;
 }
 
 // =============================================================================

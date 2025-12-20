@@ -43,7 +43,7 @@ interface ExperimentDetails {
 
 export default function ExperimentDetailPage({ params }: { params: { id: string } }) {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-  
+
   const [experiment, setExperiment] = useState<ExperimentDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

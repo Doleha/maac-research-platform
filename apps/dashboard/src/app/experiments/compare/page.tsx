@@ -56,7 +56,7 @@ const DIMENSIONS = [
 
 function ComparePageContent() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-  
+
   const searchParams = useSearchParams();
   const [experiments, setExperiments] = useState<ExperimentSummary[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -459,11 +459,13 @@ function ComparePageContent() {
 
 export default function ExperimentComparePage() {
   return (
-    <Suspense fallback={
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        </div>
+      }
+    >
       <ComparePageContent />
     </Suspense>
   );

@@ -32,7 +32,7 @@ interface FailedTrial {
 
 export default function ExperimentErrorsPage({ params }: { params: { id: string } }) {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-  
+
   const [trials, setTrials] = useState<FailedTrial[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -92,10 +92,9 @@ export default function ExperimentErrorsPage({ params }: { params: { id: string 
   const retryTrial = async (trialId: string) => {
     setRetryingTrials((prev) => new Set(prev).add(trialId));
     try {
-      const response = await fetch(
-        `${apiUrl}/experiments/${params.id}/trials/${trialId}/retry`,
-        { method: 'POST' },
-      );
+      const response = await fetch(`${apiUrl}/experiments/${params.id}/trials/${trialId}/retry`, {
+        method: 'POST',
+      });
 
       if (!response.ok) {
         throw new Error('Failed to retry trial');
@@ -124,14 +123,11 @@ export default function ExperimentErrorsPage({ params }: { params: { id: string 
 
     setBatchRetrying(true);
     try {
-      const response = await fetch(
-        `${apiUrl}/experiments/${params.id}/trials/retry-batch`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ trialIds: Array.from(selectedTrials) }),
-        },
-      );
+      const response = await fetch(`${apiUrl}/experiments/${params.id}/trials/retry-batch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trialIds: Array.from(selectedTrials) }),
+      });
 
       if (!response.ok) {
         throw new Error('Failed to retry trials');

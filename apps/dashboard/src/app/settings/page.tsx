@@ -31,7 +31,7 @@ interface TestResult {
 
 export default function SettingsPage() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-  
+
   const [activeTab, setActiveTab] = useState<'general' | 'billing'>('general');
   const [credentials, setCredentials] = useState<LLMCredentials>({});
   const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});

@@ -24,7 +24,7 @@ export default function ScenariosPage() {
   const { filters, setFilters } = useScenariosState();
   const searchQuery = filters.search;
   const domainFilter = filters.domain;
-  
+
   // Helper functions for updating persisted state
   const setSearchQuery = (value: string) => setFilters({ search: value });
   const setDomainFilter = (value: string) => setFilters({ domain: value });
@@ -104,14 +104,11 @@ export default function ScenariosPage() {
 
     try {
       setSaving(true);
-      const response = await fetch(
-        `${apiUrl}/scenarios/${editForm.scenario_id}`,
-        {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(editForm),
-        },
-      );
+      const response = await fetch(`${apiUrl}/scenarios/${editForm.scenario_id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editForm),
+      });
 
       if (!response.ok) throw new Error('Failed to update scenario');
 
@@ -259,9 +256,7 @@ export default function ScenariosPage() {
                     paginatedScenarios.map((scenario) => (
                       <tr key={scenario.scenario_id} className="hover:bg-gray-50">
                         <td className="px-6 py-4">
-                          <div className="font-mono text-sm text-gray-900">
-                            {scenario.task_id}
-                          </div>
+                          <div className="font-mono text-sm text-gray-900">{scenario.task_id}</div>
                           <div className="text-xs text-gray-500">{scenario.scenario_id}</div>
                         </td>
                         <td className="px-6 py-4">
@@ -457,9 +452,7 @@ export default function ScenariosPage() {
                   </label>
                   <textarea
                     value={editForm.task_description}
-                    onChange={(e) =>
-                      setEditForm({ ...editForm, task_description: e.target.value })
-                    }
+                    onChange={(e) => setEditForm({ ...editForm, task_description: e.target.value })}
                     rows={4}
                     className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />

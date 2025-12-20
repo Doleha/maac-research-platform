@@ -32,10 +32,10 @@ function formatTime(seconds: number): string {
 
 export default function GenerateScenariosPage() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-  
+
   // Use persisted state for form data
   const { generateForm, setGenerateForm } = useScenariosState();
-  
+
   const [formData, setFormData] = useState<GenerationRequest>({
     domains: generateForm.domains.length > 0 ? generateForm.domains : ['analytical'],
     tiers: generateForm.tiers.length > 0 ? generateForm.tiers : ['simple'],
@@ -74,7 +74,7 @@ export default function GenerateScenariosPage() {
   useEffect(() => {
     if (generating && progress.startTime) {
       timerRef.current = setInterval(() => {
-        setProgress(prev => ({
+        setProgress((prev) => ({
           ...prev,
           elapsedSeconds: (Date.now() - (prev.startTime || Date.now())) / 1000,
         }));
@@ -98,7 +98,7 @@ export default function GenerateScenariosPage() {
     setError(null);
     setGeneratedScenarios([]);
     setStreamingText('');
-    
+
     // Initialize progress tracking
     setProgress({
       startTime: Date.now(),
@@ -140,7 +140,7 @@ export default function GenerateScenariosPage() {
               setStreamingText((prev) => prev + data.text);
             } else if (data.type === 'scenario') {
               setGeneratedScenarios((prev) => [...prev, data.scenario]);
-              setProgress(prev => ({
+              setProgress((prev) => ({
                 ...prev,
                 currentCount: prev.currentCount + 1,
               }));
@@ -192,11 +192,16 @@ export default function GenerateScenariosPage() {
                           const newDomains = e.target.checked
                             ? [...formData.domains, domain]
                             : formData.domains.filter((d) => d !== domain);
-                          setFormData({ ...formData, domains: newDomains.length > 0 ? newDomains : [domain] });
+                          setFormData({
+                            ...formData,
+                            domains: newDomains.length > 0 ? newDomains : [domain],
+                          });
                         }}
                         className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
-                      <span className="text-sm text-gray-700 capitalize">{domain.replace('_', ' ')}</span>
+                      <span className="text-sm text-gray-700 capitalize">
+                        {domain.replace('_', ' ')}
+                      </span>
                     </label>
                   ))}
                 </div>
@@ -217,7 +222,10 @@ export default function GenerateScenariosPage() {
                           const newTiers = e.target.checked
                             ? [...formData.tiers, tier]
                             : formData.tiers.filter((t) => t !== tier);
-                          setFormData({ ...formData, tiers: newTiers.length > 0 ? newTiers : [tier] });
+                          setFormData({
+                            ...formData,
+                            tiers: newTiers.length > 0 ? newTiers : [tier],
+                          });
                         }}
                         className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
@@ -243,7 +251,8 @@ export default function GenerateScenariosPage() {
                   className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
                 <p className="mt-1 text-xs text-gray-500">
-                  Total: {totalScenarios} scenarios ({formData.domains.length} domains × {formData.tiers.length} tiers × {formData.repetitions} reps)
+                  Total: {totalScenarios} scenarios ({formData.domains.length} domains ×{' '}
+                  {formData.tiers.length} tiers × {formData.repetitions} reps)
                 </p>
               </div>
 
@@ -317,18 +326,21 @@ export default function GenerateScenariosPage() {
                     {progress.currentCount} of {progress.targetCount} scenarios
                   </span>
                   <span className="font-bold text-blue-700">
-                    {progress.targetCount > 0 
-                      ? Math.round((progress.currentCount / progress.targetCount) * 100) 
-                      : 0}%
+                    {progress.targetCount > 0
+                      ? Math.round((progress.currentCount / progress.targetCount) * 100)
+                      : 0}
+                    %
                   </span>
                 </div>
                 <div className="h-4 w-full overflow-hidden rounded-full bg-blue-200">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-500 ease-out"
                     style={{
-                      width: `${progress.targetCount > 0 
-                        ? (progress.currentCount / progress.targetCount) * 100 
-                        : 0}%`,
+                      width: `${
+                        progress.targetCount > 0
+                          ? (progress.currentCount / progress.targetCount) * 100
+                          : 0
+                      }%`,
                     }}
                   />
                 </div>
@@ -348,7 +360,7 @@ export default function GenerateScenariosPage() {
                 </div>
                 <div className="rounded-lg bg-white/60 p-3 text-center">
                   <div className="text-2xl font-bold text-blue-600">
-                    {progress.currentCount > 0 
+                    {progress.currentCount > 0
                       ? formatTime(progress.elapsedSeconds / progress.currentCount)
                       : '--'}
                   </div>
@@ -356,10 +368,11 @@ export default function GenerateScenariosPage() {
                 </div>
                 <div className="rounded-lg bg-white/60 p-3 text-center">
                   <div className="text-2xl font-bold text-purple-600">
-                    {progress.currentCount > 0 
+                    {progress.currentCount > 0
                       ? formatTime(
-                          ((progress.targetCount - progress.currentCount) * progress.elapsedSeconds) / 
-                          progress.currentCount
+                          ((progress.targetCount - progress.currentCount) *
+                            progress.elapsedSeconds) /
+                            progress.currentCount,
                         )
                       : '--'}
                   </div>

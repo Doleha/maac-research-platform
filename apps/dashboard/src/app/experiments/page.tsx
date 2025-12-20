@@ -56,7 +56,8 @@ export default function ExperimentsPage() {
   // Helper functions for updating persisted state
   const setSearchQuery = (value: string) => setFilters({ search: value });
   const setStatusFilter = (value: string) => setFilters({ status: value });
-  const setSortField = (value: 'name' | 'createdAt' | 'totalTrials') => setFilters({ sortBy: value });
+  const setSortField = (value: 'name' | 'createdAt' | 'totalTrials') =>
+    setFilters({ sortBy: value });
   const setSortDirection = (value: 'asc' | 'desc') => setFilters({ sortOrder: value });
 
   // Fetch experiments
@@ -251,7 +252,10 @@ export default function ExperimentsPage() {
               Showing {startIndex + 1}-{Math.min(endIndex, filteredExperiments.length)} of{' '}
               {filteredExperiments.length} experiments
             </span>
-            {(searchQuery || statusFilter !== 'all' || tierFilter !== 'all' || domainFilter !== 'all') && (
+            {(searchQuery ||
+              statusFilter !== 'all' ||
+              tierFilter !== 'all' ||
+              domainFilter !== 'all') && (
               <button
                 onClick={() => {
                   setSearchQuery('');
@@ -366,7 +370,10 @@ export default function ExperimentsPage() {
                         <td className="px-6 py-4">
                           <div className="flex flex-wrap gap-1">
                             {exp.tiers?.map((tier) => (
-                              <span key={tier} className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 capitalize">
+                              <span
+                                key={tier}
+                                className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 capitalize"
+                              >
                                 {tier}
                               </span>
                             ))}
@@ -404,9 +411,7 @@ export default function ExperimentsPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="font-medium text-gray-900">
-                            {exp.totalTrials}
-                          </span>
+                          <span className="font-medium text-gray-900">{exp.totalTrials}</span>
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-600">
                           {new Date(exp.createdAt).toLocaleDateString()}
