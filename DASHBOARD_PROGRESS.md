@@ -305,6 +305,7 @@
 **Last Updated:** December 20, 2025
 
 **Recent Progress:**
+
 - ✅ Completed sidebar navigation component with full routing structure
-- ✅ Set up basic API client with experiment and analysis endpoints  
+- ✅ Set up basic API client with experiment and analysis endpoints
 - ⏳ Next: Update layout to integrate sidebar and create experiment pages
