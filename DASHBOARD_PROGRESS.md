@@ -6,7 +6,7 @@
 
 ---
 
-## 📊 Overall Progress: 21/25 (84%) + Enhancements
+## 📊 Overall Progress: 23/25 (92%) + Enhancements
 
 ---
 
@@ -272,22 +272,31 @@
 
 ---
 
-## Phase 7: Browsing & Search (0/2)
+## Phase 7: Browsing & Search (2/2) ✅
 
 **Goal:** Browse and manage experiments and scenarios
 
-### 📋 Todo
+### ✅ Completed
 
-- [ ] **7.1 Create experiments list/browse page**
-  - Table with filters
-  - Pagination (50/page)
-  - Sortable columns
+- [x] **7.1 Create experiments list/browse page** ✅
+  - Comprehensive table with sortable columns (name, created date, MAAC score)
+  - Multi-filter system (search, status, tier, domain)
+  - Pagination (50 items per page)
+  - Status badges with icons (pending, running, completed, failed)
+  - Progress bars for trial completion
+  - Quick actions (view details, export results)
+  - Clear filters button
+  - Real-time filtering and sorting
   - **Files:** `src/app/experiments/page.tsx`
 
-- [ ] **7.2 Add scenario browser/editor**
-  - Scenarios list with filters
-  - Search by task_id
-  - Editor modal
+- [x] **7.2 Add scenario browser/editor** ✅
+  - Scenarios list with search and domain filtering
+  - View modal (read-only) for full scenario details
+  - Edit modal with inline editing for all fields
+  - Delete functionality with confirmation
+  - Task ID, domain, description, baseline answer, ground truth
+  - Pagination (50 items per page)
+  - Save changes with API integration
   - **Files:** `src/app/data/scenarios/page.tsx`
 
 ---
