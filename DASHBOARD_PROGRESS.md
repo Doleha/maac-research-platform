@@ -6,7 +6,7 @@
 
 ---
 
-## 📊 Overall Progress: 11/25 (44%)
+## 📊 Overall Progress: 15/25 (60%)
 
 ---
 
@@ -99,34 +99,44 @@
 
 ---
 
-## Phase 4: Execution Controls (0/4)
+## Phase 4: Execution Controls (4/4) ✅
 
 **Goal:** Run and monitor experiments in real-time
 
-### 📋 Todo
+### ✅ Completed
 
-- [ ] **4.1 Create experiment detail page with controls**
+- [x] **4.1 Create experiment detail page with controls** ✅
   - Metadata + config summary
   - Start/Pause/Stop/Resume buttons
-  - Status badge
+  - Status badge with live polling (5s intervals)
+  - Progress bar with completion percentage
+  - Quick action links to results/errors/export
   - **Files:** `src/app/experiments/[id]/page.tsx`
 
-- [ ] **4.2 Build real-time job queue monitor**
-  - BullMQ job status (active, completed, failed, waiting)
-  - Job cards with progress
-  - Poll every 2s
+- [x] **4.2 Build real-time job queue monitor** ✅
+  - BullMQ job status (active, completed, failed, waiting, delayed)
+  - Job cards with progress bars
+  - Stats overview cards
+  - Auto-refresh every 2s
+  - Job metadata display (trial/scenario/model/config IDs)
   - **Files:** `src/components/queue-monitor.tsx`
 
-- [ ] **4.3 Implement worker status dashboard**
-  - Worker health metrics
-  - Logs (last 100 entries)
-  - Auto-scroll
+- [x] **4.3 Implement worker status dashboard** ✅
+  - Worker health metrics (CPU, memory, uptime)
+  - Active/idle/paused/offline status badges
+  - Job processing statistics
+  - Live logs viewer (last 100 entries)
+  - Auto-scroll toggle
+  - Refresh every 3s
   - **Files:** `src/components/worker-status.tsx`
 
-- [ ] **4.4 Build error logs viewer with retry**
-  - Failed trials list
-  - Error messages + stack traces
-  - Retry individual/batch
+- [x] **4.4 Build error logs viewer with retry** ✅
+  - Failed trials list with error messages
+  - Stack trace expansion
+  - Individual trial retry buttons
+  - Batch selection and retry
+  - Select all/none functionality
+  - Scenario details display
   - **Files:** `src/app/experiments/[id]/errors/page.tsx`
 
 ---

@@ -23,13 +23,16 @@ const CSV_EXAMPLE_ROWS = [
   {
     task_id: 'ps_001',
     task_title: 'Quarterly Budget Variance Analysis',
-    task_description: 'Analyze Q3 budget variances across departments and identify cost-saving opportunities',
-    business_context: 'CFO needs comprehensive budget analysis for board meeting. Company facing 12% cost overrun in operations.',
+    task_description:
+      'Analyze Q3 budget variances across departments and identify cost-saving opportunities',
+    business_context:
+      'CFO needs comprehensive budget analysis for board meeting. Company facing 12% cost overrun in operations.',
     domain: 'problem_solving',
     scenario_type: 'control',
     complexity_level: 'moderate',
     requirements: 'Financial analysis|Trend identification|Recommendations',
-    success_criteria: 'Identify all variances >5%|Provide actionable insights|Include ROI projections',
+    success_criteria:
+      'Identify all variances >5%|Provide actionable insights|Include ROI projections',
     expected_calculations: '{"variance_percentage":true,"cost_savings":true,"roi":true}',
     expected_insights: 'Department comparison|Seasonal trends|Cost optimization areas',
     estimated_duration: '45-60 minutes',
@@ -38,13 +41,16 @@ const CSV_EXAMPLE_ROWS = [
   {
     task_id: 'cw_001',
     task_title: 'Product Launch Campaign Narrative',
-    task_description: 'Create compelling narrative for new AI product launch targeting enterprise clients',
-    business_context: 'Tech startup launching revolutionary AI tool. Need story that resonates with CTOs and VPs of Engineering.',
+    task_description:
+      'Create compelling narrative for new AI product launch targeting enterprise clients',
+    business_context:
+      'Tech startup launching revolutionary AI tool. Need story that resonates with CTOs and VPs of Engineering.',
     domain: 'creative_writing',
     scenario_type: 'test',
     complexity_level: 'complex',
     requirements: 'Target audience analysis|Brand voice alignment|Technical credibility',
-    success_criteria: 'Engaging hook|Clear value proposition|Emotional connection|Technical accuracy',
+    success_criteria:
+      'Engaging hook|Clear value proposition|Emotional connection|Technical accuracy',
     expected_calculations: '{}',
     expected_insights: 'Customer pain points|Competitive differentiation|Call to action',
     estimated_duration: '60-90 minutes',
@@ -54,13 +60,15 @@ const CSV_EXAMPLE_ROWS = [
     task_id: 'da_001',
     task_title: 'Customer Churn Prediction Analysis',
     task_description: 'Analyze customer usage patterns and identify high-risk churn candidates',
-    business_context: 'SaaS company experiencing 8% monthly churn. Need predictive model to proactively retain customers.',
+    business_context:
+      'SaaS company experiencing 8% monthly churn. Need predictive model to proactively retain customers.',
     domain: 'data_analysis',
     scenario_type: 'control',
     complexity_level: 'complex',
     requirements: 'Pattern recognition|Risk scoring|Segmentation|Retention strategy',
     success_criteria: 'Identify 80%+ of churners|Actionable segments|Retention tactics per segment',
-    expected_calculations: '{"churn_probability":true,"lifetime_value":true,"engagement_score":true}',
+    expected_calculations:
+      '{"churn_probability":true,"lifetime_value":true,"engagement_score":true}',
     expected_insights: 'Usage patterns|Risk indicators|Intervention timing|Success metrics',
     estimated_duration: '90-120 minutes',
     metadata: '{"vertical":"saas","urgency":"critical"}',
@@ -72,13 +80,19 @@ const JSON_TEMPLATE = [
   {
     task_id: 'ps_001',
     task_title: 'Quarterly Budget Variance Analysis',
-    task_description: 'Analyze Q3 budget variances across departments and identify cost-saving opportunities',
-    business_context: 'CFO needs comprehensive budget analysis for board meeting. Company facing 12% cost overrun in operations.',
+    task_description:
+      'Analyze Q3 budget variances across departments and identify cost-saving opportunities',
+    business_context:
+      'CFO needs comprehensive budget analysis for board meeting. Company facing 12% cost overrun in operations.',
     domain: 'problem_solving',
     scenario_type: 'control',
     complexity_level: 'moderate',
     requirements: ['Financial analysis', 'Trend identification', 'Recommendations'],
-    success_criteria: ['Identify all variances >5%', 'Provide actionable insights', 'Include ROI projections'],
+    success_criteria: [
+      'Identify all variances >5%',
+      'Provide actionable insights',
+      'Include ROI projections',
+    ],
     expected_calculations: {
       variance_percentage: true,
       cost_savings: true,
@@ -94,13 +108,20 @@ const JSON_TEMPLATE = [
   {
     task_id: 'cw_001',
     task_title: 'Product Launch Campaign Narrative',
-    task_description: 'Create compelling narrative for new AI product launch targeting enterprise clients',
-    business_context: 'Tech startup launching revolutionary AI tool. Need story that resonates with CTOs and VPs of Engineering.',
+    task_description:
+      'Create compelling narrative for new AI product launch targeting enterprise clients',
+    business_context:
+      'Tech startup launching revolutionary AI tool. Need story that resonates with CTOs and VPs of Engineering.',
     domain: 'creative_writing',
     scenario_type: 'test',
     complexity_level: 'complex',
     requirements: ['Target audience analysis', 'Brand voice alignment', 'Technical credibility'],
-    success_criteria: ['Engaging hook', 'Clear value proposition', 'Emotional connection', 'Technical accuracy'],
+    success_criteria: [
+      'Engaging hook',
+      'Clear value proposition',
+      'Emotional connection',
+      'Technical accuracy',
+    ],
     expected_calculations: {},
     expected_insights: ['Customer pain points', 'Competitive differentiation', 'Call to action'],
     estimated_duration: '60-90 minutes',
@@ -113,18 +134,28 @@ const JSON_TEMPLATE = [
     task_id: 'da_001',
     task_title: 'Customer Churn Prediction Analysis',
     task_description: 'Analyze customer usage patterns and identify high-risk churn candidates',
-    business_context: 'SaaS company experiencing 8% monthly churn. Need predictive model to proactively retain customers.',
+    business_context:
+      'SaaS company experiencing 8% monthly churn. Need predictive model to proactively retain customers.',
     domain: 'data_analysis',
     scenario_type: 'control',
     complexity_level: 'complex',
     requirements: ['Pattern recognition', 'Risk scoring', 'Segmentation', 'Retention strategy'],
-    success_criteria: ['Identify 80%+ of churners', 'Actionable segments', 'Retention tactics per segment'],
+    success_criteria: [
+      'Identify 80%+ of churners',
+      'Actionable segments',
+      'Retention tactics per segment',
+    ],
     expected_calculations: {
       churn_probability: true,
       lifetime_value: true,
       engagement_score: true,
     },
-    expected_insights: ['Usage patterns', 'Risk indicators', 'Intervention timing', 'Success metrics'],
+    expected_insights: [
+      'Usage patterns',
+      'Risk indicators',
+      'Intervention timing',
+      'Success metrics',
+    ],
     estimated_duration: '90-120 minutes',
     metadata: {
       vertical: 'saas',
@@ -224,8 +255,8 @@ export function TemplateDownload() {
                     title (string)
                   </li>
                   <li>
-                    <code className="rounded bg-gray-100 px-1">task_description</code> - Detailed task
-                    description (string)
+                    <code className="rounded bg-gray-100 px-1">task_description</code> - Detailed
+                    task description (string)
                   </li>
                   <li>
                     <code className="rounded bg-gray-100 px-1">business_context</code> - Real-world
@@ -236,16 +267,16 @@ export function TemplateDownload() {
                     problem_solving, creative_writing, data_analysis, technical_reasoning
                   </li>
                   <li>
-                    <code className="rounded bg-gray-100 px-1">scenario_type</code> - Must be "control"
-                    or "test"
+                    <code className="rounded bg-gray-100 px-1">scenario_type</code> - Must be
+                    "control" or "test"
                   </li>
                   <li>
                     <code className="rounded bg-gray-100 px-1">complexity_level</code> - Must be
                     "simple", "moderate", or "complex"
                   </li>
                   <li>
-                    <code className="rounded bg-gray-100 px-1">requirements</code> - Array of strings
-                    or pipe-separated (must not be empty)
+                    <code className="rounded bg-gray-100 px-1">requirements</code> - Array of
+                    strings or pipe-separated (must not be empty)
                   </li>
                   <li>
                     <code className="rounded bg-gray-100 px-1">success_criteria</code> - Array of

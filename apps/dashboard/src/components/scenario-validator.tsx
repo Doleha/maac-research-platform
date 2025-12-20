@@ -16,30 +16,41 @@ const scenarioSchema = z.object({
   scenario_type: z.enum(['control', 'test'], {
     errorMap: () => ({ message: 'scenario_type must be "control" or "test"' }),
   }),
-  requirements: z.union([z.array(z.string()), z.string()]).refine(
-    (val) => (Array.isArray(val) ? val.length > 0 : val.length > 0),
-    { message: 'requirements is required' }
-  ),
-  success_criteria: z.union([z.array(z.string()), z.string()]).refine(
-    (val) => (Array.isArray(val) ? val.length > 0 : val.length > 0),
-    { message: 'success_criteria is required' }
-  ),
+  requirements: z
+    .union([z.array(z.string()), z.string()])
+    .refine((val) => (Array.isArray(val) ? val.length > 0 : val.length > 0), {
+      message: 'requirements is required',
+    }),
+  success_criteria: z
+    .union([z.array(z.string()), z.string()])
+    .refine((val) => (Array.isArray(val) ? val.length > 0 : val.length > 0), {
+      message: 'success_criteria is required',
+    }),
   complexity_level: z.enum(['simple', 'moderate', 'complex'], {
     errorMap: () => ({ message: 'complexity_level must be "simple", "moderate", or "complex"' }),
   }),
   estimated_duration: z.string().min(1, 'estimated_duration is required'),
-  expected_calculations: z.union([z.record(z.any()), z.string()]).refine(
-    (val) => (typeof val === 'object' && Object.keys(val).length > 0) || (typeof val === 'string' && val.length > 0),
-    { message: 'expected_calculations is required' }
-  ),
-  expected_insights: z.union([z.array(z.string()), z.string()]).refine(
-    (val) => (Array.isArray(val) ? val.length > 0 : val.length > 0),
-    { message: 'expected_insights is required' }
-  ),
-  metadata: z.union([z.record(z.any()), z.string()]).refine(
-    (val) => (typeof val === 'object' && Object.keys(val).length > 0) || (typeof val === 'string' && val.length > 0),
-    { message: 'metadata is required' }
-  ),
+  expected_calculations: z
+    .union([z.record(z.any()), z.string()])
+    .refine(
+      (val) =>
+        (typeof val === 'object' && Object.keys(val).length > 0) ||
+        (typeof val === 'string' && val.length > 0),
+      { message: 'expected_calculations is required' },
+    ),
+  expected_insights: z
+    .union([z.array(z.string()), z.string()])
+    .refine((val) => (Array.isArray(val) ? val.length > 0 : val.length > 0), {
+      message: 'expected_insights is required',
+    }),
+  metadata: z
+    .union([z.record(z.any()), z.string()])
+    .refine(
+      (val) =>
+        (typeof val === 'object' && Object.keys(val).length > 0) ||
+        (typeof val === 'string' && val.length > 0),
+      { message: 'metadata is required' },
+    ),
 });
 
 interface ValidationError {
