@@ -353,7 +353,6 @@ export default function ExperimentComparePage() {
                                 comparisonData[1],
                                 dim.key,
                               );
-                              const absDiff = Math.abs(diff);
                               return (
                                 <span className="flex items-center gap-1">
                                   {diff > 0.1 ? (
