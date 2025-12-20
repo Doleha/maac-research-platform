@@ -21,8 +21,9 @@
 - **Dashboard Form Updates:** 8/8 tasks complete (100%) ✅
 - **Dashboard API/Visualization:** 5/5 tasks complete (100%) ✅
 - **Testing:** 5/5 tasks complete (100%) ✅
+- **Phase 2 Advanced Endpoints:** 9/9 tasks complete (100%) ✅
 
-**Overall:** 30/30 tasks complete (100%) 🎉
+**Overall:** 39/39 tasks complete (100%) 🎉🎉
 
 ---
 
@@ -267,52 +268,43 @@
 
 ## Phase 2: Advanced Features (Priority 2 - Deferred)
 
-### 🚀 Backend - Advanced Endpoints (9 tasks)
+### 🚀 Backend - Advanced Endpoints (9 tasks) ✅
 
-- [ ] **6.1 Add GET /api/experiments/:id/progress (SSE)**
+- [x] **6.1 Add GET /api/experiments/:id/progress (SSE)** ✅
   - **Description:** Real-time progress streaming
-  - **Complexity:** High - requires SSE implementation
-  - **Defer to:** Phase 2
+  - **Implemented:** SSE endpoint with heartbeat, progress updates, completion events
 
-- [ ] **6.2 Add POST /api/experiments/:id/retry**
+- [x] **6.2 Add POST /api/experiments/:id/retry** ✅
   - **Description:** Retry failed trials
-  - **Complexity:** Medium
-  - **Defer to:** Phase 2
+  - **Implemented:** Requeues failed trials via orchestrator
 
-- [ ] **6.3 Add GET /api/experiments/:id/export**
+- [x] **6.3 Add GET /api/experiments/:id/export** ✅
   - **Description:** Export results to JSON/CSV
-  - **Complexity:** Medium
-  - **Defer to:** Phase 2
+  - **Implemented:** Supports format=json|csv query param
 
-- [ ] **6.4 Add PUT /api/scenarios/:id**
+- [x] **6.4 Add PUT /api/scenarios/:id** ✅
   - **Description:** Update existing scenario
-  - **Complexity:** Low
-  - **Defer to:** Phase 2
+  - **Implemented:** Update title, description, criteria, insights
 
-- [ ] **6.5 Add DELETE /api/scenarios/:id**
+- [x] **6.5 Add DELETE /api/scenarios/:id** ✅
   - **Description:** Delete scenario
-  - **Complexity:** Low
-  - **Defer to:** Phase 2
+  - **Implemented:** Soft delete with validation
 
-- [ ] **6.6 Add POST /api/scenarios/bulk-import**
+- [x] **6.6 Add POST /api/scenarios/bulk-import** ✅
   - **Description:** Import scenarios from CSV
-  - **Complexity:** Medium
-  - **Defer to:** Phase 2
+  - **Implemented:** Accepts array of scenario objects
 
-- [ ] **6.7 Add POST /api/scenarios/generate/estimate**
+- [x] **6.7 Add POST /api/scenarios/generate/estimate** ✅
   - **Description:** Cost estimation for AI generation
-  - **Complexity:** Low
-  - **Defer to:** Phase 2
+  - **Implemented:** Token/cost estimates by model
 
-- [ ] **6.8 Add system monitoring endpoints**
+- [x] **6.8 Add system monitoring endpoints** ✅
   - **Description:** Docker container status, system metrics
-  - **Complexity:** High
-  - **Defer to:** Phase 2
+  - **Implemented:** GET /system/status, GET /system/metrics
 
-- [ ] **6.9 Add settings endpoints**
+- [x] **6.9 Add settings endpoints** ✅
   - **Description:** API keys, preferences, billing
-  - **Complexity:** Medium
-  - **Defer to:** Phase 2
+  - **Implemented:** CRUD for settings table with encryption support
 
 ---
 
