@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   BarChart3,
@@ -54,7 +54,9 @@ const DIMENSIONS = [
   { key: 'constructValidity', label: 'Construct Validity' },
 ] as const;
 
-export default function ExperimentComparePage() {
+function ComparePageContent() {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  
   const searchParams = useSearchParams();
   const [experiments, setExperiments] = useState<ExperimentSummary[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -72,11 +74,11 @@ export default function ExperimentComparePage() {
     if (ids?.length) {
       setSelectedIds(new Set(ids));
     }
-  }, []);
+  }, [searchParams]);
 
   const fetchExperiments = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/experiments');
+      const response = await fetch(`${apiUrl}/experiments`);
       if (!response.ok) {
         throw new Error('Failed to fetch experiments');
       }
@@ -106,7 +108,7 @@ export default function ExperimentComparePage() {
     setComparing(true);
     try {
       const ids = Array.from(selectedIds);
-      const response = await fetch('http://localhost:3001/api/experiments/compare', {
+      const response = await fetch(`${apiUrl}/experiments/compare`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ experimentIds: ids }),
@@ -452,5 +454,17 @@ export default function ExperimentComparePage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ExperimentComparePage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    }>
+      <ComparePageContent />
+    </Suspense>
   );
 }

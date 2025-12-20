@@ -31,6 +31,8 @@ interface FailedTrial {
 }
 
 export default function ExperimentErrorsPage({ params }: { params: { id: string } }) {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  
   const [trials, setTrials] = useState<FailedTrial[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +47,7 @@ export default function ExperimentErrorsPage({ params }: { params: { id: string 
 
   const fetchFailedTrials = async () => {
     try {
-      const response = await fetch(`http://localhost:3001/api/experiments/${params.id}/errors`);
+      const response = await fetch(`${apiUrl}/experiments/${params.id}/errors`);
       if (!response.ok) {
         throw new Error('Failed to fetch error logs');
       }
@@ -91,7 +93,7 @@ export default function ExperimentErrorsPage({ params }: { params: { id: string 
     setRetryingTrials((prev) => new Set(prev).add(trialId));
     try {
       const response = await fetch(
-        `http://localhost:3001/api/experiments/${params.id}/trials/${trialId}/retry`,
+        `${apiUrl}/experiments/${params.id}/trials/${trialId}/retry`,
         { method: 'POST' },
       );
 
@@ -123,7 +125,7 @@ export default function ExperimentErrorsPage({ params }: { params: { id: string 
     setBatchRetrying(true);
     try {
       const response = await fetch(
-        `http://localhost:3001/api/experiments/${params.id}/trials/retry-batch`,
+        `${apiUrl}/experiments/${params.id}/trials/retry-batch`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

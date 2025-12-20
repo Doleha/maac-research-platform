@@ -14,6 +14,8 @@ interface ExperimentDetails {
 }
 
 export default function ExperimentExportPage({ params }: { params: { id: string } }) {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  
   const [experiment, setExperiment] = useState<ExperimentDetails | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -23,7 +25,7 @@ export default function ExperimentExportPage({ params }: { params: { id: string 
 
   const fetchExperiment = async () => {
     try {
-      const response = await fetch(`http://localhost:3001/api/experiments/${params.id}/status`);
+      const response = await fetch(`${apiUrl}/experiments/${params.id}/status`);
       if (response.ok) {
         const data = await response.json();
         setExperiment(data);

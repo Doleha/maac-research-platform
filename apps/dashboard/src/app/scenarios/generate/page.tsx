@@ -1,51 +1,96 @@
 'use client';
 
-import { useState } from 'react';
-import { Wand2, Loader2, CheckCircle, AlertCircle, DollarSign, FileText } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Wand2, Loader2, CheckCircle, AlertCircle, FileText, Clock, Target } from 'lucide-react';
+import { useScenariosState } from '@/contexts/DashboardStateContext';
 
 interface GenerationRequest {
-  domain: string;
-  count: number;
-  complexity: 'simple' | 'moderate' | 'complex';
-  llm_provider: string;
-  llm_model: string;
-  temperature: number;
+  domains: string[];
+  tiers: string[];
+  repetitions: number;
+  model: string;
+  configId: string;
+}
+
+interface ProgressState {
+  startTime: number | null;
+  currentCount: number;
+  targetCount: number;
+  elapsedSeconds: number;
+}
+
+// Helper function to format time
+function formatTime(seconds: number): string {
+  if (seconds < 60) return `${Math.round(seconds)}s`;
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.round(seconds % 60);
+  if (mins < 60) return `${mins}m ${secs}s`;
+  const hours = Math.floor(mins / 60);
+  const remainMins = mins % 60;
+  return `${hours}h ${remainMins}m`;
 }
 
 export default function GenerateScenariosPage() {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  
+  // Use persisted state for form data
+  const { generateForm, setGenerateForm } = useScenariosState();
+  
   const [formData, setFormData] = useState<GenerationRequest>({
-    domain: 'problem_solving',
-    count: 10,
-    complexity: 'moderate',
-    llm_provider: 'openai',
-    llm_model: 'gpt-4o',
-    temperature: 0.7,
+    domains: generateForm.domains.length > 0 ? generateForm.domains : ['analytical'],
+    tiers: generateForm.tiers.length > 0 ? generateForm.tiers : ['simple'],
+    repetitions: generateForm.scenariosPerDomainTier || 5,
+    model: 'deepseek_v3',
+    configId: '111111111111',
   });
 
+  // Persist form changes to global state
+  useEffect(() => {
+    setGenerateForm({
+      domains: formData.domains,
+      tiers: formData.tiers,
+      scenariosPerDomainTier: formData.repetitions,
+    });
+  }, [formData.domains, formData.tiers, formData.repetitions, setGenerateForm]);
+
+  // Calculate total scenarios
+  const totalScenarios = formData.domains.length * formData.tiers.length * formData.repetitions;
+
   const [generating, setGenerating] = useState(false);
-  const [estimatedCost, setEstimatedCost] = useState<number | null>(null);
   const [generatedScenarios, setGeneratedScenarios] = useState<any[]>([]);
   const [streamingText, setStreamingText] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  // Estimate cost
-  const handleEstimate = async () => {
-    try {
-      const response = await fetch('http://localhost:3001/api/scenarios/generate/estimate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
+  // Progress tracking
+  const [progress, setProgress] = useState<ProgressState>({
+    startTime: null,
+    currentCount: 0,
+    targetCount: 0,
+    elapsedSeconds: 0,
+  });
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-      if (!response.ok) throw new Error('Failed to estimate cost');
-
-      const data = await response.json();
-      setEstimatedCost(data.estimated_credits);
-    } catch (err) {
-      console.error('Estimation error:', err);
-      setEstimatedCost(null);
+  // Update elapsed time while generating
+  useEffect(() => {
+    if (generating && progress.startTime) {
+      timerRef.current = setInterval(() => {
+        setProgress(prev => ({
+          ...prev,
+          elapsedSeconds: (Date.now() - (prev.startTime || Date.now())) / 1000,
+        }));
+      }, 1000);
+    } else {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     }
-  };
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [generating, progress.startTime]);
 
   // Generate scenarios with SSE streaming
   const handleGenerate = async () => {
@@ -53,15 +98,26 @@ export default function GenerateScenariosPage() {
     setError(null);
     setGeneratedScenarios([]);
     setStreamingText('');
+    
+    // Initialize progress tracking
+    setProgress({
+      startTime: Date.now(),
+      currentCount: 0,
+      targetCount: totalScenarios,
+      elapsedSeconds: 0,
+    });
 
     try {
-      const response = await fetch('http://localhost:3001/api/scenarios/generate', {
+      const response = await fetch(`${apiUrl}/scenarios/generate-llm-stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
-      if (!response.ok) throw new Error('Failed to start generation');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.error || 'Failed to start generation');
+      }
 
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
@@ -84,6 +140,10 @@ export default function GenerateScenariosPage() {
               setStreamingText((prev) => prev + data.text);
             } else if (data.type === 'scenario') {
               setGeneratedScenarios((prev) => [...prev, data.scenario]);
+              setProgress(prev => ({
+                ...prev,
+                currentCount: prev.currentCount + 1,
+              }));
               setStreamingText('');
             } else if (data.type === 'complete') {
               setGenerating(false);
@@ -117,160 +177,197 @@ export default function GenerateScenariosPage() {
             <h2 className="mb-4 text-xl font-semibold text-gray-900">Configuration</h2>
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              {/* Domain */}
+              {/* Domains - Multi-select checkboxes */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Domain <span className="text-red-500">*</span>
+                  Domains <span className="text-red-500">*</span>
                 </label>
-                <select
-                  value={formData.domain}
-                  onChange={(e) => {
-                    setFormData({ ...formData, domain: e.target.value });
-                    setEstimatedCost(null);
-                  }}
-                  className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                >
-                  <option value="problem_solving">Problem Solving</option>
-                  <option value="creative_writing">Creative Writing</option>
-                  <option value="data_analysis">Data Analysis</option>
-                  <option value="technical_reasoning">Technical Reasoning</option>
-                </select>
+                <div className="mt-2 space-y-2">
+                  {['analytical', 'planning', 'communication', 'problem_solving'].map((domain) => (
+                    <label key={domain} className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.domains.includes(domain)}
+                        onChange={(e) => {
+                          const newDomains = e.target.checked
+                            ? [...formData.domains, domain]
+                            : formData.domains.filter((d) => d !== domain);
+                          setFormData({ ...formData, domains: newDomains.length > 0 ? newDomains : [domain] });
+                        }}
+                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-700 capitalize">{domain.replace('_', ' ')}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
 
-              {/* Count */}
+              {/* Tiers - Multi-select checkboxes */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Number of Scenarios <span className="text-red-500">*</span>
+                  Complexity Tiers <span className="text-red-500">*</span>
+                </label>
+                <div className="mt-2 space-y-2">
+                  {['simple', 'moderate', 'complex'].map((tier) => (
+                    <label key={tier} className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.tiers.includes(tier)}
+                        onChange={(e) => {
+                          const newTiers = e.target.checked
+                            ? [...formData.tiers, tier]
+                            : formData.tiers.filter((t) => t !== tier);
+                          setFormData({ ...formData, tiers: newTiers.length > 0 ? newTiers : [tier] });
+                        }}
+                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-700 capitalize">{tier}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Repetitions per domain/tier */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Repetitions per Domain/Tier <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
                   min="1"
-                  max="100"
-                  value={formData.count}
+                  max="50"
+                  value={formData.repetitions}
                   onChange={(e) => {
-                    setFormData({ ...formData, count: parseInt(e.target.value) || 1 });
-                    setEstimatedCost(null);
+                    setFormData({ ...formData, repetitions: parseInt(e.target.value) || 1 });
                   }}
                   className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
-              </div>
-
-              {/* Complexity */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Complexity <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={formData.complexity}
-                  onChange={(e) => {
-                    setFormData({
-                      ...formData,
-                      complexity: e.target.value as 'simple' | 'moderate' | 'complex',
-                    });
-                    setEstimatedCost(null);
-                  }}
-                  className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                >
-                  <option value="simple">Simple</option>
-                  <option value="moderate">Moderate</option>
-                  <option value="complex">Complex</option>
-                </select>
-              </div>
-
-              {/* Temperature */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Temperature</label>
-                <input
-                  type="number"
-                  min="0"
-                  max="2"
-                  step="0.1"
-                  value={formData.temperature}
-                  onChange={(e) =>
-                    setFormData({ ...formData, temperature: parseFloat(e.target.value) || 0.7 })
-                  }
-                  className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-                <p className="mt-1 text-xs text-gray-500">Higher = more creative (0.0 - 2.0)</p>
-              </div>
-
-              {/* Provider */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  LLM Provider <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={formData.llm_provider}
-                  onChange={(e) => {
-                    setFormData({ ...formData, llm_provider: e.target.value });
-                    setEstimatedCost(null);
-                  }}
-                  className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                >
-                  <option value="openai">OpenAI</option>
-                  <option value="anthropic">Anthropic</option>
-                  <option value="deepseek">DeepSeek</option>
-                  <option value="openrouter">OpenRouter</option>
-                </select>
+                <p className="mt-1 text-xs text-gray-500">
+                  Total: {totalScenarios} scenarios ({formData.domains.length} domains × {formData.tiers.length} tiers × {formData.repetitions} reps)
+                </p>
               </div>
 
               {/* Model */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Model <span className="text-red-500">*</span>
+                  LLM Model <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  value={formData.llm_model}
+                <select
+                  value={formData.model}
                   onChange={(e) => {
-                    setFormData({ ...formData, llm_model: e.target.value });
-                    setEstimatedCost(null);
+                    setFormData({ ...formData, model: e.target.value });
                   }}
                   className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  placeholder="e.g., gpt-4o, claude-3-5-sonnet-20241022"
-                />
+                >
+                  <option value="deepseek_v3">DeepSeek V3</option>
+                  <option value="sonnet_37">Claude 3.7 Sonnet</option>
+                  <option value="gpt_4o">GPT-4o</option>
+                  <option value="llama_maverick">Llama Maverick</option>
+                </select>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="mt-6 flex items-center gap-3">
-              <button
-                onClick={handleEstimate}
-                disabled={generating}
-                className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <DollarSign className="h-4 w-4" />
-                Estimate Cost
-              </button>
-
+            <div className="mt-6 flex flex-wrap items-center gap-3">
               <button
                 onClick={handleGenerate}
-                disabled={generating}
+                disabled={generating || totalScenarios === 0}
                 className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {generating ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    Generating...
+                    Generating {totalScenarios} scenarios...
                   </>
                 ) : (
                   <>
                     <Wand2 className="h-4 w-4" />
-                    Generate Scenarios
+                    Generate {totalScenarios} Scenarios
                   </>
                 )}
               </button>
 
-              {estimatedCost !== null && (
-                <div className="ml-auto flex items-center gap-2 rounded-lg bg-blue-50 px-4 py-2">
-                  <DollarSign className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-medium text-blue-900">
-                    Est. {estimatedCost.toFixed(2)} credits
-                  </span>
-                </div>
-              )}
+              <div className="flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2">
+                <Target className="h-4 w-4 text-gray-600" />
+                <span className="text-sm font-medium text-gray-700">
+                  {totalScenarios} total scenarios
+                </span>
+              </div>
             </div>
           </div>
+
+          {/* Progress Indicator */}
+          {generating && progress.startTime && (
+            <div className="rounded-lg border border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 p-6 shadow-sm">
+              <div className="mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Target className="h-5 w-5 text-blue-600" />
+                  <h3 className="font-semibold text-blue-900">Generation Progress</h3>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-blue-700">
+                  <Clock className="h-4 w-4" />
+                  <span>Elapsed: {formatTime(progress.elapsedSeconds)}</span>
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="mb-4">
+                <div className="mb-2 flex justify-between text-sm">
+                  <span className="font-medium text-blue-900">
+                    {progress.currentCount} of {progress.targetCount} scenarios
+                  </span>
+                  <span className="font-bold text-blue-700">
+                    {progress.targetCount > 0 
+                      ? Math.round((progress.currentCount / progress.targetCount) * 100) 
+                      : 0}%
+                  </span>
+                </div>
+                <div className="h-4 w-full overflow-hidden rounded-full bg-blue-200">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-500 ease-out"
+                    style={{
+                      width: `${progress.targetCount > 0 
+                        ? (progress.currentCount / progress.targetCount) * 100 
+                        : 0}%`,
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                <div className="rounded-lg bg-white/60 p-3 text-center">
+                  <div className="text-2xl font-bold text-green-600">{progress.currentCount}</div>
+                  <div className="text-xs text-gray-600">Completed</div>
+                </div>
+                <div className="rounded-lg bg-white/60 p-3 text-center">
+                  <div className="text-2xl font-bold text-orange-600">
+                    {progress.targetCount - progress.currentCount}
+                  </div>
+                  <div className="text-xs text-gray-600">Remaining</div>
+                </div>
+                <div className="rounded-lg bg-white/60 p-3 text-center">
+                  <div className="text-2xl font-bold text-blue-600">
+                    {progress.currentCount > 0 
+                      ? formatTime(progress.elapsedSeconds / progress.currentCount)
+                      : '--'}
+                  </div>
+                  <div className="text-xs text-gray-600">Avg per Scenario</div>
+                </div>
+                <div className="rounded-lg bg-white/60 p-3 text-center">
+                  <div className="text-2xl font-bold text-purple-600">
+                    {progress.currentCount > 0 
+                      ? formatTime(
+                          ((progress.targetCount - progress.currentCount) * progress.elapsedSeconds) / 
+                          progress.currentCount
+                        )
+                      : '--'}
+                  </div>
+                  <div className="text-xs text-gray-600">Est. Remaining</div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Streaming Output */}
           {(generating || streamingText) && (

@@ -43,6 +43,8 @@ interface SystemMetrics {
 }
 
 export default function SystemHealthPage() {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  
   const [containers, setContainers] = useState<ContainerStatus[]>([]);
   const [services, setServices] = useState<ServiceHealth[]>([]);
   const [metrics, setMetrics] = useState<SystemMetrics | null>(null);
@@ -53,9 +55,9 @@ export default function SystemHealthPage() {
   const fetchSystemHealth = async () => {
     try {
       const [containersRes, servicesRes, metricsRes] = await Promise.all([
-        fetch('http://localhost:3001/api/system/containers'),
-        fetch('http://localhost:3001/api/system/services'),
-        fetch('http://localhost:3001/api/system/metrics'),
+        fetch(`${apiUrl}/system/containers`),
+        fetch(`${apiUrl}/system/services`),
+        fetch(`${apiUrl}/system/metrics`),
       ]);
 
       if (!containersRes.ok || !servicesRes.ok || !metricsRes.ok) {
@@ -99,7 +101,7 @@ export default function SystemHealthPage() {
   ) => {
     try {
       const response = await fetch(
-        `http://localhost:3001/api/system/containers/${containerName}/${action}`,
+        `${apiUrl}/system/containers/${containerName}/${action}`,
         { method: 'POST' },
       );
 

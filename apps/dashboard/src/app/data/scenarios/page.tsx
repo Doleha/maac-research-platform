@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Search, Edit, Trash2, Loader2, X, Save, Eye } from 'lucide-react';
+import { useScenariosState } from '@/contexts/DashboardStateContext';
 
 interface Scenario {
   scenario_id: string;
@@ -19,9 +20,14 @@ export default function ScenariosPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Filter states
-  const [searchQuery, setSearchQuery] = useState('');
-  const [domainFilter, setDomainFilter] = useState<string>('all');
+  // Use persisted filter states
+  const { filters, setFilters } = useScenariosState();
+  const searchQuery = filters.search;
+  const domainFilter = filters.domain;
+  
+  // Helper functions for updating persisted state
+  const setSearchQuery = (value: string) => setFilters({ search: value });
+  const setDomainFilter = (value: string) => setFilters({ domain: value });
 
   // Editor modal
   const [editingScenario, setEditingScenario] = useState<Scenario | null>(null);
@@ -40,7 +46,8 @@ export default function ScenariosPage() {
     const fetchScenarios = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:3001/api/scenarios');
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+        const response = await fetch(`${apiUrl}/scenarios`);
         if (!response.ok) throw new Error('Failed to fetch scenarios');
         const data = await response.json();
         setScenarios(data.scenarios || []);
@@ -93,11 +100,12 @@ export default function ScenariosPage() {
 
   const handleSave = async () => {
     if (!editForm) return;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
     try {
       setSaving(true);
       const response = await fetch(
-        `http://localhost:3001/api/scenarios/${editForm.scenario_id}`,
+        `${apiUrl}/scenarios/${editForm.scenario_id}`,
         {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -122,9 +130,10 @@ export default function ScenariosPage() {
 
   const handleDelete = async (scenarioId: string) => {
     if (!confirm('Are you sure you want to delete this scenario?')) return;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
     try {
-      const response = await fetch(`http://localhost:3001/api/scenarios/${scenarioId}`, {
+      const response = await fetch(`${apiUrl}/scenarios/${scenarioId}`, {
         method: 'DELETE',
       });
 

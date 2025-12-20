@@ -4,17 +4,16 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Search,
-  Filter,
   Plus,
   ArrowUpDown,
   Eye,
   FileText,
-  Play,
   CheckCircle,
   XCircle,
   Clock,
   Loader2,
 } from 'lucide-react';
+import { useExperimentsState } from '@/contexts/DashboardStateContext';
 
 interface Experiment {
   id: number;
@@ -39,26 +38,34 @@ export default function ExperimentsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Filter states
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  // Use persisted filter state
+  const { filters, setFilters } = useExperimentsState();
+  const searchQuery = filters.search;
+  const statusFilter = filters.status;
+  const sortField = filters.sortBy as 'name' | 'createdAt' | 'totalTrials';
+  const sortDirection = filters.sortOrder;
+
+  // Local filter states for tier and domain (not in global state yet)
   const [tierFilter, setTierFilter] = useState<string>('all');
   const [domainFilter, setDomainFilter] = useState<string>('all');
-  const [sortField, setSortField] = useState<'name' | 'createdAt' | 'totalTrials'>(
-    'createdAt',
-  );
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
+
+  // Helper functions for updating persisted state
+  const setSearchQuery = (value: string) => setFilters({ search: value });
+  const setStatusFilter = (value: string) => setFilters({ status: value });
+  const setSortField = (value: 'name' | 'createdAt' | 'totalTrials') => setFilters({ sortBy: value });
+  const setSortDirection = (value: 'asc' | 'desc') => setFilters({ sortOrder: value });
 
   // Fetch experiments
   useEffect(() => {
     const fetchExperiments = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:3001/api/experiments');
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+        const response = await fetch(`${apiUrl}/experiments`);
         if (!response.ok) throw new Error('Failed to fetch experiments');
         const data = await response.json();
         setExperiments(data.experiments || []);

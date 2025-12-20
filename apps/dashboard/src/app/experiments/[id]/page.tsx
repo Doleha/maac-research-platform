@@ -42,6 +42,8 @@ interface ExperimentDetails {
 }
 
 export default function ExperimentDetailPage({ params }: { params: { id: string } }) {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  
   const [experiment, setExperiment] = useState<ExperimentDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +57,7 @@ export default function ExperimentDetailPage({ params }: { params: { id: string 
 
   const fetchExperiment = async () => {
     try {
-      const response = await fetch(`http://localhost:3001/api/experiments/${params.id}/status`);
+      const response = await fetch(`${apiUrl}/experiments/${params.id}/status`);
       if (!response.ok) {
         throw new Error('Failed to fetch experiment');
       }
@@ -74,10 +76,10 @@ export default function ExperimentDetailPage({ params }: { params: { id: string 
     try {
       const endpoint =
         action === 'start'
-          ? `/api/experiments/${params.id}/start`
-          : `/api/experiments/${params.id}/${action}`;
+          ? `/experiments/${params.id}/start`
+          : `/experiments/${params.id}/${action}`;
 
-      const response = await fetch(`http://localhost:3001${endpoint}`, {
+      const response = await fetch(`${apiUrl}${endpoint}`, {
         method: 'POST',
       });
 
