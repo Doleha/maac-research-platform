@@ -6,11 +6,11 @@
 
 ---
 
-## 📊 Overall Progress: 3/25 (12%)
+## 📊 Overall Progress: 5/25 (20%)
 
 ---
 
-## Phase 1: Foundation (2/2) ✅
+## Phase 1: Foundation (4/4) ✅
 
 **Goal:** Multi-page routing and navigation structure
 
@@ -29,20 +29,16 @@
   - Experiment endpoints
   - Analysis endpoints
   - **Files:** `src/lib/api-client.ts`
-
-### 🚧 In Progress
-
-- [x] **1.1 Setup multi-page routing & navigation** ⚠️ (Partial)
+- [x] **1.1 Setup multi-page routing & navigation** ✅
   - ✅ Build sidebar navigation component
-  - ⏳ Create pages: /experiments/new, /experiments/[id], /data, /settings
-  - ⏳ Update layout to use sidebar
-
-### 📋 Todo
-
-- [ ] **1.2 Build experiment creation form - Basic structure**
+  - ✅ Create pages: /experiments, /experiments/new, /experiments/[id], /data, /settings
+  - ✅ Update layout to use sidebar
+  - **Files:** `src/app/layout.tsx`, `src/app/experiments/page.tsx`, `src/app/experiments/new/page.tsx`, `src/app/experiments/[id]/page.tsx`, `src/app/data/page.tsx`, `src/app/settings/page.tsx`
+- [x] **1.2 Build experiment creation form - Basic structure** ✅
   - Experiment metadata (name, description)
   - Domain selection (problem_solving, creative_writing, data_analysis, technical_reasoning)
   - Tier selection (1a, 1b, 2), replication count
+  - Form validation and error handling
   - **Files:** `src/app/experiments/new/page.tsx`, `src/components/experiment-form.tsx`
 
 ---
@@ -308,4 +304,7 @@
 
 - ✅ Completed sidebar navigation component with full routing structure
 - ✅ Set up basic API client with experiment and analysis endpoints
-- ⏳ Next: Update layout to integrate sidebar and create experiment pages
+- ✅ Updated layout to integrate sidebar in two-column layout
+- ✅ Created all foundation pages: /experiments, /experiments/new, /experiments/[id], /data, /settings
+- ✅ Built comprehensive experiment creation form with validation
+- ⏳ Next: Phase 2 - Add LLM provider/model selection and tool configuration
