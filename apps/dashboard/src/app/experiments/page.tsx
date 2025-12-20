@@ -17,20 +17,20 @@ import {
 } from 'lucide-react';
 
 interface Experiment {
-  id: string;
+  id: number;
+  experimentId: string;
   name: string;
-  description: string;
-  domain: string;
-  tier: string;
-  status: 'pending' | 'running' | 'completed' | 'failed';
-  llm_provider: string;
-  llm_model: string;
-  tool_configuration: string;
-  replication_count: number;
-  completed_trials: number;
-  overall_maac_score: number | null;
-  created_at: string;
-  updated_at: string;
+  description?: string;
+  domains: string[];
+  tiers: string[];
+  models: string[];
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'paused';
+  totalTrials: number;
+  completedTrials: number;
+  failedTrials: number;
+  createdAt: string;
+  startedAt?: string;
+  completedAt?: string;
 }
 
 export default function ExperimentsPage() {
@@ -44,8 +44,8 @@ export default function ExperimentsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [tierFilter, setTierFilter] = useState<string>('all');
   const [domainFilter, setDomainFilter] = useState<string>('all');
-  const [sortField, setSortField] = useState<'name' | 'created_at' | 'overall_maac_score'>(
-    'created_at',
+  const [sortField, setSortField] = useState<'name' | 'createdAt' | 'totalTrials'>(
+    'createdAt',
   );
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
 
@@ -84,7 +84,7 @@ export default function ExperimentsPage() {
         (exp) =>
           exp.name.toLowerCase().includes(query) ||
           exp.description?.toLowerCase().includes(query) ||
-          exp.id.toLowerCase().includes(query),
+          exp.experimentId.toLowerCase().includes(query),
       );
     }
 
@@ -93,24 +93,24 @@ export default function ExperimentsPage() {
       filtered = filtered.filter((exp) => exp.status === statusFilter);
     }
 
-    // Tier filter
+    // Tier filter (check if any tier in the array matches)
     if (tierFilter !== 'all') {
-      filtered = filtered.filter((exp) => exp.tier === tierFilter);
+      filtered = filtered.filter((exp) => exp.tiers?.includes(tierFilter));
     }
 
-    // Domain filter
+    // Domain filter (check if any domain in the array matches)
     if (domainFilter !== 'all') {
-      filtered = filtered.filter((exp) => exp.domain === domainFilter);
+      filtered = filtered.filter((exp) => exp.domains?.includes(domainFilter));
     }
 
     // Sort
     filtered.sort((a, b) => {
-      let aVal: any = a[sortField];
-      let bVal: any = b[sortField];
+      let aVal: any = a[sortField as keyof Experiment];
+      let bVal: any = b[sortField as keyof Experiment];
 
-      if (sortField === 'overall_maac_score') {
-        aVal = aVal ?? -1;
-        bVal = bVal ?? -1;
+      if (sortField === 'createdAt') {
+        aVal = new Date(aVal).getTime();
+        bVal = new Date(bVal).getTime();
       }
 
       if (sortDirection === 'asc') {
@@ -137,6 +137,7 @@ export default function ExperimentsPage() {
       running: 'bg-blue-100 text-blue-800 border-blue-200',
       completed: 'bg-green-100 text-green-800 border-green-200',
       failed: 'bg-red-100 text-red-800 border-red-200',
+      paused: 'bg-orange-100 text-orange-800 border-orange-200',
     };
 
     const icons = {
@@ -144,6 +145,7 @@ export default function ExperimentsPage() {
       running: <Loader2 className="h-3 w-3 animate-spin" />,
       completed: <CheckCircle className="h-3 w-3" />,
       failed: <XCircle className="h-3 w-3" />,
+      paused: <Clock className="h-3 w-3" />,
     };
 
     return (
@@ -295,13 +297,13 @@ export default function ExperimentsPage() {
                       Status
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-600">
-                      Tier
+                      Tiers
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-600">
-                      Domain
+                      Domains
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-600">
-                      Provider/Model
+                      Models
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-600">
                       Progress
@@ -309,19 +311,19 @@ export default function ExperimentsPage() {
                     <th className="px-6 py-3 text-left">
                       <button
                         onClick={() => {
-                          setSortField('overall_maac_score');
+                          setSortField('totalTrials');
                           setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
                         }}
                         className="flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-gray-600 hover:text-gray-900"
                       >
-                        MAAC Score
+                        Trials
                         <ArrowUpDown className="h-4 w-4" />
                       </button>
                     </th>
                     <th className="px-6 py-3 text-left">
                       <button
                         onClick={() => {
-                          setSortField('created_at');
+                          setSortField('createdAt');
                           setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
                         }}
                         className="flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-gray-600 hover:text-gray-900"
@@ -346,7 +348,7 @@ export default function ExperimentsPage() {
                     </tr>
                   ) : (
                     paginatedExperiments.map((exp) => (
-                      <tr key={exp.id} className="hover:bg-gray-50">
+                      <tr key={exp.experimentId} className="hover:bg-gray-50">
                         <td className="px-6 py-4">
                           <div>
                             <div className="font-medium text-gray-900">{exp.name}</div>
@@ -355,52 +357,64 @@ export default function ExperimentsPage() {
                         </td>
                         <td className="px-6 py-4">{getStatusBadge(exp.status)}</td>
                         <td className="px-6 py-4">
-                          <span className="rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
-                            Tier {exp.tier}
-                          </span>
+                          <div className="flex flex-wrap gap-1">
+                            {exp.tiers?.map((tier) => (
+                              <span key={tier} className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 capitalize">
+                                {tier}
+                              </span>
+                            ))}
+                          </div>
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">
-                          {exp.domain.replace(/_/g, ' ')}
+                        <td className="px-6 py-4">
+                          <div className="flex flex-wrap gap-1">
+                            {exp.domains?.map((domain) => (
+                              <span key={domain} className="text-xs text-gray-600 capitalize">
+                                {domain.replace(/_/g, ' ')}
+                              </span>
+                            ))}
+                          </div>
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-600">
-                          {exp.llm_provider} / {exp.llm_model}
+                        <td className="px-6 py-4">
+                          <div className="flex flex-wrap gap-1">
+                            {exp.models?.map((model) => (
+                              <span key={model} className="text-xs text-gray-600">
+                                {model}
+                              </span>
+                            ))}
+                          </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm text-gray-600">
-                            {exp.completed_trials} / {exp.replication_count}
+                            {exp.completedTrials} / {exp.totalTrials}
                           </div>
                           <div className="mt-1 h-2 w-24 rounded-full bg-gray-200">
                             <div
                               className="h-2 rounded-full bg-blue-600"
                               style={{
-                                width: `${(exp.completed_trials / exp.replication_count) * 100}%`,
+                                width: `${(exp.completedTrials / (exp.totalTrials || 1)) * 100}%`,
                               }}
                             />
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          {exp.overall_maac_score !== null ? (
-                            <span className="font-medium text-gray-900">
-                              {exp.overall_maac_score.toFixed(2)}
-                            </span>
-                          ) : (
-                            <span className="text-gray-400">—</span>
-                          )}
+                          <span className="font-medium text-gray-900">
+                            {exp.totalTrials}
+                          </span>
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-600">
-                          {new Date(exp.created_at).toLocaleDateString()}
+                          {new Date(exp.createdAt).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center justify-end gap-2">
                             <Link
-                              href={`/experiments/${exp.id}`}
+                              href={`/experiments/${exp.experimentId}`}
                               className="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                               title="View Details"
                             >
                               <Eye className="h-5 w-5" />
                             </Link>
                             <Link
-                              href={`/experiments/${exp.id}/export`}
+                              href={`/experiments/${exp.experimentId}/export`}
                               className="rounded p-1 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                               title="Export Results"
                             >
