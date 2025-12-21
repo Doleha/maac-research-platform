@@ -320,7 +320,7 @@ MAAC WORKFLOW APPROACH:
 COMPLETE EXAMPLE SCENARIO (problem_solving domain, simple tier):
 
 {
-  "task_id": "problem_solving-simple-111111111111-rep31",
+  "task_id": "problem_solving-simple-deepseek-chat-rep001",
   "task_title": "Enterprise Software Selection Decision Analysis",
   "task_description": "Evaluate three enterprise software options using weighted criteria analysis: Option A costs $150K with 6-month implementation, 85% feature match, high vendor stability, good scalability, and 24/7 support. Option B costs $200K with 4-month implementation, 95% feature match, medium vendor stability, excellent scalability, and business hours support. Option C costs $100K with 8-month implementation, 75% feature match, low vendor stability, limited scalability, and email-only support. Calculate weighted scores using criteria weights: Cost (20%), Implementation Speed (25%), Features (30%), Vendor Stability (15%), Scalability (10%).",
   "business_context": "Technology company requiring enterprise software selection for critical business operations with systematic decision-making framework and risk assessment.",
@@ -546,8 +546,11 @@ export class LLMScenarioGenerator {
 
         const endTime = Date.now();
 
+        // Override task_id with our correctly built scenarioId
+        // The LLM may generate task_id with configId, but we want it to include model name
         return {
           ...parsed,
+          task_id: scenarioId,  // Override LLM-generated task_id with correct format
           scenarioId,
           index: params.index,
           modelId: params.model,
