@@ -48,3 +48,14 @@ export {
   type ScenarioGenerationProgress,
   type ProgressCallback,
 } from './llm-scenario-generator';
+
+// Scenario Validator (Complexity analysis and validation middleware)
+export {
+  validateGeneratedScenario,
+  validateScenarioBatch,
+  validateWithRegeneration,
+  wouldPassValidation,
+  type ValidatedScenario,
+  type ValidationMiddlewareOptions,
+  type ValidationBatchResult,
+} from './scenario-validator';

@@ -1396,6 +1396,202 @@ export async function scenarioRoutes(
       };
     },
   );
+
+  // ==========================================================================
+  // COMPLEXITY VALIDATION STATISTICS
+  // ==========================================================================
+
+  /**
+   * GET /scenarios/validation/stats
+   * Get complexity validation statistics across all scenarios
+   */
+  fastify.get('/scenarios/validation/stats', async (request, reply) => {
+    try {
+      // Total scenarios
+      const totalScenarios = await prisma.mAACExperimentScenario.count();
+
+      // Validated scenarios
+      const validatedCount = await prisma.mAACExperimentScenario.count({
+        where: { validationPassed: true },
+      });
+
+      // Average complexity scores by tier
+      const complexityByTier = await prisma.mAACExperimentScenario.groupBy({
+        by: ['tier'],
+        where: { complexityScore: { not: null } },
+        _avg: {
+          complexityScore: true,
+        },
+        _count: true,
+      });
+
+      // Recent validation failures (if any)
+      const recentFailures = await prisma.mAACExperimentScenario.findMany({
+        where: { validationPassed: false },
+        orderBy: { validatedAt: 'desc' },
+        take: 10,
+        select: {
+          scenarioId: true,
+          domain: true,
+          tier: true,
+          complexityScore: true,
+          validatedAt: true,
+        },
+      });
+
+      // Tier distribution
+      const tierDistribution = await prisma.mAACExperimentScenario.groupBy({
+        by: ['tier'],
+        where: { validationPassed: true },
+        _count: true,
+      });
+
+      return reply.send({
+        summary: {
+          totalScenarios,
+          validatedCount,
+          validationRate: totalScenarios > 0 ? (validatedCount / totalScenarios) * 100 : 0,
+        },
+        complexityByTier: complexityByTier.map((item) => ({
+          tier: item.tier,
+          averageScore: item._avg.complexityScore,
+          count: item._count,
+        })),
+        tierDistribution: tierDistribution.map((item) => ({
+          tier: item.tier,
+          count: item._count,
+        })),
+        recentFailures,
+      });
+    } catch (error) {
+      fastify.log.error(error, 'Failed to fetch validation statistics');
+      return reply.status(500).send({ error: 'Failed to fetch validation statistics' });
+    }
+  });
+
+  /**
+   * GET /scenarios/:id/validation
+   * Get detailed complexity validation metrics for a specific scenario
+   */
+  fastify.get<{ Params: { id: string } }>(
+    '/scenarios/:id/validation',
+    async (request, reply) => {
+      try {
+        const scenario = await prisma.mAACExperimentScenario.findUnique({
+          where: { scenarioId: request.params.id },
+          select: {
+            scenarioId: true,
+            domain: true,
+            tier: true,
+            validationPassed: true,
+            complexityScore: true,
+            woodMetrics: true,
+            campbellAttributes: true,
+            liuLiDimensions: true,
+            validatedAt: true,
+          },
+        });
+
+        if (!scenario) {
+          return reply.status(404).send({ error: 'Scenario not found' });
+        }
+
+        return reply.send({
+          scenarioId: scenario.scenarioId,
+          domain: scenario.domain,
+          tier: scenario.tier,
+          validation: {
+            passed: scenario.validationPassed,
+            timestamp: scenario.validatedAt,
+          },
+          complexityMetrics: {
+            overallScore: scenario.complexityScore,
+            wood: scenario.woodMetrics,
+            campbell: scenario.campbellAttributes,
+            liuLi: scenario.liuLiDimensions,
+          },
+        });
+      } catch (error) {
+        fastify.log.error(error, 'Failed to fetch scenario validation details');
+        return reply.status(500).send({ error: 'Failed to fetch validation details' });
+      }
+    },
+  );
+
+  /**
+   * GET /scenarios/validation/distribution
+   * Get complexity score distribution for analysis
+   */
+  fastify.get('/scenarios/validation/distribution', async (request, reply) => {
+    try {
+      const scenarios = await prisma.mAACExperimentScenario.findMany({
+        where: {
+          validationPassed: true,
+          complexityScore: { not: null },
+        },
+        select: {
+          tier: true,
+          complexityScore: true,
+          domain: true,
+        },
+      });
+
+      // Group by score ranges
+      const distribution = {
+        simple: { '0-10': 0, '10-15': 0, '15-20': 0 },
+        moderate: { '15-20': 0, '20-25': 0, '25-30': 0, '30+': 0 },
+        complex: { '30-40': 0, '40-50': 0, '50+': 0 },
+      };
+
+      scenarios.forEach((s) => {
+        const score = s.complexityScore || 0;
+        const tier = s.tier as 'simple' | 'moderate' | 'complex';
+
+        if (tier === 'simple') {
+          if (score < 10) distribution.simple['0-10']++;
+          else if (score < 15) distribution.simple['10-15']++;
+          else distribution.simple['15-20']++;
+        } else if (tier === 'moderate') {
+          if (score < 20) distribution.moderate['15-20']++;
+          else if (score < 25) distribution.moderate['20-25']++;
+          else if (score < 30) distribution.moderate['25-30']++;
+          else distribution.moderate['30+']++;
+        } else if (tier === 'complex') {
+          if (score < 40) distribution.complex['30-40']++;
+          else if (score < 50) distribution.complex['40-50']++;
+          else distribution.complex['50+']++;
+        }
+      });
+
+      // Domain breakdown
+      const byDomain = scenarios.reduce(
+        (acc, s) => {
+          const domain = s.domain as string;
+          if (!acc[domain]) acc[domain] = [];
+          acc[domain].push(s.complexityScore || 0);
+          return acc;
+        },
+        {} as Record<string, number[]>,
+      );
+
+      const domainStats = Object.entries(byDomain).map(([domain, scores]) => ({
+        domain,
+        count: scores.length,
+        average: scores.reduce((a, b) => a + b, 0) / scores.length,
+        min: Math.min(...scores),
+        max: Math.max(...scores),
+      }));
+
+      return reply.send({
+        distribution,
+        byDomain: domainStats,
+        totalValidated: scenarios.length,
+      });
+    } catch (error) {
+      fastify.log.error(error, 'Failed to fetch validation distribution');
+      return reply.status(500).send({ error: 'Failed to fetch validation distribution' });
+    }
+  });
 }
 
 export default scenarioRoutes;

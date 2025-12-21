@@ -13,6 +13,7 @@
 
 import { Queue, Worker, Job } from 'bullmq';
 import { z } from 'zod';
+import { EventEmitter } from 'events';
 import type {
   ExperimentConfig,
   Scenario,
@@ -25,6 +26,7 @@ import type {
   ToolConfiguration,
   ToolConfigBlock,
 } from '@maac/types';
+import { validateScenario, type ScenarioInput } from '@maac/complexity-analyzer';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -439,12 +441,13 @@ const TASK_TEMPLATES: TaskTemplates = {
  *
  * Manages the complete experimental pipeline:
  * 1. Generate scenarios (4 domains × 3 tiers × N repetitions)
- * 2. Queue trials for execution via BullMQ
- * 3. Execute via CognitiveSystem (MIMIC)
- * 4. Assess via MAAC framework
- * 5. Store results in PostgreSQL
+ * 2. Validate scenarios with complexity analysis (NEW)
+ * 3. Queue trials for execution via BullMQ
+ * 4. Execute via CognitiveSystem (MIMIC)
+ * 5. Assess via MAAC framework
+ * 6. Store results in PostgreSQL
  */
-export class AdvancedExperimentOrchestrator {
+export class AdvancedExperimentOrchestrator extends EventEmitter {
   private trialQueue: Queue<TrialJobData>;
   private trialWorker: Worker<TrialJobData>;
   private readonly config: Required<OrchestratorConfig>;
@@ -456,6 +459,8 @@ export class AdvancedExperimentOrchestrator {
   }
 
   constructor(config: OrchestratorConfig) {
+    super(); // Initialize EventEmitter
+    
     this.config = {
       cognitiveSystem: config.cognitiveSystem,
       maacEvaluator: config.maacEvaluator,
@@ -953,12 +958,59 @@ export class AdvancedExperimentOrchestrator {
   // ==========================================================================
 
   /**
-   * Store scenarios in database
+   * Store scenarios in database with complexity validation
+   * CRITICAL: All scenarios MUST pass complexity validation before storage
    */
   private async storeScenarios(scenarios: Scenario[]): Promise<void> {
-    // Batch insert scenarios
+    this.log(`Validating ${scenarios.length} scenarios before database storage...`);
+    this.emit('validation:started', { total: scenarios.length });
+    
+    // Validate all scenarios with complexity analysis (parallel for performance)
+    const validatedScenarios = await Promise.all(
+      scenarios.map(async (scenario, index) => {
+        // Map Scenario to ScenarioInput for validation
+        const scenarioInput: ScenarioInput = {
+          id: scenario.scenarioId,
+          intendedTier: scenario.tier,
+          content: `${scenario.taskTitle}\n\n${scenario.taskDescription}\n\nContext: ${scenario.businessContext}`,
+          calculationSteps: scenario.expectedCalculations,
+          domain: scenario.domain,
+        };
+        
+        const validation = await validateScenario(scenarioInput);
+        
+        this.emit('validation:progress', {
+          current: index + 1,
+          total: scenarios.length,
+          scenarioId: scenario.scenarioId,
+          isValid: validation.isValid,
+          complexityScore: validation.complexityScore.overallScore,
+        });
+        
+        if (!validation.isValid) {
+          this.emit('validation:failed', {
+            scenarioId: scenario.scenarioId,
+            rejectionReasons: validation.complexityScore.rejectionReasons,
+          });
+          
+          throw new Error(
+            `Scenario ${scenario.scenarioId} failed complexity validation: ${validation.complexityScore.rejectionReasons.join(', ')}`
+          );
+        }
+        
+        return {
+          scenario,
+          complexityMetrics: validation.complexityScore!,
+        };
+      })
+    );
+
+    this.log(`All ${validatedScenarios.length} scenarios passed complexity validation`);
+    this.emit('validation:completed', { total: validatedScenarios.length });
+
+    // Batch insert scenarios with complexity metrics
     await this.config.database.mAACExperimentScenario.createMany({
-      data: scenarios.map((s) => ({
+      data: validatedScenarios.map(({ scenario: s, complexityMetrics }) => ({
         experimentId: s.experimentId,
         scenarioId: s.scenarioId,
         domain: s.domain,
@@ -975,8 +1027,17 @@ export class AdvancedExperimentOrchestrator {
         scenarioRequirements: s.scenarioRequirements,
         dataElements: s.dataElements || [],
         completed: false,
+        // Complexity validation metrics
+        complexityScore: complexityMetrics.overallScore,
+        woodMetrics: complexityMetrics.woodMetrics as any,
+        campbellAttributes: complexityMetrics.campbellAttributes as any,
+        liuLiDimensions: complexityMetrics.liuLiDimensions as any,
+        validatedAt: new Date(),
+        validationPassed: true,
       })),
     });
+    
+    this.log(`Stored ${validatedScenarios.length} validated scenarios in database`);
   }
 
   /**

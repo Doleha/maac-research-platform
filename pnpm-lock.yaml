@@ -179,6 +179,9 @@ importers:
 
   packages/experiment-orchestrator:
     dependencies:
+      '@maac/complexity-analyzer':
+        specifier: workspace:*
+        version: link:../complexity-analyzer
       '@maac/framework':
         specifier: workspace:*
         version: link:../maac-framework

@@ -188,6 +188,75 @@ model MAACExperimentScenario {
   scenarioRequirements Json   @map("scenario_requirements")
   dataElements         Json?  @map("data_elements")
 
+  // ============================================================================
+  // COMPLEXITY VALIDATION (Academic frameworks)
+  // Based on Wood (1986), Campbell (1988), Liu & Li (2012)
+  // ============================================================================
+
+  // Validation status
+  validationPassed      Boolean   @default(false) @map("validation_passed")
+  validationTimestamp   DateTime? @map("validation_timestamp")
+  validationDurationMs  Int?      @map("validation_duration_ms")
+  regenerationAttempts  Int       @default(0) @map("regeneration_attempts")
+
+  // Composite complexity score
+  complexityOverallScore  Decimal? @map("complexity_overall_score") @db.Decimal(5, 2)
+  complexityPredictedTier String?  @map("complexity_predicted_tier") // 'simple' | 'moderate' | 'complex'
+  complexityTierMatch     Boolean? @map("complexity_tier_match")
+  complexityConfidence    Decimal? @map("complexity_confidence") @db.Decimal(3, 2)
+
+  // Wood (1986) metrics
+  woodDistinctActs          Int?     @map("wood_distinct_acts")
+  woodInformationCuesPerAct Decimal? @map("wood_information_cues_per_act") @db.Decimal(4, 2)
+  woodTotalElements         Int?     @map("wood_total_elements")
+  woodCoordinativeComplexity String? @map("wood_coordinative_complexity") // 'sequential' | 'interdependent' | 'networked'
+  woodDynamicComplexity     String?  @map("wood_dynamic_complexity") // 'static' | 'low' | 'high'
+  woodComponentScore        Decimal? @map("wood_component_score") @db.Decimal(5, 2)
+
+  // Campbell (1988) attributes
+  campbellMultiplePaths           Boolean? @map("campbell_multiple_paths")
+  campbellPathCount               Int?     @map("campbell_path_count")
+  campbellMultipleOutcomes        Boolean? @map("campbell_multiple_outcomes")
+  campbellOutcomeCount            Int?     @map("campbell_outcome_count")
+  campbellConflictingInterdep     Boolean? @map("campbell_conflicting_interdep")
+  campbellUncertaintyLevel        String?  @map("campbell_uncertainty_level") // 'none' | 'bounded' | 'high'
+  campbellType                    Int?     @map("campbell_type") // 0-15 binary encoding
+
+  // Liu & Li (2012) dimensions
+  liuLiSize             Int?     @map("liu_li_size")
+  liuLiVariety          Decimal? @map("liu_li_variety") @db.Decimal(3, 2)
+  liuLiAmbiguity        Decimal? @map("liu_li_ambiguity") @db.Decimal(3, 2)
+  liuLiRelationships    Decimal? @map("liu_li_relationships") @db.Decimal(3, 2)
+  liuLiVariability      Decimal? @map("liu_li_variability") @db.Decimal(3, 2)
+  liuLiUnreliability    Decimal? @map("liu_li_unreliability") @db.Decimal(3, 2)
+  liuLiNovelty          String?  @map("liu_li_novelty") // 'routine' | 'semi-familiar' | 'novel'
+  liuLiIncongruity      Decimal? @map("liu_li_incongruity") @db.Decimal(3, 2)
+  liuLiActionComplexity Int?     @map("liu_li_action_complexity")
+  liuLiTimePressure     String?  @map("liu_li_time_pressure") // 'low' | 'moderate' | 'high'
+
+  // Element interactivity (Cognitive Load Theory)
+  interactivityTotalElements      Int?     @map("interactivity_total_elements")
+  interactivitySimultaneousElems  Int?     @map("interactivity_simultaneous_elems")
+  interactivityRatio              Decimal? @map("interactivity_ratio") @db.Decimal(3, 2)
+  interactivityDependencyDepth    Int?     @map("interactivity_dependency_depth")
+  interactivityDependencyEdges    Int?     @map("interactivity_dependency_edges")
+
+  // Score breakdown
+  scoreWood            Decimal? @map("score_wood") @db.Decimal(5, 2)
+  scoreCampbell        Decimal? @map("score_campbell") @db.Decimal(5, 2)
+  scoreLiuLi           Decimal? @map("score_liu_li") @db.Decimal(5, 2)
+  scoreInteractivity   Decimal? @map("score_interactivity") @db.Decimal(5, 2)
+
+  // Validation flags (stored as JSON for flexibility)
+  validationFlags      Json?    @map("validation_flags")
+  rejectionReasons     String[] @map("rejection_reasons")
+  analyzerVersion      String?  @map("analyzer_version")
+
+  // Full complexity score JSON (for detailed analysis)
+  complexityScoreJson  Json?    @map("complexity_score_json")
+
+  // ============================================================================
+
   // Billing fields
   userId           String? @map("user_id")
   user             User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
@@ -204,6 +273,8 @@ model MAACExperimentScenario {
   @@index([userId])
   @@index([domain, tier])
   @@index([configId])
+  @@index([validationPassed])
+  @@index([complexityPredictedTier])
   @@map("maac_experiment_scenarios")
 }
 

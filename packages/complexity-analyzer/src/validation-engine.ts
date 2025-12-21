@@ -15,8 +15,6 @@ import type {
   ValidationBatchStats,
   ComplexityValidationConfig,
   ValidationProgressCallback,
-  ValidationProgressEvent,
-  DEFAULT_COMPLEXITY_CONFIG,
 } from '@maac/types';
 
 import { analyzeWoodMetrics, type WoodAnalysisInput } from './analyzers/wood-analyzer';
@@ -187,7 +185,6 @@ export async function validateBatch(
   options?: ValidationOptions,
 ): Promise<{ results: ScenarioValidationResult[]; stats: ValidationBatchStats }> {
   const startTime = Date.now();
-  const config = options?.config ?? getDefaultConfig();
   const results: ScenarioValidationResult[] = [];
 
   // Emit batch start
@@ -285,7 +282,7 @@ async function analyzeScenario(
     content: scenario.content,
     woodTotalElements: woodMetrics.totalElements,
     variables: scenario.variables,
-    steps: scenario.calculationSteps?.map((step, i) => ({
+    steps: scenario.calculationSteps?.map((_step, i) => ({
       id: `step-${i + 1}`,
       dependsOn: i > 0 ? [`step-${i}`] : undefined,
     })),

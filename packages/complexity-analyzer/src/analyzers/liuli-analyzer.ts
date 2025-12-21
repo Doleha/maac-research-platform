@@ -323,7 +323,7 @@ function calculateVariety(
 
   // Detect variety from patterns
   let categoriesFound = 0;
-  for (const [category, patterns] of Object.entries(VARIETY_PATTERNS)) {
+  for (const [, patterns] of Object.entries(VARIETY_PATTERNS)) {
     for (const pattern of patterns) {
       if (pattern.test(content)) {
         categoriesFound++;
@@ -432,7 +432,7 @@ function calculateUnreliability(content: string, missingInformation?: string[]):
 /**
  * Determines novelty level
  */
-function determineNovelty(content: string, isNovel?: boolean, domain?: string): NoveltyLevel {
+function determineNovelty(content: string, isNovel?: boolean, _domain?: string): NoveltyLevel {
   if (isNovel === true) {
     return 'novel';
   }
@@ -494,7 +494,6 @@ function calculateActionComplexity(
   }
 
   let totalWeight = 0;
-  const contentLower = content.toLowerCase();
 
   for (const [action, weight] of Object.entries(ACTION_COMPLEXITY_WEIGHTS)) {
     const regex = new RegExp(`\\b${action}\\b`, 'gi');

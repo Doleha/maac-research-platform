@@ -145,7 +145,6 @@ const DYNAMIC_PATTERNS = {
  */
 export function analyzeWoodMetrics(input: WoodAnalysisInput): WoodMetrics {
   const { content } = input;
-  const contentLower = content.toLowerCase();
 
   // Count distinct acts
   const distinctActs = countDistinctActs(content, input.calculationSteps);
@@ -193,7 +192,6 @@ function countDistinctActs(content: string, predefinedSteps?: string[]): number 
     return predefinedSteps.length;
   }
 
-  const contentLower = content.toLowerCase();
   let actCount = 0;
 
   // Count explicit calculation keywords

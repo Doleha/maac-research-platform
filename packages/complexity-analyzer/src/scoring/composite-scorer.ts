@@ -24,14 +24,13 @@ import type {
   ValidationFlags,
   TierRequirements,
   ComplexityValidationConfig,
-  DEFAULT_COMPLEXITY_CONFIG,
-  TIER_REQUIREMENTS,
 } from '@maac/types';
+import { TIER_REQUIREMENTS } from '@maac/types';
 
-import { calculateWoodScore } from './wood-analyzer';
-import { calculateCampbellScore } from './campbell-analyzer';
-import { calculateLiuLiScore } from './liuli-analyzer';
-import { calculateInteractivityScore } from './interactivity-analyzer';
+import { calculateWoodScore } from '../analyzers/wood-analyzer';
+import { calculateCampbellScore } from '../analyzers/campbell-analyzer';
+import { calculateLiuLiScore } from '../analyzers/liuli-analyzer';
+import { calculateInteractivityScore } from '../analyzers/interactivity-analyzer';
 
 /**
  * Analyzer version for reproducibility
@@ -198,7 +197,7 @@ function calculateConfidence(
   campbellAttributes: CampbellAttributes,
   liuLiDimensions: LiuLiDimensions,
   elementInteractivity: ElementInteractivityAnalysis,
-  config?: ComplexityValidationConfig,
+  _config?: ComplexityValidationConfig,
 ): number {
   const tierReq = TIER_REQUIREMENTS[predictedTier];
   let confidenceFactors = 0;
@@ -292,7 +291,7 @@ function validateTierRequirements(
   liuLiDimensions: LiuLiDimensions,
   elementInteractivity: ElementInteractivityAnalysis,
   score: number,
-  config?: ComplexityValidationConfig,
+  _config?: ComplexityValidationConfig,
 ): ValidationFlags {
   const tierReq = TIER_REQUIREMENTS[intendedTier];
   const criteriaChecks: Record<string, boolean> = {};
@@ -377,7 +376,7 @@ function validateTierRequirements(
 function checkRequiredAttributes(
   tier: 'simple' | 'moderate' | 'complex',
   campbellAttributes: CampbellAttributes,
-  liuLiDimensions: LiuLiDimensions,
+  _liuLiDimensions: LiuLiDimensions,
 ): boolean {
   switch (tier) {
     case 'simple':
@@ -419,7 +418,7 @@ function generateRejectionReasons(
   predictedTier: 'simple' | 'moderate' | 'complex',
   validationFlags: ValidationFlags,
   score: number,
-  config?: ComplexityValidationConfig,
+  _config?: ComplexityValidationConfig,
 ): string[] {
   const reasons: string[] = [];
   const tierReq = TIER_REQUIREMENTS[intendedTier];
