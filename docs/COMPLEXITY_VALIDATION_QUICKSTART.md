@@ -92,7 +92,7 @@ if (result.isValid) {
 ### Default Thresholds
 
 - **Simple**: 0-15 points
-- **Moderate**: 15-30 points  
+- **Moderate**: 15-30 points
 - **Complex**: 30+ points
 
 ### Adjust Thresholds (Optional)
@@ -103,7 +103,7 @@ import { validateScenario, DEFAULT_COMPLEXITY_CONFIG } from '@maac/complexity-an
 const customConfig = {
   ...DEFAULT_COMPLEXITY_CONFIG,
   tierThresholds: {
-    simple: { min: 0, max: 12 },    // Stricter
+    simple: { min: 0, max: 12 }, // Stricter
     moderate: { min: 12, max: 35 },
     complex: { min: 35, max: Infinity },
   },
@@ -125,21 +125,25 @@ COMPLEXITY_MODERATE_MAX=30
 ## What Gets Validated
 
 ### 1. Wood (1986) - Component Complexity
+
 - Distinct acts (number of steps)
 - Information cues (data points)
 - Coordinative complexity (dependencies)
 - Dynamic complexity (state changes)
 
 ### 2. Campbell (1988) - Four Sources
+
 - Multiple solution paths
 - Multiple correct outcomes
 - Conflicting trade-offs
 - Uncertain relationships
 
 ### 3. Liu & Li (2012) - Ten Dimensions
+
 - Variety, Ambiguity, Novelty, Coupling, etc.
 
 ### 4. Element Interactivity
+
 - Cognitive load from simultaneous processing
 
 ## Database Schema
@@ -147,7 +151,7 @@ COMPLEXITY_MODERATE_MAX=30
 Complexity metrics automatically stored with each scenario:
 
 ```sql
-SELECT 
+SELECT
   "scenarioId",
   tier,
   "complexityScore",
@@ -175,7 +179,7 @@ const config = {
   ...DEFAULT_COMPLEXITY_CONFIG,
   weights: {
     ...DEFAULT_COMPLEXITY_CONFIG.weights,
-    elementInteractivity: 5.0,  // Increase importance
+    elementInteractivity: 5.0, // Increase importance
   },
 };
 ```
@@ -196,10 +200,10 @@ process.env.SKIP_COMPLEXITY_VALIDATION = 'true';
 
 ## API Endpoints
 
-| Endpoint | Description |
-|----------|-------------|
-| `GET /scenarios/validation/stats` | Overall statistics |
-| `GET /scenarios/:id/validation` | Scenario details |
+| Endpoint                                 | Description        |
+| ---------------------------------------- | ------------------ |
+| `GET /scenarios/validation/stats`        | Overall statistics |
+| `GET /scenarios/:id/validation`          | Scenario details   |
 | `GET /scenarios/validation/distribution` | Score distribution |
 
 ## Next Steps
@@ -219,12 +223,13 @@ process.env.SKIP_COMPLEXITY_VALIDATION = 'true';
 ## Support
 
 Questions? Check:
+
 1. Framework document: `context/complexity-tier-robustness-framwork.md`
 2. Type definitions: `packages/shared-types/src/complexity.ts`
 3. Analyzer code: `packages/complexity-analyzer/src/`
 
 ## Academic References
 
-- Wood (1986): *Organizational Behavior and Human Decision Processes*, 37(1), 60-82
-- Campbell (1988): *Academy of Management Review*, 13(1), 40-52
-- Liu & Li (2012): *Procedia Engineering*, 29, 3244-3249
+- Wood (1986): _Organizational Behavior and Human Decision Processes_, 37(1), 60-82
+- Campbell (1988): _Academy of Management Review_, 13(1), 40-52
+- Liu & Li (2012): _Procedia Engineering_, 29, 3244-3249

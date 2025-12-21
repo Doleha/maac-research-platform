@@ -12,6 +12,7 @@ import {
   Layers,
   Activity,
   ScrollText,
+  Shield,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -19,6 +20,7 @@ const navigation = [
   { name: 'Dashboard', href: '/', icon: Home },
   // Workflow order: Generate → Design → Run → Analyze
   { name: 'Generate Scenarios', href: '/scenarios/generate', icon: Layers },
+  { name: 'Complexity Validation', href: '/validation', icon: Shield },
   { name: 'Design Experiment', href: '/experiments/new', icon: Plus },
   { name: 'Experiments', href: '/experiments', icon: FlaskConical },
   { name: 'Compare Results', href: '/experiments/compare', icon: BarChart3 },
