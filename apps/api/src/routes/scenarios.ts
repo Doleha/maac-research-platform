@@ -1418,9 +1418,9 @@ export async function scenarioRoutes(
       // Average complexity scores by tier
       const complexityByTier = await prisma.mAACExperimentScenario.groupBy({
         by: ['tier'],
-        where: { complexityScore: { not: null } },
+        where: { complexityOverallScore: { not: null } },
         _avg: {
-          complexityScore: true,
+          complexityOverallScore: true,
         },
         _count: true,
       });
@@ -1428,14 +1428,14 @@ export async function scenarioRoutes(
       // Recent validation failures (if any)
       const recentFailures = await prisma.mAACExperimentScenario.findMany({
         where: { validationPassed: false },
-        orderBy: { validatedAt: 'desc' },
+        orderBy: { validationTimestamp: 'desc' },
         take: 10,
         select: {
           scenarioId: true,
           domain: true,
           tier: true,
-          complexityScore: true,
-          validatedAt: true,
+          complexityOverallScore: true,
+          validationTimestamp: true,
         },
       });
 
@@ -1454,14 +1454,20 @@ export async function scenarioRoutes(
         },
         complexityByTier: complexityByTier.map((item) => ({
           tier: item.tier,
-          averageScore: item._avg.complexityScore,
+          averageScore: item._avg.complexityOverallScore,
           count: item._count,
         })),
         tierDistribution: tierDistribution.map((item) => ({
           tier: item.tier,
           count: item._count,
         })),
-        recentFailures,
+        recentFailures: recentFailures.map((f) => ({
+          scenarioId: f.scenarioId,
+          domain: f.domain,
+          tier: f.tier,
+          complexityScore: f.complexityOverallScore,
+          validatedAt: f.validationTimestamp,
+        })),
       });
     } catch (error) {
       fastify.log.error(error, 'Failed to fetch validation statistics');
@@ -1482,11 +1488,32 @@ export async function scenarioRoutes(
           domain: true,
           tier: true,
           validationPassed: true,
-          complexityScore: true,
-          woodMetrics: true,
-          campbellAttributes: true,
-          liuLiDimensions: true,
-          validatedAt: true,
+          complexityOverallScore: true,
+          complexityPredictedTier: true,
+          complexityTierMatch: true,
+          complexityConfidence: true,
+          woodDistinctActs: true,
+          woodInformationCuesPerAct: true,
+          woodTotalElements: true,
+          woodCoordinativeComplexity: true,
+          woodDynamicComplexity: true,
+          woodComponentScore: true,
+          campbellMultiplePaths: true,
+          campbellPathCount: true,
+          campbellMultipleOutcomes: true,
+          campbellOutcomeCount: true,
+          campbellConflictingInterdep: true,
+          campbellUncertaintyLevel: true,
+          liuLiSize: true,
+          liuLiVariety: true,
+          liuLiAmbiguity: true,
+          liuLiNovelty: true,
+          liuLiTimePressure: true,
+          scoreWood: true,
+          scoreCampbell: true,
+          scoreLiuLi: true,
+          scoreInteractivity: true,
+          validationTimestamp: true,
         },
       });
 
@@ -1500,13 +1527,42 @@ export async function scenarioRoutes(
         tier: scenario.tier,
         validation: {
           passed: scenario.validationPassed,
-          timestamp: scenario.validatedAt,
+          timestamp: scenario.validationTimestamp,
         },
         complexityMetrics: {
-          overallScore: scenario.complexityScore,
-          wood: scenario.woodMetrics,
-          campbell: scenario.campbellAttributes,
-          liuLi: scenario.liuLiDimensions,
+          overallScore: scenario.complexityOverallScore,
+          predictedTier: scenario.complexityPredictedTier,
+          tierMatch: scenario.complexityTierMatch,
+          confidence: scenario.complexityConfidence,
+          wood: {
+            distinctActs: scenario.woodDistinctActs,
+            informationCuesPerAct: scenario.woodInformationCuesPerAct,
+            totalElements: scenario.woodTotalElements,
+            coordinativeComplexity: scenario.woodCoordinativeComplexity,
+            dynamicComplexity: scenario.woodDynamicComplexity,
+            componentScore: scenario.woodComponentScore,
+          },
+          campbell: {
+            multiplePaths: scenario.campbellMultiplePaths,
+            pathCount: scenario.campbellPathCount,
+            multipleOutcomes: scenario.campbellMultipleOutcomes,
+            outcomeCount: scenario.campbellOutcomeCount,
+            conflictingInterdependence: scenario.campbellConflictingInterdep,
+            uncertaintyLevel: scenario.campbellUncertaintyLevel,
+          },
+          liuLi: {
+            size: scenario.liuLiSize,
+            variety: scenario.liuLiVariety,
+            ambiguity: scenario.liuLiAmbiguity,
+            novelty: scenario.liuLiNovelty,
+            timePressure: scenario.liuLiTimePressure,
+          },
+          scores: {
+            wood: scenario.scoreWood,
+            campbell: scenario.scoreCampbell,
+            liuLi: scenario.scoreLiuLi,
+            interactivity: scenario.scoreInteractivity,
+          },
         },
       });
     } catch (error) {
@@ -1524,11 +1580,11 @@ export async function scenarioRoutes(
       const scenarios = await prisma.mAACExperimentScenario.findMany({
         where: {
           validationPassed: true,
-          complexityScore: { not: null },
+          complexityOverallScore: { not: null },
         },
         select: {
           tier: true,
-          complexityScore: true,
+          complexityOverallScore: true,
           domain: true,
         },
       });
@@ -1541,7 +1597,7 @@ export async function scenarioRoutes(
       };
 
       scenarios.forEach((s) => {
-        const score = s.complexityScore || 0;
+        const score = Number(s.complexityOverallScore) || 0;
         const tier = s.tier as 'simple' | 'moderate' | 'complex';
 
         if (tier === 'simple') {
@@ -1565,7 +1621,7 @@ export async function scenarioRoutes(
         (acc, s) => {
           const domain = s.domain as string;
           if (!acc[domain]) acc[domain] = [];
-          acc[domain].push(s.complexityScore || 0);
+          acc[domain].push(Number(s.complexityOverallScore) || 0);
           return acc;
         },
         {} as Record<string, number[]>,
