@@ -436,7 +436,7 @@ async function main() {
 
   // Register LLM provider routes
   await fastify.register(async (instance) => {
-    instance.register(llmRoutes, { prefix: '/llm' });
+    instance.register(llmRoutes, { prefix: '/api/llm' });
   });
 
   // Register billing & credits routes
