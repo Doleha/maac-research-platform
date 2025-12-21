@@ -17,13 +17,15 @@ import { cn } from '@/lib/utils';
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: Home },
+  // Workflow order: Generate → Design → Run → Analyze
+  { name: 'Generate Scenarios', href: '/scenarios/generate', icon: Layers },
+  { name: 'Design Experiment', href: '/experiments/new', icon: Plus },
   { name: 'Experiments', href: '/experiments', icon: FlaskConical },
-  { name: 'New Experiment', href: '/experiments/new', icon: Plus },
+  { name: 'Compare Results', href: '/experiments/compare', icon: BarChart3 },
+  // Utilities
   { name: 'Data Upload', href: '/data', icon: Database },
-  { name: 'Scenarios', href: '/scenarios/generate', icon: Layers },
-  { name: 'Compare', href: '/experiments/compare', icon: BarChart3 },
-  { name: 'System Health', href: '/system', icon: Activity },
   { name: 'Logs', href: '/logs', icon: ScrollText },
+  { name: 'System Health', href: '/system', icon: Activity },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
