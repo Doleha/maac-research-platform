@@ -21,6 +21,8 @@ interface LLMCredentials {
   anthropic?: string;
   deepseek?: string;
   openrouter?: string;
+  grok?: string;
+  gemini?: string;
 }
 
 interface TestResult {
@@ -131,10 +133,22 @@ export default function SettingsPage() {
   };
 
   const providers = [
-    { key: 'openai', label: 'OpenAI', placeholder: 'sk-proj-...' },
-    { key: 'anthropic', label: 'Anthropic', placeholder: 'sk-ant-...' },
-    { key: 'deepseek', label: 'DeepSeek', placeholder: 'sk-...' },
-    { key: 'openrouter', label: 'OpenRouter', placeholder: 'sk-or-...' },
+    { key: 'openai', label: 'OpenAI', placeholder: 'sk-proj-...', envVar: 'OPENAI_API_KEY' },
+    {
+      key: 'anthropic',
+      label: 'Anthropic',
+      placeholder: 'sk-ant-...',
+      envVar: 'ANTHROPIC_API_KEY',
+    },
+    { key: 'deepseek', label: 'DeepSeek', placeholder: 'sk-...', envVar: 'DEEPSEEK_API_KEY' },
+    {
+      key: 'openrouter',
+      label: 'OpenRouter',
+      placeholder: 'sk-or-...',
+      envVar: 'OPENROUTER_API_KEY',
+    },
+    { key: 'grok', label: 'Grok (X.AI)', placeholder: 'xai-...', envVar: 'GROK_API_KEY' },
+    { key: 'gemini', label: 'Google Gemini', placeholder: 'AI...', envVar: 'GEMINI_API_KEY' },
   ] as const;
 
   return (

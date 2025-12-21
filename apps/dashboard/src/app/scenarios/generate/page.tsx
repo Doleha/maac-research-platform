@@ -12,13 +12,16 @@ import {
   XCircle,
 } from 'lucide-react';
 import { useScenariosState } from '@/contexts/DashboardStateContext';
+import { SimpleLLMSelector } from '@/components/llm-selector';
 
 interface GenerationRequest {
   domains: string[];
   tiers: string[];
   repetitions: number;
+  provider: string;
   model: string;
   configId: string;
+  concurrency: number;
 }
 
 interface ProgressState {
@@ -49,8 +52,10 @@ export default function GenerateScenariosPage() {
     domains: generateForm.domains.length > 0 ? generateForm.domains : ['analytical'],
     tiers: generateForm.tiers.length > 0 ? generateForm.tiers : ['simple'],
     repetitions: generateForm.scenariosPerDomainTier || 5,
-    model: 'deepseek_v3',
+    provider: 'deepseek',
+    model: 'deepseek-chat',
     configId: '111111111111',
+    concurrency: 3,
   });
 
   // Persist form changes to global state
@@ -328,23 +333,39 @@ export default function GenerateScenariosPage() {
                 </p>
               </div>
 
-              {/* Model */}
+              {/* LLM Provider & Model Selection */}
+              <SimpleLLMSelector
+                provider={formData.provider}
+                model={formData.model}
+                onProviderChange={(provider) => setFormData({ ...formData, provider })}
+                onModelChange={(model) => setFormData({ ...formData, model })}
+              />
+
+              {/* Concurrency */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  LLM Model <span className="text-red-500">*</span>
+                  Parallel Generation (Concurrency)
                 </label>
-                <select
-                  value={formData.model}
-                  onChange={(e) => {
-                    setFormData({ ...formData, model: e.target.value });
-                  }}
-                  className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                >
-                  <option value="deepseek_v3">DeepSeek V3</option>
-                  <option value="sonnet_37">Claude 3.7 Sonnet</option>
-                  <option value="gpt_4o">GPT-4o</option>
-                  <option value="llama_maverick">Llama Maverick</option>
-                </select>
+                <div className="mt-1 flex items-center gap-3">
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={formData.concurrency}
+                    onChange={(e) => {
+                      setFormData({ ...formData, concurrency: parseInt(e.target.value) || 1 });
+                    }}
+                    className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-gray-200 accent-blue-600"
+                  />
+                  <span className="w-8 text-center font-medium text-blue-600">
+                    {formData.concurrency}x
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-gray-500">
+                  {formData.concurrency === 1
+                    ? 'Sequential (slower but safer for rate limits)'
+                    : `${formData.concurrency} parallel API calls (~${formData.concurrency}x faster)`}
+                </p>
               </div>
             </div>
 
@@ -517,22 +538,70 @@ export default function GenerateScenariosPage() {
                   <div key={idx} className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                     <div className="mb-2 flex items-center justify-between">
                       <span className="font-medium text-gray-900">
-                        Scenario {idx + 1}: {scenario.task_id}
+                        Scenario {idx + 1}:{' '}
+                        {scenario.task_id || scenario.scenarioId || `#${idx + 1}`}
                       </span>
-                      <span className="rounded bg-gray-200 px-2 py-1 text-xs font-medium text-gray-700">
-                        {scenario.domain}
-                      </span>
+                      <div className="flex gap-2">
+                        <span className="rounded bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
+                          {scenario.domain || scenario.metadata?.business_domain || 'unknown'}
+                        </span>
+                        <span className="rounded bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700">
+                          {scenario.complexity_level || scenario.tier || 'unknown'}
+                        </span>
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-700">
-                      <p className="mb-2">
-                        <strong>Task:</strong> {scenario.task_description}
-                      </p>
-                      <p className="mb-2">
-                        <strong>Baseline:</strong> {scenario.baseline_answer}
+                    <div className="space-y-2 text-sm text-gray-700">
+                      <p>
+                        <strong className="text-gray-900">Title:</strong>{' '}
+                        {scenario.task_title || 'N/A'}
                       </p>
                       <p>
-                        <strong>Ground Truth:</strong> {scenario.ground_truth}
+                        <strong className="text-gray-900">Description:</strong>{' '}
+                        {scenario.task_description || 'N/A'}
                       </p>
+                      <p>
+                        <strong className="text-gray-900">Business Context:</strong>{' '}
+                        {scenario.business_context || 'N/A'}
+                      </p>
+                      {scenario.requirements && scenario.requirements.length > 0 && (
+                        <div>
+                          <strong className="text-gray-900">Requirements:</strong>
+                          <ul className="ml-4 list-disc">
+                            {scenario.requirements.slice(0, 3).map((req: string, i: number) => (
+                              <li key={i}>{req}</li>
+                            ))}
+                            {scenario.requirements.length > 3 && (
+                              <li className="text-gray-500">
+                                +{scenario.requirements.length - 3} more...
+                              </li>
+                            )}
+                          </ul>
+                        </div>
+                      )}
+                      {scenario.success_criteria && scenario.success_criteria.length > 0 && (
+                        <div>
+                          <strong className="text-gray-900">Success Criteria:</strong>
+                          <ul className="ml-4 list-disc">
+                            {scenario.success_criteria
+                              .slice(0, 3)
+                              .map((criteria: string, i: number) => (
+                                <li key={i}>{criteria}</li>
+                              ))}
+                            {scenario.success_criteria.length > 3 && (
+                              <li className="text-gray-500">
+                                +{scenario.success_criteria.length - 3} more...
+                              </li>
+                            )}
+                          </ul>
+                        </div>
+                      )}
+                      {scenario.control_expectations?.expected_calculations && (
+                        <p>
+                          <strong className="text-gray-900">Expected Calculations:</strong>{' '}
+                          {Object.keys(scenario.control_expectations.expected_calculations).length}{' '}
+                          defined
+                        </p>
+                      )}
                     </div>
                   </div>
                 ))}

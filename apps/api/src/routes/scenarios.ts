@@ -35,14 +35,38 @@ interface GenerateScenariosInput {
 }
 
 /**
+ * Map of provider names to their environment variable keys
+ */
+const PROVIDER_API_KEY_MAP: Record<string, string> = {
+  openai: 'OPENAI_API_KEY',
+  anthropic: 'ANTHROPIC_API_KEY',
+  deepseek: 'DEEPSEEK_API_KEY',
+  openrouter: 'OPENROUTER_API_KEY',
+  grok: 'GROK_API_KEY',
+  gemini: 'GEMINI_API_KEY',
+  llama: 'OPENROUTER_API_KEY',
+};
+
+/**
+ * Get API key for a provider from environment
+ */
+function getProviderApiKey(provider: string): string | undefined {
+  const envVar = PROVIDER_API_KEY_MAP[provider.toLowerCase()];
+  return envVar ? process.env[envVar] : undefined;
+}
+
+/**
  * Input schema for LLM-based scenario generation
  */
 interface GenerateLLMScenariosInput {
   domains?: Domain[];
   tiers?: Tier[];
   repetitions?: number;
-  model?: ModelId;
+  provider?: string;
+  model?: string;
   configId?: string;
+  /** Number of parallel API calls (1-10, default: 1) */
+  concurrency?: number;
 }
 
 /**
@@ -281,9 +305,9 @@ export async function scenarioRoutes(
 
   /**
    * POST /scenarios/generate-llm
-   * Generate scenarios using DeepSeek LLM (matches n8n production workflow)
+   * Generate scenarios using LLM (supports multiple providers)
    *
-   * This endpoint calls DeepSeek with the exact n8n Tier 1a system prompt
+   * This endpoint calls the selected LLM provider with the exact n8n Tier 1a system prompt
    * to generate unique, detailed scenarios with embedded calculations.
    */
   fastify.post<{ Body: GenerateLLMScenariosInput }>(
@@ -312,10 +336,14 @@ export async function scenarioRoutes(
               maximum: 150,
               default: 1,
             },
+            provider: {
+              type: 'string',
+              enum: ['deepseek', 'openai', 'anthropic', 'openrouter', 'grok', 'gemini', 'llama'],
+              default: 'deepseek',
+            },
             model: {
               type: 'string',
-              enum: ['deepseek_v3', 'sonnet_37', 'gpt_4o', 'llama_maverick'],
-              default: 'deepseek_v3',
+              default: 'deepseek-chat',
             },
             configId: {
               type: 'string',
@@ -355,6 +383,7 @@ export async function scenarioRoutes(
                   domains: { type: 'array', items: { type: 'string' } },
                   tiers: { type: 'array', items: { type: 'string' } },
                   repetitions: { type: 'integer' },
+                  provider: { type: 'string' },
                   model: { type: 'string' },
                   configId: { type: 'string' },
                 },
@@ -369,28 +398,33 @@ export async function scenarioRoutes(
         domains = ['analytical'],
         tiers = ['simple'],
         repetitions = 1,
-        model = 'deepseek_v3',
+        provider = 'deepseek',
+        model = 'deepseek-chat',
         configId = '111111111111',
       } = request.body;
 
-      // Get DeepSeek API key from environment
-      const deepseekApiKey = process.env.DEEPSEEK_API_KEY;
-      if (!deepseekApiKey) {
+      // Get API key for the selected provider
+      const apiKey = getProviderApiKey(provider);
+      const envVar = PROVIDER_API_KEY_MAP[provider.toLowerCase()];
+
+      if (!apiKey) {
         return reply.code(500).send({
-          error: 'DEEPSEEK_API_KEY not configured',
-          message: 'LLM-based scenario generation requires DeepSeek API key',
+          error: `${envVar || 'API key'} not configured`,
+          message: `LLM-based scenario generation requires an API key for ${provider}. Please add ${envVar} in Settings.`,
+          provider,
         });
       }
 
       const totalScenarios = domains.length * tiers.length * repetitions;
       fastify.log.info(
-        `LLM Generating ${totalScenarios} scenarios: ${domains.length} domains × ${tiers.length} tiers × ${repetitions} reps`,
+        `LLM Generating ${totalScenarios} scenarios using ${provider}/${model}: ${domains.length} domains × ${tiers.length} tiers × ${repetitions} reps`,
       );
 
       try {
-        // Create LLM scenario generator
+        // Create LLM scenario generator with selected provider
         const generatorConfig: LLMScenarioGeneratorConfig = {
-          deepseekApiKey,
+          apiKey,
+          provider: provider as any,
           domains,
           tiers,
           models: [model],
@@ -501,8 +535,9 @@ export async function scenarioRoutes(
 
   /**
    * POST /scenarios/generate-llm-stream
-   * Generate scenarios using DeepSeek LLM with Server-Sent Events for real-time progress
+   * Generate scenarios using LLM with Server-Sent Events for real-time progress
    *
+   * Supports multiple providers: deepseek, openai, anthropic, openrouter, grok, gemini
    * Returns an SSE stream with progress updates as each scenario is generated.
    * Use this for UI feedback with progress bars.
    */
@@ -532,15 +567,28 @@ export async function scenarioRoutes(
               maximum: 150,
               default: 1,
             },
+            provider: {
+              type: 'string',
+              enum: ['deepseek', 'openai', 'anthropic', 'openrouter', 'grok', 'gemini', 'llama'],
+              default: 'deepseek',
+              description: 'LLM provider to use for scenario generation',
+            },
             model: {
               type: 'string',
-              enum: ['deepseek_v3', 'sonnet_37', 'gpt_4o', 'llama_maverick'],
-              default: 'deepseek_v3',
+              default: 'deepseek-chat',
+              description: 'Model ID from the selected provider',
             },
             configId: {
               type: 'string',
               pattern: '^[01]{12}$',
               default: '111111111111',
+            },
+            concurrency: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 10,
+              default: 1,
+              description: 'Number of parallel API calls for faster generation',
             },
           },
         },
@@ -551,21 +599,28 @@ export async function scenarioRoutes(
         domains = ['analytical'],
         tiers = ['simple'],
         repetitions = 1,
-        model = 'deepseek_v3',
+        provider = 'deepseek',
+        model = 'deepseek-chat',
         configId = '111111111111',
+        concurrency = 1,
       } = request.body;
 
-      // Get DeepSeek API key from environment
-      const deepseekApiKey = process.env.DEEPSEEK_API_KEY;
-      if (!deepseekApiKey) {
+      // Get API key for the selected provider
+      const apiKey = getProviderApiKey(provider);
+      const envVar = PROVIDER_API_KEY_MAP[provider.toLowerCase()];
+
+      if (!apiKey) {
         return reply.code(500).send({
-          error: 'DEEPSEEK_API_KEY not configured',
-          message: 'LLM-based scenario generation requires DeepSeek API key',
+          error: `${envVar || 'API key'} not configured`,
+          message: `LLM-based scenario generation requires an API key for ${provider}. Please add ${envVar} in Settings.`,
+          provider,
         });
       }
 
       const totalScenarios = domains.length * tiers.length * repetitions;
-      fastify.log.info(`[SSE] LLM Generating ${totalScenarios} scenarios with streaming progress`);
+      fastify.log.info(
+        `[SSE] LLM Generating ${totalScenarios} scenarios using ${provider}/${model} with streaming progress`,
+      );
 
       // Set SSE headers
       reply.raw.writeHead(200, {
@@ -586,15 +641,17 @@ export async function scenarioRoutes(
       const generatedScenarios: GeneratedLLMScenario[] = [];
 
       try {
-        // Create LLM scenario generator
+        // Create LLM scenario generator with selected provider
         const generatorConfig: LLMScenarioGeneratorConfig = {
-          deepseekApiKey,
+          apiKey,
+          provider: provider as any,
           domains,
           tiers,
           models: [model],
           configId,
           maxRetries: 3,
           rateLimitDelayMs: 1500,
+          concurrency,
         };
 
         const generator = createLLMScenarioGenerator(generatorConfig);
@@ -606,7 +663,7 @@ export async function scenarioRoutes(
           current: 0,
           total: totalScenarios,
           percentage: 0,
-          message: `Starting generation of ${totalScenarios} scenarios...`,
+          message: `Starting generation of ${totalScenarios} scenarios using ${provider}/${model} (concurrency: ${concurrency})...`,
         });
 
         // Generate scenarios with progress callback
@@ -615,6 +672,7 @@ export async function scenarioRoutes(
           tiers,
           repetitions,
           model,
+          concurrency,
           onProgress: (progress: ScenarioGenerationProgress) => {
             // Send progress event with scenario data if available
             sendEvent('progress', {
@@ -631,15 +689,24 @@ export async function scenarioRoutes(
               error: progress.error,
               elapsedMs: progress.elapsedMs,
               estimatedRemainingMs: progress.estimatedRemainingMs,
-              // Include scenario data for scenario_complete events
+              // Include full scenario data for scenario_complete events
               scenario: progress.scenario
                 ? {
                     scenarioId: progress.scenario.scenarioId,
+                    task_id: progress.scenario.task_id,
+                    task_title: progress.scenario.task_title,
+                    task_description: progress.scenario.task_description,
+                    business_context: progress.scenario.business_context,
+                    complexity_level: progress.scenario.complexity_level,
                     domain: progress.scenario.metadata?.business_domain,
                     tier: progress.scenario.complexity_level,
-                    taskTitle: progress.scenario.task_title,
-                    taskDescription: progress.scenario.task_description,
-                    businessContext: progress.scenario.business_context,
+                    requirements: progress.scenario.requirements,
+                    success_criteria: progress.scenario.success_criteria,
+                    estimated_duration: progress.scenario.estimated_duration,
+                    domain_specific_data: progress.scenario.domain_specific_data,
+                    control_expectations: progress.scenario.control_expectations,
+                    MAAC_cognitive_requirements: progress.scenario.MAAC_cognitive_requirements,
+                    metadata: progress.scenario.metadata,
                   }
                 : undefined,
             });

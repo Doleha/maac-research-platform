@@ -17,6 +17,96 @@ import { getDomainPatterns } from './domain-patterns';
 import { EXPERIMENT_DESIGN } from './types';
 
 // ============================================================================
+// SEMAPHORE - For parallel generation with concurrency control
+// ============================================================================
+
+/**
+ * Simple semaphore for limiting concurrent operations
+ */
+class Semaphore {
+  private permits: number;
+  private waiting: Array<() => void> = [];
+
+  constructor(permits: number) {
+    this.permits = permits;
+  }
+
+  async acquire(): Promise<void> {
+    if (this.permits > 0) {
+      this.permits--;
+      return;
+    }
+    return new Promise<void>((resolve) => {
+      this.waiting.push(resolve);
+    });
+  }
+
+  release(): void {
+    if (this.waiting.length > 0) {
+      const next = this.waiting.shift();
+      next?.();
+    } else {
+      this.permits++;
+    }
+  }
+
+  /** Temporarily reduce permits (for rate limit backoff) */
+  reducePermits(amount: number): void {
+    this.permits = Math.max(1, this.permits - amount);
+  }
+}
+
+/**
+ * Rate limit tracker for adaptive backoff
+ */
+class RateLimitTracker {
+  private consecutiveErrors = 0;
+  private baseDelayMs: number;
+
+  constructor(baseDelayMs: number) {
+    this.baseDelayMs = baseDelayMs;
+  }
+
+  /** Record a successful request - reset error counter */
+  recordSuccess(): void {
+    this.consecutiveErrors = Math.max(0, this.consecutiveErrors - 1);
+  }
+
+  /** Record a rate limit error - increase backoff */
+  recordRateLimitError(): void {
+    this.consecutiveErrors++;
+  }
+
+  /** Get the current delay with exponential backoff and jitter */
+  getDelay(): number {
+    if (this.consecutiveErrors === 0) {
+      return this.baseDelayMs;
+    }
+
+    // Exponential backoff: base * 2^errors, capped at 60 seconds
+    const exponentialDelay = Math.min(
+      this.baseDelayMs * Math.pow(2, this.consecutiveErrors),
+      60000,
+    );
+
+    // Add jitter (±20%) to prevent thundering herd
+    const jitter = exponentialDelay * 0.2 * (Math.random() - 0.5);
+
+    return Math.round(exponentialDelay + jitter);
+  }
+
+  /** Check if we're in a rate-limited state */
+  isRateLimited(): boolean {
+    return this.consecutiveErrors >= 3;
+  }
+
+  /** Get current error count */
+  getErrorCount(): number {
+    return this.consecutiveErrors;
+  }
+}
+
+// ============================================================================
 // TYPES - Matching n8n Structured Output Parser Schema
 // ============================================================================
 
@@ -70,16 +160,54 @@ export const LLMScenarioOutputSchema = z.object({
 
 export type LLMScenarioOutput = z.infer<typeof LLMScenarioOutputSchema>;
 
+/**
+ * Supported LLM providers for scenario generation
+ */
+export type LLMProvider =
+  | 'deepseek'
+  | 'openai'
+  | 'anthropic'
+  | 'openrouter'
+  | 'grok'
+  | 'gemini'
+  | 'llama';
+
+/**
+ * Provider configuration with API endpoints
+ */
+const PROVIDER_CONFIG: Record<LLMProvider, { baseUrl: string; defaultModel: string }> = {
+  deepseek: { baseUrl: 'https://api.deepseek.com/v1', defaultModel: 'deepseek-chat' },
+  openai: { baseUrl: 'https://api.openai.com/v1', defaultModel: 'gpt-4o' },
+  anthropic: { baseUrl: 'https://api.anthropic.com/v1', defaultModel: 'claude-sonnet-4-20250514' },
+  openrouter: { baseUrl: 'https://openrouter.ai/api/v1', defaultModel: 'openai/gpt-4o' },
+  grok: { baseUrl: 'https://api.x.ai/v1', defaultModel: 'grok-2' },
+  gemini: {
+    baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
+    defaultModel: 'gemini-1.5-pro',
+  },
+  llama: {
+    baseUrl: 'https://openrouter.ai/api/v1',
+    defaultModel: 'meta-llama/llama-3.3-70b-instruct',
+  },
+};
+
 export interface LLMScenarioGeneratorConfig {
-  deepseekApiKey: string;
+  /** API key (provider-specific) */
+  apiKey: string;
+  /** LLM provider to use (default: deepseek) */
+  provider?: LLMProvider;
+  /** @deprecated Use apiKey instead */
+  deepseekApiKey?: string;
   domains?: Domain[];
   tiers?: Tier[];
   repetitionsPerBlock?: number;
-  models?: ModelId[];
+  models?: string[];
   configId?: string;
   enabledTools?: string[];
   maxRetries?: number;
   rateLimitDelayMs?: number;
+  /** Number of parallel API calls (default: 1 for sequential) */
+  concurrency?: number;
 }
 
 /**
@@ -108,7 +236,7 @@ export interface GeneratedLLMScenario extends LLMScenarioOutput {
   // Additional tracking fields
   scenarioId: string;
   index: number;
-  modelId: ModelId;
+  modelId: string;
   configId: string;
   generationTimestamp: string;
   generationDurationMs: number;
@@ -332,42 +460,57 @@ function generateUUID(): string {
 /**
  * LLM-Based Scenario Generator
  *
- * Uses DeepSeek to generate scenarios matching the production n8n workflow.
+ * Uses LLM (DeepSeek, OpenAI, Anthropic, etc.) to generate scenarios matching the production n8n workflow.
  */
 export class LLMScenarioGenerator {
-  private config: Required<LLMScenarioGeneratorConfig>;
+  private config: Required<Omit<LLMScenarioGeneratorConfig, 'deepseekApiKey'>>;
+  private apiKey: string;
+  private provider: LLMProvider;
+  private baseUrl: string;
+  private modelId: string;
 
   constructor(config: LLMScenarioGeneratorConfig) {
+    // Support backwards compatibility with deepseekApiKey
+    this.apiKey = config.apiKey || config.deepseekApiKey || '';
+    this.provider = config.provider || 'deepseek';
+
+    const providerConfig = PROVIDER_CONFIG[this.provider];
+    this.baseUrl = providerConfig.baseUrl;
+    this.modelId = config.models?.[0] || providerConfig.defaultModel;
+
     this.config = {
-      deepseekApiKey: config.deepseekApiKey,
+      apiKey: this.apiKey,
+      provider: this.provider,
       domains: config.domains || [...EXPERIMENT_DESIGN.domains],
       tiers: config.tiers || [...EXPERIMENT_DESIGN.tiers],
       repetitionsPerBlock: config.repetitionsPerBlock || EXPERIMENT_DESIGN.repetitionsPerBlock,
-      models: config.models || [...EXPERIMENT_DESIGN.validModels],
+      models: config.models || [this.modelId],
       configId: config.configId || EXPERIMENT_DESIGN.fullToolsConfigId,
       enabledTools: config.enabledTools || [],
       maxRetries: config.maxRetries || 3,
       rateLimitDelayMs: config.rateLimitDelayMs || 1000,
+      concurrency: config.concurrency || 1,
     };
   }
 
   /**
-   * Generate a single scenario using DeepSeek LLM
+   * Generate a single scenario using LLM
    */
   async generateScenario(params: {
     domain: Domain;
     tier: Tier;
     repetition: number;
-    model: ModelId;
+    model: string;
     index: number;
   }): Promise<GeneratedLLMScenario> {
     const startTime = Date.now();
     const experimentId = generateUUID();
     const timestamp = new Date().toISOString();
 
-    // Build trial ID matching n8n format
-    const trialId = `${params.domain}-${params.tier}-${this.config.configId}-rep${params.repetition}-${params.model}`;
-    const taskId = `${params.domain}-${params.tier}-${this.config.configId}-rep${params.repetition}`;
+    // Build descriptive IDs with domain, tier, model, and repetition
+    const scenarioId = `${params.domain}-${params.tier}-${params.model}-rep${params.repetition.toString().padStart(3, '0')}`;
+    const trialId = `${params.domain}-${params.tier}-${params.model}-rep${params.repetition}`;
+    const taskId = scenarioId;
 
     // Get domain pattern for context (matching n8n Domain Pattern Examples tool)
     const patternIndex = params.repetition % 5;
@@ -405,7 +548,7 @@ export class LLMScenarioGenerator {
 
         return {
           ...parsed,
-          scenarioId: `${params.domain}-${params.tier}-${params.repetition.toString().padStart(3, '0')}`,
+          scenarioId,
           index: params.index,
           modelId: params.model,
           configId: this.config.configId,
@@ -430,6 +573,7 @@ export class LLMScenarioGenerator {
 
   /**
    * Generate multiple scenarios with rate limiting and progress updates
+   * Supports parallel generation with configurable concurrency
    */
   async generateScenarios(params: {
     domains?: Domain[];
@@ -438,18 +582,33 @@ export class LLMScenarioGenerator {
     model?: ModelId;
     startIndex?: number;
     onProgress?: ProgressCallback;
+    /** Number of parallel API calls (overrides config) */
+    concurrency?: number;
   }): Promise<GeneratedLLMScenario[]> {
     const domains = params.domains || this.config.domains;
     const tiers = params.tiers || this.config.tiers;
     const repetitions = params.repetitions || 1;
     const model = params.model || this.config.models[0];
-    let index = params.startIndex || 0;
+    const startIndex = params.startIndex || 0;
     const onProgress = params.onProgress;
+    const concurrency = params.concurrency || this.config.concurrency || 1;
 
-    const scenarios: GeneratedLLMScenario[] = [];
-    const total = domains.length * tiers.length * repetitions;
+    // Build list of all scenarios to generate
+    const tasks: Array<{ domain: Domain; tier: Tier; repetition: number; index: number }> = [];
+    let idx = startIndex;
+    for (const domain of domains) {
+      for (const tier of tiers) {
+        for (let rep = 1; rep <= repetitions; rep++) {
+          tasks.push({ domain, tier, repetition: rep, index: idx++ });
+        }
+      }
+    }
+
+    const total = tasks.length;
     const startTime = Date.now();
     let completed = 0;
+    const scenarios: GeneratedLLMScenario[] = [];
+    const errors: Array<{ task: (typeof tasks)[0]; error: Error }> = [];
 
     // Emit start event
     onProgress?.({
@@ -457,96 +616,249 @@ export class LLMScenarioGenerator {
       current: 0,
       total,
       percentage: 0,
-      message: `Starting generation of ${total} scenarios...`,
+      message: `Starting generation of ${total} scenarios (concurrency: ${concurrency})...`,
     });
 
-    for (const domain of domains) {
-      for (const tier of tiers) {
-        for (let rep = 1; rep <= repetitions; rep++) {
-          const currentIndex = completed + 1;
+    // Sequential processing (original behavior)
+    if (concurrency <= 1) {
+      for (const task of tasks) {
+        const currentIndex = completed + 1;
 
-          // Emit progress update before generation
+        onProgress?.({
+          type: 'progress',
+          current: currentIndex,
+          total,
+          percentage: Math.round((completed / total) * 100),
+          domain: task.domain,
+          tier: task.tier,
+          repetition: task.repetition,
+          message: `Generating scenario ${currentIndex}/${total}: ${task.domain}/${task.tier}/rep${task.repetition}...`,
+          elapsedMs: Date.now() - startTime,
+          estimatedRemainingMs:
+            completed > 0
+              ? Math.round(((Date.now() - startTime) / completed) * (total - completed))
+              : undefined,
+        });
+
+        try {
+          const scenario = await this.generateScenario({
+            domain: task.domain,
+            tier: task.tier,
+            repetition: task.repetition,
+            model,
+            index: task.index,
+          });
+
+          scenarios.push(scenario);
+          completed++;
+
           onProgress?.({
-            type: 'progress',
+            type: 'scenario_complete',
+            current: completed,
+            total,
+            percentage: Math.round((completed / total) * 100),
+            domain: task.domain,
+            tier: task.tier,
+            repetition: task.repetition,
+            scenarioId: scenario.scenarioId,
+            taskTitle: scenario.task_title,
+            message: `✓ Completed ${completed}/${total}: ${scenario.task_title.substring(0, 50)}...`,
+            scenario,
+            elapsedMs: Date.now() - startTime,
+            estimatedRemainingMs:
+              completed < total
+                ? Math.round(((Date.now() - startTime) / completed) * (total - completed))
+                : 0,
+          });
+        } catch (error) {
+          onProgress?.({
+            type: 'error',
             current: currentIndex,
             total,
             percentage: Math.round((completed / total) * 100),
-            domain,
-            tier,
-            repetition: rep,
-            message: `Generating scenario ${currentIndex}/${total}: ${domain}/${tier}/rep${rep}...`,
+            domain: task.domain,
+            tier: task.tier,
+            repetition: task.repetition,
+            message: `✗ Failed scenario ${currentIndex}/${total}: ${task.domain}/${task.tier}/rep${task.repetition}`,
+            error: error instanceof Error ? error.message : 'Unknown error',
             elapsedMs: Date.now() - startTime,
-            estimatedRemainingMs:
-              completed > 0
-                ? Math.round(((Date.now() - startTime) / completed) * (total - completed))
-                : undefined,
+          });
+          throw error;
+        }
+
+        if (completed < total) {
+          await this.delay(this.config.rateLimitDelayMs);
+        }
+      }
+    } else {
+      // Parallel processing with semaphore and rate limit tracking
+      const semaphore = new Semaphore(concurrency);
+      const rateLimitTracker = new RateLimitTracker(this.config.rateLimitDelayMs);
+      const retryQueue: Array<(typeof tasks)[0]> = [];
+      const maxRetries = 3;
+
+      const processTask = async (task: (typeof tasks)[0], retryCount = 0): Promise<void> => {
+        await semaphore.acquire();
+
+        // If rate limited, wait with exponential backoff before proceeding
+        if (rateLimitTracker.isRateLimited()) {
+          const backoffDelay = rateLimitTracker.getDelay();
+          onProgress?.({
+            type: 'progress',
+            current: completed,
+            total,
+            percentage: Math.round((completed / total) * 100),
+            message: `⏳ Rate limited - waiting ${Math.round(backoffDelay / 1000)}s before retry...`,
+            elapsedMs: Date.now() - startTime,
+          });
+          await this.delay(backoffDelay);
+        }
+
+        try {
+          const scenario = await this.generateScenario({
+            domain: task.domain,
+            tier: task.tier,
+            repetition: task.repetition,
+            model,
+            index: task.index,
           });
 
-          try {
-            const scenario = await this.generateScenario({
-              domain,
-              tier,
-              repetition: rep,
-              model,
-              index: index++,
-            });
+          // Success - record it and reset error count
+          rateLimitTracker.recordSuccess();
+          completed++;
+          scenarios.push(scenario);
 
-            scenarios.push(scenario);
-            completed++;
+          onProgress?.({
+            type: 'scenario_complete',
+            current: completed,
+            total,
+            percentage: Math.round((completed / total) * 100),
+            domain: task.domain,
+            tier: task.tier,
+            repetition: task.repetition,
+            scenarioId: scenario.scenarioId,
+            taskTitle: scenario.task_title,
+            message: `✓ Completed ${completed}/${total}: ${scenario.task_title.substring(0, 50)}...`,
+            scenario,
+            elapsedMs: Date.now() - startTime,
+            estimatedRemainingMs:
+              completed < total
+                ? Math.round(((Date.now() - startTime) / completed) * (total - completed))
+                : 0,
+          });
 
-            // Emit scenario complete event
+          // Small delay between releases to avoid rate limiting
+          await this.delay(rateLimitTracker.getDelay() / concurrency);
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          const isRateLimitError =
+            errorMessage.includes('429') ||
+            errorMessage.includes('rate') ||
+            errorMessage.includes('limit') ||
+            errorMessage.includes('too many');
+
+          if (isRateLimitError) {
+            rateLimitTracker.recordRateLimitError();
+
+            // Reduce concurrency temporarily when rate limited
+            if (rateLimitTracker.getErrorCount() >= 2) {
+              semaphore.reducePermits(1);
+              onProgress?.({
+                type: 'progress',
+                current: completed,
+                total,
+                percentage: Math.round((completed / total) * 100),
+                message: `⚠️ Reducing concurrency due to rate limits...`,
+                elapsedMs: Date.now() - startTime,
+              });
+            }
+          }
+
+          // Retry logic for failed tasks
+          if (retryCount < maxRetries) {
+            const retryDelay = rateLimitTracker.getDelay();
             onProgress?.({
-              type: 'scenario_complete',
+              type: 'progress',
               current: completed,
               total,
               percentage: Math.round((completed / total) * 100),
-              domain,
-              tier,
-              repetition: rep,
-              scenarioId: scenario.scenarioId,
-              taskTitle: scenario.task_title,
-              message: `✓ Completed ${completed}/${total}: ${scenario.task_title.substring(0, 50)}...`,
-              scenario,
+              domain: task.domain,
+              tier: task.tier,
+              message: `🔄 Retry ${retryCount + 1}/${maxRetries} for ${task.domain}/${task.tier}/rep${task.repetition} in ${Math.round(retryDelay / 1000)}s...`,
               elapsedMs: Date.now() - startTime,
-              estimatedRemainingMs:
-                completed < total
-                  ? Math.round(((Date.now() - startTime) / completed) * (total - completed))
-                  : 0,
             });
-          } catch (error) {
-            // Emit error event but continue processing
+
+            // Queue for retry after delay
+            retryQueue.push(task);
+          } else {
+            // Max retries exceeded - record as failed
+            errors.push({ task, error: error instanceof Error ? error : new Error(String(error)) });
             onProgress?.({
               type: 'error',
-              current: currentIndex,
+              current: completed,
               total,
               percentage: Math.round((completed / total) * 100),
-              domain,
-              tier,
-              repetition: rep,
-              message: `✗ Failed scenario ${currentIndex}/${total}: ${domain}/${tier}/rep${rep}`,
-              error: error instanceof Error ? error.message : 'Unknown error',
+              domain: task.domain,
+              tier: task.tier,
+              repetition: task.repetition,
+              message: `✗ Failed after ${maxRetries} retries: ${task.domain}/${task.tier}/rep${task.repetition}`,
+              error: errorMessage,
               elapsedMs: Date.now() - startTime,
             });
-
-            // Re-throw to let caller handle
-            throw error;
           }
-
-          // Rate limiting between scenarios
-          if (completed < total) {
-            await this.delay(this.config.rateLimitDelayMs);
-          }
+        } finally {
+          semaphore.release();
         }
+      };
+
+      // Process all initial tasks
+      await Promise.all(tasks.map((task) => processTask(task, 0)));
+
+      // Process retry queue with increasing retry counts
+      for (let retryRound = 1; retryRound <= maxRetries && retryQueue.length > 0; retryRound++) {
+        const tasksToRetry = [...retryQueue];
+        retryQueue.length = 0; // Clear the queue
+
+        // Wait with backoff before retrying
+        const backoffDelay = rateLimitTracker.getDelay();
+        onProgress?.({
+          type: 'progress',
+          current: completed,
+          total,
+          percentage: Math.round((completed / total) * 100),
+          message: `⏳ Waiting ${Math.round(backoffDelay / 1000)}s before retry round ${retryRound} (${tasksToRetry.length} tasks)...`,
+          elapsedMs: Date.now() - startTime,
+        });
+        await this.delay(backoffDelay);
+
+        // Retry failed tasks
+        await Promise.all(tasksToRetry.map((task) => processTask(task, retryRound)));
+      }
+
+      // If any errors occurred after all retries, report but don't throw
+      // This allows partial success
+      if (errors.length > 0) {
+        onProgress?.({
+          type: 'progress',
+          current: completed,
+          total,
+          percentage: Math.round((completed / total) * 100),
+          message: `⚠️ ${errors.length} scenarios failed after all retries`,
+          elapsedMs: Date.now() - startTime,
+        });
       }
     }
+
+    // Sort scenarios by index to maintain order
+    scenarios.sort((a, b) => a.index - b.index);
 
     // Emit complete event
     onProgress?.({
       type: 'complete',
-      current: total,
+      current: scenarios.length,
       total,
       percentage: 100,
-      message: `✓ Successfully generated ${total} scenarios in ${Math.round((Date.now() - startTime) / 1000)}s`,
+      message: `✓ Generated ${scenarios.length}/${total} scenarios in ${Math.round((Date.now() - startTime) / 1000)}s${errors.length > 0 ? ` (${errors.length} failed)` : ''}`,
       elapsedMs: Date.now() - startTime,
     });
 
@@ -698,34 +1010,15 @@ export class LLMScenarioGenerator {
       },
     };
 
-    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    const response = await fetch(`${this.baseUrl}/chat/completions`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${this.config.deepseekApiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: [
-          {
-            role: 'system',
-            content: TASK_GENERATOR_SYSTEM_PROMPT,
-          },
-          {
-            role: 'user',
-            content: userMessage,
-          },
-        ],
-        temperature: 0.7,
-        max_tokens: 4000,
-        tools: [scenarioFunction],
-        tool_choice: { type: 'function', function: { name: 'generate_maac_scenario' } },
-      }),
+      headers: this.getRequestHeaders(),
+      body: JSON.stringify(this.buildRequestBody(userMessage, scenarioFunction)),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`DeepSeek API error: ${response.status} - ${errorText}`);
+      throw new Error(`${this.provider} API error: ${response.status} - ${errorText}`);
     }
 
     const data = (await response.json()) as {
@@ -742,7 +1035,7 @@ export class LLMScenarioGenerator {
     // Extract the function call arguments (this is our structured output)
     const toolCall = data.choices[0]?.message?.tool_calls?.[0];
     if (toolCall?.function?.arguments) {
-      console.log('Got structured output via function calling');
+      console.log(`Got structured output via function calling from ${this.provider}`);
       return toolCall.function.arguments;
     }
 
@@ -750,6 +1043,69 @@ export class LLMScenarioGenerator {
     const content = data.choices[0]?.message?.content || '';
     console.log('Fallback to content:', content.substring(0, 200));
     return content;
+  }
+
+  /**
+   * Get request headers based on provider
+   */
+  private getRequestHeaders(): Record<string, string> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    switch (this.provider) {
+      case 'anthropic':
+        headers['x-api-key'] = this.apiKey;
+        headers['anthropic-version'] = '2023-06-01';
+        break;
+      case 'openrouter':
+      case 'llama':
+        headers['Authorization'] = `Bearer ${this.apiKey}`;
+        headers['HTTP-Referer'] = 'https://maac-research-platform.com';
+        headers['X-Title'] = 'MAAC Research Platform';
+        break;
+      default:
+        headers['Authorization'] = `Bearer ${this.apiKey}`;
+    }
+
+    return headers;
+  }
+
+  /**
+   * Build request body based on provider
+   */
+  private buildRequestBody(userMessage: string, scenarioFunction: any): Record<string, any> {
+    const baseBody = {
+      model: this.modelId,
+      messages: [
+        {
+          role: 'system',
+          content: TASK_GENERATOR_SYSTEM_PROMPT,
+        },
+        {
+          role: 'user',
+          content: userMessage,
+        },
+      ],
+      temperature: 0.7,
+      max_tokens: 4000,
+    };
+
+    // Most providers support OpenAI-compatible function calling
+    if (this.provider !== 'anthropic' && this.provider !== 'gemini') {
+      return {
+        ...baseBody,
+        tools: [scenarioFunction],
+        tool_choice: { type: 'function', function: { name: 'generate_maac_scenario' } },
+      };
+    }
+
+    // For Anthropic and Gemini, we'll use JSON mode in the prompt
+    // and extract structured output from the response
+    return {
+      ...baseBody,
+      max_tokens: 4000,
+    };
   }
 
   /**
