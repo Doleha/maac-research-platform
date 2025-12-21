@@ -550,7 +550,7 @@ export class LLMScenarioGenerator {
         // The LLM may generate task_id with configId, but we want it to include model name
         return {
           ...parsed,
-          task_id: scenarioId,  // Override LLM-generated task_id with correct format
+          task_id: scenarioId, // Override LLM-generated task_id with correct format
           scenarioId,
           index: params.index,
           modelId: params.model,
