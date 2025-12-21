@@ -91,16 +91,11 @@ export function ComplexityDistributionChart({
     complex: { bar: 'bg-purple-500', light: 'bg-purple-100' },
   };
 
-  const domainColors = [
-    'bg-indigo-500',
-    'bg-emerald-500',
-    'bg-orange-500',
-    'bg-pink-500',
-  ];
+  const domainColors = ['bg-indigo-500', 'bg-emerald-500', 'bg-orange-500', 'bg-pink-500'];
 
   // Find max count for scaling
   const allCounts = Object.entries(data.distribution).flatMap(([_, ranges]) =>
-    Object.values(ranges)
+    Object.values(ranges),
   );
   const maxCount = Math.max(...allCounts, 1);
 
@@ -118,7 +113,7 @@ export function ComplexityDistributionChart({
                 'rounded-md px-3 py-1 text-sm font-medium transition-colors',
                 activeTab === 'tier'
                   ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  : 'text-gray-600 hover:text-gray-900',
               )}
             >
               By Tier
@@ -129,7 +124,7 @@ export function ComplexityDistributionChart({
                 'rounded-md px-3 py-1 text-sm font-medium transition-colors',
                 activeTab === 'domain'
                   ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  : 'text-gray-600 hover:text-gray-900',
               )}
             >
               By Domain
@@ -169,7 +164,7 @@ export function ComplexityDistributionChart({
                           key={range}
                           className={cn(
                             'relative flex items-center justify-center rounded text-xs font-medium text-white transition-all hover:opacity-80',
-                            tierColors[tier].bar
+                            tierColors[tier].bar,
                           )}
                           style={{ width: `${Math.max(width, 8)}%` }}
                           title={`${range}: ${count} scenarios`}
@@ -210,7 +205,7 @@ export function ComplexityDistributionChart({
                     </div>
                     <span className="text-sm text-gray-500">{domain.count} scenarios</span>
                   </div>
-                  
+
                   {/* Stats Row */}
                   <div className="grid grid-cols-4 gap-4 text-center">
                     <div>
@@ -221,21 +216,15 @@ export function ComplexityDistributionChart({
                     </div>
                     <div>
                       <p className="text-xs text-gray-500">Min</p>
-                      <p className="text-lg font-semibold text-gray-700">
-                        {domain.min.toFixed(1)}
-                      </p>
+                      <p className="text-lg font-semibold text-gray-700">{domain.min.toFixed(1)}</p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500">Max</p>
-                      <p className="text-lg font-semibold text-gray-700">
-                        {domain.max.toFixed(1)}
-                      </p>
+                      <p className="text-lg font-semibold text-gray-700">{domain.max.toFixed(1)}</p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500">Range</p>
-                      <p className="text-lg font-semibold text-gray-700">
-                        {range.toFixed(1)}
-                      </p>
+                      <p className="text-lg font-semibold text-gray-700">{range.toFixed(1)}</p>
                     </div>
                   </div>
 

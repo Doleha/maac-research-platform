@@ -113,10 +113,7 @@ export function ComplexityDetailsModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
       <div className="relative z-10 w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-xl bg-white shadow-2xl m-4">
@@ -144,10 +141,7 @@ export function ComplexityDetailsModal({
           ) : error ? (
             <div className="py-12 text-center text-red-600">
               <p className="font-medium">Error: {error}</p>
-              <button
-                onClick={fetchDetails}
-                className="mt-2 text-sm underline hover:text-red-800"
-              >
+              <button onClick={fetchDetails} className="mt-2 text-sm underline hover:text-red-800">
                 Try again
               </button>
             </div>
@@ -164,11 +158,18 @@ export function ComplexityDetailsModal({
                         className="text-gray-400 hover:text-gray-600"
                         title="Copy ID"
                       >
-                        {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                        {copied ? (
+                          <Check className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
                       </button>
                     </div>
                     <p className="text-sm text-gray-500">
-                      Domain: <span className="capitalize font-medium">{data.domain.replace('_', ' ')}</span>
+                      Domain:{' '}
+                      <span className="capitalize font-medium">
+                        {data.domain.replace('_', ' ')}
+                      </span>
                     </p>
                   </div>
                   <ComplexityBadge
@@ -199,15 +200,17 @@ export function ComplexityDetailsModal({
               {/* Framework Metrics */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Wood (1986) */}
-                <FrameworkCard
-                  title="Wood (1986)"
-                  subtitle="Component Complexity"
-                  color="blue"
-                >
+                <FrameworkCard title="Wood (1986)" subtitle="Component Complexity" color="blue">
                   {data.complexityMetrics.wood ? (
                     <div className="space-y-2 text-sm">
-                      <MetricRow label="Distinct Acts" value={data.complexityMetrics.wood.distinctActs} />
-                      <MetricRow label="Information Cues" value={data.complexityMetrics.wood.informationCues} />
+                      <MetricRow
+                        label="Distinct Acts"
+                        value={data.complexityMetrics.wood.distinctActs}
+                      />
+                      <MetricRow
+                        label="Information Cues"
+                        value={data.complexityMetrics.wood.informationCues}
+                      />
                       <MetricRow
                         label="Coordination Level"
                         value={data.complexityMetrics.wood.coordinativeComplexity.level}
@@ -228,15 +231,17 @@ export function ComplexityDetailsModal({
                 </FrameworkCard>
 
                 {/* Campbell (1988) */}
-                <FrameworkCard
-                  title="Campbell (1988)"
-                  subtitle="Four Sources"
-                  color="yellow"
-                >
+                <FrameworkCard title="Campbell (1988)" subtitle="Four Sources" color="yellow">
                   {data.complexityMetrics.campbell ? (
                     <div className="space-y-2 text-sm">
-                      <BoolMetric label="Multiple Paths" value={data.complexityMetrics.campbell.multiplePaths} />
-                      <BoolMetric label="Multiple Outcomes" value={data.complexityMetrics.campbell.multipleOutcomes} />
+                      <BoolMetric
+                        label="Multiple Paths"
+                        value={data.complexityMetrics.campbell.multiplePaths}
+                      />
+                      <BoolMetric
+                        label="Multiple Outcomes"
+                        value={data.complexityMetrics.campbell.multipleOutcomes}
+                      />
                       <BoolMetric
                         label="Conflicting Interdependence"
                         value={data.complexityMetrics.campbell.conflictingInterdependence}
@@ -253,23 +258,55 @@ export function ComplexityDetailsModal({
                 </FrameworkCard>
 
                 {/* Liu & Li (2012) */}
-                <FrameworkCard
-                  title="Liu & Li (2012)"
-                  subtitle="Ten Dimensions"
-                  color="purple"
-                >
+                <FrameworkCard title="Liu & Li (2012)" subtitle="Ten Dimensions" color="purple">
                   {data.complexityMetrics.liuLi ? (
                     <div className="space-y-1.5 text-sm">
                       <MetricRow label="Variety" value={data.complexityMetrics.liuLi.variety} />
-                      <MetricRow label="Ambiguity" value={data.complexityMetrics.liuLi.ambiguity} capitalize />
-                      <MetricRow label="Instability" value={data.complexityMetrics.liuLi.instability} capitalize />
-                      <MetricRow label="Coupling" value={data.complexityMetrics.liuLi.coupling} capitalize />
-                      <MetricRow label="Novelty" value={data.complexityMetrics.liuLi.novelty} capitalize />
-                      <MetricRow label="Time Pressure" value={data.complexityMetrics.liuLi.timePressure} capitalize />
-                      <MetricRow label="Equivocality" value={data.complexityMetrics.liuLi.equivocality} capitalize />
-                      <MetricRow label="Scope" value={data.complexityMetrics.liuLi.scope} capitalize />
-                      <MetricRow label="Work Flow" value={data.complexityMetrics.liuLi.workFlow} capitalize />
-                      <MetricRow label="Coordination" value={data.complexityMetrics.liuLi.coordination} capitalize />
+                      <MetricRow
+                        label="Ambiguity"
+                        value={data.complexityMetrics.liuLi.ambiguity}
+                        capitalize
+                      />
+                      <MetricRow
+                        label="Instability"
+                        value={data.complexityMetrics.liuLi.instability}
+                        capitalize
+                      />
+                      <MetricRow
+                        label="Coupling"
+                        value={data.complexityMetrics.liuLi.coupling}
+                        capitalize
+                      />
+                      <MetricRow
+                        label="Novelty"
+                        value={data.complexityMetrics.liuLi.novelty}
+                        capitalize
+                      />
+                      <MetricRow
+                        label="Time Pressure"
+                        value={data.complexityMetrics.liuLi.timePressure}
+                        capitalize
+                      />
+                      <MetricRow
+                        label="Equivocality"
+                        value={data.complexityMetrics.liuLi.equivocality}
+                        capitalize
+                      />
+                      <MetricRow
+                        label="Scope"
+                        value={data.complexityMetrics.liuLi.scope}
+                        capitalize
+                      />
+                      <MetricRow
+                        label="Work Flow"
+                        value={data.complexityMetrics.liuLi.workFlow}
+                        capitalize
+                      />
+                      <MetricRow
+                        label="Coordination"
+                        value={data.complexityMetrics.liuLi.coordination}
+                        capitalize
+                      />
                     </div>
                   ) : (
                     <NoData />
@@ -281,9 +318,18 @@ export function ComplexityDetailsModal({
               <div className="rounded-lg border bg-gray-50 p-4">
                 <h4 className="font-medium text-gray-700 mb-2">Academic References</h4>
                 <ul className="space-y-1 text-xs text-gray-500">
-                  <li>• Wood, R.E. (1986). Task complexity. <i>Organizational Behavior and Human Decision Processes</i>, 37(1), 60-82.</li>
-                  <li>• Campbell, D.J. (1988). Task Complexity. <i>Academy of Management Review</i>, 13(1), 40-52.</li>
-                  <li>• Liu, L., & Li, X. (2012). Multidimensional Task Complexity. <i>Procedia Engineering</i>, 29, 3244-3249.</li>
+                  <li>
+                    • Wood, R.E. (1986). Task complexity.{' '}
+                    <i>Organizational Behavior and Human Decision Processes</i>, 37(1), 60-82.
+                  </li>
+                  <li>
+                    • Campbell, D.J. (1988). Task Complexity. <i>Academy of Management Review</i>,
+                    13(1), 40-52.
+                  </li>
+                  <li>
+                    • Liu, L., & Li, X. (2012). Multidimensional Task Complexity.{' '}
+                    <i>Procedia Engineering</i>, 29, 3244-3249.
+                  </li>
                 </ul>
               </div>
             </div>
@@ -341,9 +387,7 @@ function MetricRow({
   return (
     <div className="flex justify-between">
       <span className="text-gray-600">{label}</span>
-      <span className={cn('font-medium text-gray-900', capitalize && 'capitalize')}>
-        {value}
-      </span>
+      <span className={cn('font-medium text-gray-900', capitalize && 'capitalize')}>{value}</span>
     </div>
   );
 }
@@ -355,7 +399,7 @@ function BoolMetric({ label, value }: { label: string; value: boolean }) {
       <span
         className={cn(
           'text-xs font-medium px-2 py-0.5 rounded',
-          value ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+          value ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600',
         )}
       >
         {value ? 'Yes' : 'No'}

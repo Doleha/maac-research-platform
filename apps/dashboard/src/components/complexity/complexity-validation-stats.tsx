@@ -159,7 +159,9 @@ export function ComplexityValidationStats({
           title="Validation Rate"
           value={`${summary.validationRate.toFixed(1)}%`}
           icon={TrendingUp}
-          color={summary.validationRate >= 95 ? 'green' : summary.validationRate >= 80 ? 'yellow' : 'red'}
+          color={
+            summary.validationRate >= 95 ? 'green' : summary.validationRate >= 80 ? 'yellow' : 'red'
+          }
         />
         <SummaryCard
           title="Recent Failures"
@@ -187,7 +189,10 @@ export function ComplexityValidationStats({
             const range = ranges[tier as keyof typeof ranges];
 
             // Score position as percentage
-            const position = Math.min(100, Math.max(0, ((avgScore - range.min) / (range.max - range.min)) * 100));
+            const position = Math.min(
+              100,
+              Math.max(0, ((avgScore - range.min) / (range.max - range.min)) * 100),
+            );
 
             // Color based on tier
             const tierColors = {
@@ -208,13 +213,18 @@ export function ComplexityValidationStats({
                 {/* Score bar */}
                 <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
                   <div
-                    className={cn('h-full transition-all', tierColors[tier as keyof typeof tierColors])}
+                    className={cn(
+                      'h-full transition-all',
+                      tierColors[tier as keyof typeof tierColors],
+                    )}
                     style={{ width: `${position}%` }}
                   />
                 </div>
                 <div className="mt-1 flex justify-between text-xs text-gray-500">
                   <span>{range.min}</span>
-                  <span>Expected: {range.min}-{range.max}</span>
+                  <span>
+                    Expected: {range.min}-{range.max}
+                  </span>
                   <span>{range.max}</span>
                 </div>
               </div>

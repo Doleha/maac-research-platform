@@ -53,18 +53,18 @@ export function ComplexityScenarioList({
     try {
       setLoading(true);
       setError(null);
-      
+
       // In a real app, you'd pass filters to API
       // For now, we'll fetch from the stats endpoint and mock
       const response = await fetch(`${apiUrl}/scenarios/validation/stats`);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      
+
       // Mock some scenario data based on the distribution
       // In production, this would be a proper paginated endpoint
       const mockScenarios: ScenarioRow[] = [];
       const domains = ['analytical', 'planning', 'communication', 'problem_solving'];
       const tiers: Array<'simple' | 'moderate' | 'complex'> = ['simple', 'moderate', 'complex'];
-      
+
       for (let i = 0; i < 50; i++) {
         const tier = tiers[i % 3];
         const scoreRanges = {
@@ -73,17 +73,18 @@ export function ComplexityScenarioList({
           complex: { min: 30, max: 50 },
         };
         const range = scoreRanges[tier];
-        
+
         mockScenarios.push({
           scenarioId: `${domains[i % 4]}-${tier}-${String(Math.floor(i / 12)).padStart(3, '0')}-${i}`,
           domain: domains[i % 4],
           tier,
           validationPassed: Math.random() > 0.05, // 95% pass rate
-          complexityScore: Math.round((range.min + Math.random() * (range.max - range.min)) * 10) / 10,
+          complexityScore:
+            Math.round((range.min + Math.random() * (range.max - range.min)) * 10) / 10,
           validatedAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
         });
       }
-      
+
       setScenarios(mockScenarios);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch');
@@ -119,7 +120,7 @@ export function ComplexityScenarioList({
   // Apply sorting
   const sortedScenarios = [...filteredScenarios].sort((a, b) => {
     let comparison = 0;
-    
+
     switch (sortField) {
       case 'scenarioId':
         comparison = a.scenarioId.localeCompare(b.scenarioId);
@@ -135,10 +136,11 @@ export function ComplexityScenarioList({
         comparison = (a.complexityScore || 0) - (b.complexityScore || 0);
         break;
       case 'validatedAt':
-        comparison = new Date(a.validatedAt || 0).getTime() - new Date(b.validatedAt || 0).getTime();
+        comparison =
+          new Date(a.validatedAt || 0).getTime() - new Date(b.validatedAt || 0).getTime();
         break;
     }
-    
+
     return sortOrder === 'asc' ? comparison : -comparison;
   });
 
@@ -181,7 +183,7 @@ export function ComplexityScenarioList({
                 'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
                 showFilters
                   ? 'bg-blue-100 text-blue-700'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200',
               )}
             >
               <SlidersHorizontal className="h-4 w-4" />
@@ -338,7 +340,7 @@ export function ComplexityScenarioList({
                   onClick={() => onScenarioClick?.(scenario.scenarioId)}
                   className={cn(
                     'transition-colors',
-                    onScenarioClick && 'cursor-pointer hover:bg-gray-50'
+                    onScenarioClick && 'cursor-pointer hover:bg-gray-50',
                   )}
                 >
                   <td className="px-4 py-3 font-mono text-sm text-gray-900">
@@ -372,8 +374,9 @@ export function ComplexityScenarioList({
       {totalPages > 1 && (
         <div className="flex items-center justify-between border-t px-4 py-3">
           <p className="text-sm text-gray-500">
-            Showing {page * pageSize + 1} to {Math.min((page + 1) * pageSize, sortedScenarios.length)} of{' '}
-            {sortedScenarios.length} scenarios
+            Showing {page * pageSize + 1} to{' '}
+            {Math.min((page + 1) * pageSize, sortedScenarios.length)} of {sortedScenarios.length}{' '}
+            scenarios
           </p>
           <div className="flex gap-2">
             <button

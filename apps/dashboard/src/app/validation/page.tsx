@@ -26,7 +26,8 @@ export default function ValidationDashboardPage() {
               <h1 className="text-3xl font-bold text-gray-900">Complexity Validation</h1>
             </div>
             <p className="text-gray-600">
-              Monitor and analyze scenario complexity validation based on peer-reviewed academic frameworks
+              Monitor and analyze scenario complexity validation based on peer-reviewed academic
+              frameworks
             </p>
           </div>
 
@@ -48,24 +49,22 @@ export default function ValidationDashboardPage() {
           {/* Main Content */}
           <div className="space-y-8">
             {/* Overview Stats */}
-            <ComplexityValidationStats
-              onScenarioClick={setSelectedScenarioId}
-            />
+            <ComplexityValidationStats onScenarioClick={setSelectedScenarioId} />
 
             {/* Distribution Chart */}
             <ComplexityDistributionChart />
 
             {/* Scenario List */}
-            <ComplexityScenarioList
-              onScenarioClick={setSelectedScenarioId}
-            />
+            <ComplexityScenarioList onScenarioClick={setSelectedScenarioId} />
 
             {/* Info Section */}
             <div className="rounded-lg border bg-white p-6">
               <div className="flex items-start gap-3">
                 <Info className="h-5 w-5 text-gray-400 mt-0.5" />
                 <div className="text-sm text-gray-600">
-                  <h4 className="font-medium text-gray-900 mb-2">Understanding Complexity Scores</h4>
+                  <h4 className="font-medium text-gray-900 mb-2">
+                    Understanding Complexity Scores
+                  </h4>
                   <ul className="space-y-1.5">
                     <li>
                       <span className="font-medium">Simple (0-15):</span> Single-step tasks with
