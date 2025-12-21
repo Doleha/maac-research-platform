@@ -164,7 +164,7 @@ export default function GenerateScenariosPage() {
       if (!reader) throw new Error('No response body');
 
       let buffer = '';
-      
+
       while (true) {
         const { done, value } = await reader.read();
 
@@ -172,14 +172,14 @@ export default function GenerateScenariosPage() {
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
-        
+
         // Keep the last incomplete line in the buffer
         buffer = lines.pop() || '';
 
         for (const line of lines) {
           const trimmedLine = line.trim();
           if (!trimmedLine) continue;
-          
+
           // Parse SSE data lines (API sends: "event: X\ndata: {...}")
           if (trimmedLine.startsWith('data: ')) {
             try {
@@ -189,7 +189,9 @@ export default function GenerateScenariosPage() {
               // API sends type: 'start', 'progress', 'scenario_complete', 'storing', 'complete', 'error'
               if (data.type === 'start' || data.type === 'progress') {
                 // Show progress message
-                setStreamingText(data.message || `Generating scenario ${data.current}/${data.total}...`);
+                setStreamingText(
+                  data.message || `Generating scenario ${data.current}/${data.total}...`,
+                );
               } else if (data.type === 'scenario_complete') {
                 // A scenario was generated
                 if (data.scenario) {

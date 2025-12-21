@@ -600,6 +600,15 @@ export async function scenarioRoutes(
         const generator = createLLMScenarioGenerator(generatorConfig);
         const startTime = Date.now();
 
+        // Send initial start event
+        sendEvent('progress', {
+          type: 'start',
+          current: 0,
+          total: totalScenarios,
+          percentage: 0,
+          message: `Starting generation of ${totalScenarios} scenarios...`,
+        });
+
         // Generate scenarios with progress callback
         const scenarios = await generator.generateScenarios({
           domains,
@@ -607,7 +616,7 @@ export async function scenarioRoutes(
           repetitions,
           model,
           onProgress: (progress: ScenarioGenerationProgress) => {
-            // Send progress event
+            // Send progress event with scenario data if available
             sendEvent('progress', {
               type: progress.type,
               current: progress.current,
@@ -622,6 +631,17 @@ export async function scenarioRoutes(
               error: progress.error,
               elapsedMs: progress.elapsedMs,
               estimatedRemainingMs: progress.estimatedRemainingMs,
+              // Include scenario data for scenario_complete events
+              scenario: progress.scenario
+                ? {
+                    scenarioId: progress.scenario.scenarioId,
+                    domain: progress.scenario.metadata?.business_domain,
+                    tier: progress.scenario.complexity_level,
+                    taskTitle: progress.scenario.task_title,
+                    taskDescription: progress.scenario.task_description,
+                    businessContext: progress.scenario.business_context,
+                  }
+                : undefined,
             });
 
             // Track scenarios for database insert
