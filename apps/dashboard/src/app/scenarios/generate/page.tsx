@@ -1,7 +1,16 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Wand2, Loader2, CheckCircle, AlertCircle, FileText, Clock, Target, XCircle } from 'lucide-react';
+import {
+  Wand2,
+  Loader2,
+  CheckCircle,
+  AlertCircle,
+  FileText,
+  Clock,
+  Target,
+  XCircle,
+} from 'lucide-react';
 import { useScenariosState } from '@/contexts/DashboardStateContext';
 
 interface GenerationRequest {
@@ -108,7 +117,7 @@ export default function GenerateScenariosPage() {
   const handleGenerate = async () => {
     // Create new abort controller for this generation
     abortControllerRef.current = new AbortController();
-    
+
     setGenerating(true);
     setPaused(false);
     setError(null);
@@ -126,7 +135,7 @@ export default function GenerateScenariosPage() {
     try {
       console.log('Sending request to:', `${apiUrl}/scenarios/generate-llm-stream`);
       console.log('Request body:', JSON.stringify(formData, null, 2));
-      
+
       const response = await fetch(`${apiUrl}/scenarios/generate-llm-stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -135,7 +144,7 @@ export default function GenerateScenariosPage() {
       });
 
       console.log('Response status:', response.status);
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Error response:', errorText);

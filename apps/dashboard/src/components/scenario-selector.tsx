@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, CheckSquare, Square, Filter, RefreshCw, AlertCircle, Loader2 } from 'lucide-react';
+import { Search, CheckSquare, Square, RefreshCw, AlertCircle, Loader2 } from 'lucide-react';
 
 interface Scenario {
   id: number;
@@ -65,8 +65,7 @@ export function ScenarioSelector({
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
         (s) =>
-          s.taskTitle.toLowerCase().includes(query) ||
-          s.scenarioId.toLowerCase().includes(query)
+          s.taskTitle.toLowerCase().includes(query) || s.scenarioId.toLowerCase().includes(query),
       );
     }
 
@@ -257,9 +256,7 @@ export function ScenarioSelector({
                 />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-gray-900 truncate">
-                      {scenario.taskTitle}
-                    </span>
+                    <span className="font-medium text-gray-900 truncate">{scenario.taskTitle}</span>
                   </div>
                   <div className="mt-1 flex flex-wrap gap-2 text-xs">
                     <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-blue-700">

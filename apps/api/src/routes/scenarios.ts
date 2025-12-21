@@ -21,7 +21,6 @@ import {
   type GeneratedLLMScenario,
 } from '@maac/experiment-orchestrator';
 import type { Domain, Tier, ModelId } from '@maac/types';
-import { logger } from './logs.js';
 
 /**
  * Input schema for scenario generation

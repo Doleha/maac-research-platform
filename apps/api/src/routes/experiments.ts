@@ -16,7 +16,7 @@ import {
   CreateExperimentSchema,
   CreateExperimentInput,
 } from '@maac/experiment-orchestrator';
-import type { Domain, Tier } from '@maac/types';
+import type { Domain, Tier, SuccessCriterion } from '@maac/types';
 import { logger } from './logs.js';
 
 /**
@@ -39,7 +39,7 @@ export async function experimentRoutes(
   /**
    * POST /experiments
    * Create and start a new experiment
-   * 
+   *
    * Supports two modes:
    * 1. scenarioIds provided: Uses existing MAACExperimentScenario records
    * 2. domains/tiers provided: Creates trials based on domain/tier combinations
@@ -50,11 +50,7 @@ export async function experimentRoutes(
       schema: {
         body: {
           type: 'object',
-          required: [
-            'name',
-            'models',
-            'toolConfigs',
-          ],
+          required: ['name', 'models', 'toolConfigs'],
           properties: {
             name: { type: 'string', minLength: 1, maxLength: 255 },
             description: { type: 'string', maxLength: 2000 },
@@ -137,21 +133,77 @@ export async function experimentRoutes(
         // Generate experiment ID
         const experimentId = crypto.randomUUID();
 
-        // Calculate total trials
-        const totalTrials =
-          validated.domains.length *
-          validated.tiers.length *
-          validated.repetitionsPerDomainTier *
-          validated.models.length *
-          validated.toolConfigs.length;
+        // Determine mode and calculate trials
+        const isScenarioMode = validated.scenarioIds && validated.scenarioIds.length > 0;
+        let totalTrials: number;
+        let scenarioRecords: Array<{
+          id: number;
+          scenarioId: string;
+          domain: string;
+          tier: string;
+          repetition: number;
+          taskTitle: string;
+          taskDescription: string;
+          businessContext: string;
+          successCriteria: unknown;
+          expectedCalculations: unknown;
+          expectedInsights: unknown;
+          scenarioRequirements: unknown;
+          dataElements: unknown;
+          configId: string;
+          modelId: string;
+        }> = [];
+        let domains: string[] = [];
+        let tiers: string[] = [];
 
-        logger.info('experiment', `Creating experiment: ${validated.name}`, {
-          experimentId,
-          totalTrials,
-          domains: validated.domains,
-          tiers: validated.tiers,
-          models: validated.models,
-        });
+        if (isScenarioMode) {
+          // Fetch full scenarios from database
+          const dbRecords = await prisma.mAACExperimentScenario.findMany({
+            where: {
+              scenarioId: { in: validated.scenarioIds },
+            },
+          });
+
+          if (dbRecords.length === 0) {
+            return reply.code(400).send({
+              error: 'No scenarios found',
+              message: 'None of the provided scenario IDs were found in the database',
+            });
+          }
+
+          scenarioRecords = dbRecords as typeof scenarioRecords;
+          // Each scenario runs once per model per tool config
+          totalTrials =
+            scenarioRecords.length * validated.models.length * validated.toolConfigs.length;
+          // Extract unique domains and tiers from scenarios
+          domains = [...new Set(scenarioRecords.map((s) => s.domain))];
+          tiers = [...new Set(scenarioRecords.map((s) => s.tier))];
+
+          logger.info('experiment', `Creating experiment (scenario mode): ${validated.name}`, {
+            experimentId,
+            totalTrials,
+            scenarioCount: scenarioRecords.length,
+            domains,
+            tiers,
+            models: validated.models,
+          });
+        } else {
+          // Matrix mode - existing logic
+          domains = validated.domains || [];
+          tiers = validated.tiers || [];
+          const repetitions = validated.repetitionsPerDomainTier || 1;
+          totalTrials =
+            domains.length * tiers.length * repetitions * validated.models.length * validated.toolConfigs.length;
+
+          logger.info('experiment', `Creating experiment (matrix mode): ${validated.name}`, {
+            experimentId,
+            totalTrials,
+            domains,
+            tiers,
+            models: validated.models,
+          });
+        }
+
         fastify.log.info(`Creating experiment ${experimentId} with ${totalTrials} trials`);
 
         // Save experiment metadata to database
@@ -161,11 +213,11 @@ export async function experimentRoutes(
             name: validated.name,
             description: validated.description || '',
             status: 'pending',
-            domains: validated.domains,
-            tiers: validated.tiers,
+            domains: domains as Domain[],
+            tiers: tiers as Tier[],
             models: validated.models,
             toolConfigs: validated.toolConfigs, // Store as JSON
-            repetitionsPerDomainTier: validated.repetitionsPerDomainTier,
+            repetitionsPerDomainTier: validated.repetitionsPerDomainTier || 1,
             parallelism: validated.parallelism || 10,
             timeout: validated.timeout || 60000,
             totalTrials,
@@ -180,44 +232,73 @@ export async function experimentRoutes(
           data: { status: 'running', startedAt: new Date() },
         });
 
-        // Start experiment
-        const result = await orchestrator.runExperiment({
-          experimentId,
-          name: validated.name,
-          description: validated.description || '',
-          domains: validated.domains,
-          tiers: validated.tiers,
-          repetitionsPerDomainTier: validated.repetitionsPerDomainTier,
-          models: validated.models,
-          toolConfigs: validated.toolConfigs.map((tc) => {
-            // Map from API schema to ToolConfiguration interface
-            const apiConfig = tc.toolConfiguration || {};
-            return {
+        // Build tool configs for orchestrator
+        const toolConfigs = validated.toolConfigs.map((tc) => {
+          const apiConfig = tc.toolConfiguration || {};
+          return {
+            configId: tc.configId,
+            name: tc.name,
+            description: tc.description || '',
+            toolConfiguration: {
+              memoryAccess: apiConfig.enableMemoryStore || apiConfig.enableMemoryQuery || false,
+              externalSearch: false,
+              structuredReasoning: apiConfig.enableThinkTool || false,
               configId: tc.configId,
-              name: tc.name,
-              description: tc.description || '',
-              toolConfiguration: {
-                // Required properties
-                memoryAccess: apiConfig.enableMemoryStore || apiConfig.enableMemoryQuery || false,
-                externalSearch: false,
-                structuredReasoning: apiConfig.enableThinkTool || false,
-                configId: tc.configId,
-                // Optional engine flags
-                goalEngine: apiConfig.enableGoalEngine,
-                planningEngine: apiConfig.enablePlanningEngine,
-                validationEngine: apiConfig.enableValidationEngine,
-                clarificationEngine: apiConfig.enableClarificationEngine,
-                reflectionEngine: apiConfig.enableReflectionEngine,
-                evaluationEngine: apiConfig.enableEvaluationEngine,
-                // Memory subsystems
-                memoryStore: apiConfig.enableMemoryStore,
-              },
-              scenarioCount: 0,
-            };
-          }),
-          parallelism: validated.parallelism || 10,
-          timeout: validated.timeout || 60000,
+              goalEngine: apiConfig.enableGoalEngine,
+              planningEngine: apiConfig.enablePlanningEngine,
+              validationEngine: apiConfig.enableValidationEngine,
+              clarificationEngine: apiConfig.enableClarificationEngine,
+              reflectionEngine: apiConfig.enableReflectionEngine,
+              evaluationEngine: apiConfig.enableEvaluationEngine,
+              memoryStore: apiConfig.enableMemoryStore,
+            },
+            scenarioCount: 0,
+          };
         });
+
+        // Start experiment
+        let result;
+        if (isScenarioMode && scenarioRecords.length > 0) {
+          // For scenario mode, pass full scenario data
+          result = await orchestrator.runExperimentWithScenarios({
+            experimentId,
+            name: validated.name,
+            description: validated.description || '',
+            scenarios: scenarioRecords.map((s) => ({
+              scenarioId: s.scenarioId,
+              domain: s.domain as Domain,
+              tier: s.tier as Tier,
+              repetition: s.repetition,
+              taskTitle: s.taskTitle,
+              taskDescription: s.taskDescription,
+              businessContext: s.businessContext,
+              successCriteria: s.successCriteria as SuccessCriterion[],
+              expectedCalculations: s.expectedCalculations as string[],
+              expectedInsights: s.expectedInsights as string[],
+              scenarioRequirements: s.scenarioRequirements as string[],
+              dataElements: s.dataElements as string[] | undefined,
+              configId: s.configId,
+            })),
+            models: validated.models,
+            toolConfigs,
+            parallelism: validated.parallelism || 10,
+            timeout: validated.timeout || 60000,
+          });
+        } else {
+          // Matrix mode - existing logic
+          result = await orchestrator.runExperiment({
+            experimentId,
+            name: validated.name,
+            description: validated.description || '',
+            domains: domains as Domain[],
+            tiers: tiers as Tier[],
+            repetitionsPerDomainTier: validated.repetitionsPerDomainTier || 1,
+            models: validated.models,
+            toolConfigs,
+            parallelism: validated.parallelism || 10,
+            timeout: validated.timeout || 60000,
+          });
+        }
 
         return reply.code(201).send(result);
       } catch (error) {
@@ -443,6 +524,108 @@ export async function experimentRoutes(
           experimentId: id,
         });
       }
+    },
+  );
+
+  // ==========================================================================
+  // STREAM EXPERIMENT PROGRESS (SSE)
+  // ==========================================================================
+
+  /**
+   * GET /experiments/:id/stream
+   * Server-Sent Events stream for real-time experiment progress
+   */
+  fastify.get<{ Params: { id: string } }>(
+    '/experiments/:id/stream',
+    {
+      schema: {
+        params: {
+          type: 'object',
+          required: ['id'],
+          properties: {
+            id: { type: 'string' },
+          },
+        },
+      },
+    },
+    async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+      const { id } = request.params;
+
+      // Set up SSE headers
+      reply.raw.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+      });
+
+      const sendEvent = (type: string, data: Record<string, unknown>) => {
+        reply.raw.write(`data: ${JSON.stringify({ type, ...data })}\n\n`);
+      };
+
+      let lastCompleted = 0;
+      let experimentDone = false;
+
+      // Poll for progress updates
+      const pollInterval = setInterval(async () => {
+        try {
+          const experiment = await prisma.experiment.findUnique({
+            where: { experimentId: id },
+          });
+
+          if (!experiment) {
+            sendEvent('error', { message: 'Experiment not found' });
+            clearInterval(pollInterval);
+            reply.raw.end();
+            return;
+          }
+
+          // Send progress update if there are new completed trials
+          if (experiment.completedTrials > lastCompleted) {
+            sendEvent('trial_complete', {
+              completedTrials: experiment.completedTrials,
+              totalTrials: experiment.totalTrials,
+              failedTrials: experiment.failedTrials,
+            });
+            lastCompleted = experiment.completedTrials;
+          }
+
+          // Check if experiment is done
+          if (
+            experiment.status === 'completed' ||
+            experiment.status === 'failed' ||
+            experiment.status === 'stopped'
+          ) {
+            if (!experimentDone) {
+              experimentDone = true;
+              if (experiment.status === 'completed') {
+                sendEvent('experiment_complete', {
+                  experimentId: id,
+                  completedTrials: experiment.completedTrials,
+                  failedTrials: experiment.failedTrials,
+                });
+              } else {
+                sendEvent('error', {
+                  message: `Experiment ${experiment.status}`,
+                  status: experiment.status,
+                });
+              }
+              clearInterval(pollInterval);
+              reply.raw.end();
+            }
+          }
+        } catch (error) {
+          console.error('SSE poll error:', error);
+          sendEvent('error', { message: 'Failed to fetch experiment status' });
+          clearInterval(pollInterval);
+          reply.raw.end();
+        }
+      }, 1000); // Poll every second
+
+      // Clean up on client disconnect
+      request.raw.on('close', () => {
+        clearInterval(pollInterval);
+      });
     },
   );
 

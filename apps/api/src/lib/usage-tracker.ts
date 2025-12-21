@@ -4,10 +4,7 @@
  * Tracks LLM token usage and deducts credits from user balance
  */
 
-import { PrismaClient } from '@prisma/client';
 import { calculateCreditCost, getTierBaseFee } from './charge-matrix';
-
-const prisma = new PrismaClient();
 
 export interface UsageRecord {
   experimentId: string;

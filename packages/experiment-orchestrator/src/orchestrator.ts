@@ -23,6 +23,7 @@ import type {
   CognitiveSystem,
   CognitiveResponse,
   ToolConfiguration,
+  ToolConfigBlock,
 } from '@maac/types';
 
 // ============================================================================
@@ -537,6 +538,104 @@ export class AdvancedExperimentOrchestrator {
   }
 
   /**
+   * Run experiment with pre-generated scenarios from the database
+   * This method uses existing MAACExperimentScenario records instead of generating new ones
+   */
+  async runExperimentWithScenarios(config: {
+    experimentId: string;
+    name: string;
+    description: string;
+    scenarios: Array<{
+      scenarioId: string;
+      domain: Domain;
+      tier: Tier;
+      repetition?: number;
+      taskTitle: string;
+      taskDescription: string;
+      businessContext: string;
+      successCriteria: SuccessCriterion[];
+      expectedCalculations?: string[];
+      expectedInsights?: string[];
+      scenarioRequirements?: string[];
+      dataElements?: string[];
+      configId: string;
+      modelId?: ModelId;
+    }>;
+    models: ModelId[];
+    toolConfigs: ToolConfigBlock[];
+    parallelism?: number;
+    timeout?: number;
+  }): Promise<ExperimentRunResult> {
+    this.log(`Starting experiment with pre-generated scenarios: ${config.name}`);
+    this._isRunning = true;
+
+    try {
+      // Expand scenarios across all models and tool configs
+      // Each scenario runs once per model per toolConfig
+      const scenarios: Scenario[] = [];
+      let scenarioIndex = 0;
+
+      for (const inputScenario of config.scenarios) {
+        for (const modelId of config.models) {
+          for (const toolConfig of config.toolConfigs) {
+            scenarios.push({
+              scenarioId: `${inputScenario.scenarioId}-${modelId}-${toolConfig.configId.slice(0, 6)}-${scenarioIndex}`,
+              experimentId: config.experimentId,
+              domain: inputScenario.domain,
+              tier: inputScenario.tier,
+              repetition: inputScenario.repetition ?? 0,
+              taskTitle: inputScenario.taskTitle,
+              taskDescription: inputScenario.taskDescription,
+              businessContext: inputScenario.businessContext,
+              successCriteria: inputScenario.successCriteria,
+              expectedCalculations: inputScenario.expectedCalculations ?? [],
+              expectedInsights: inputScenario.expectedInsights ?? [],
+              scenarioRequirements: inputScenario.scenarioRequirements ?? [],
+              dataElements: inputScenario.dataElements,
+              configId: toolConfig.configId,
+              modelId: modelId,
+            });
+            scenarioIndex++;
+          }
+        }
+      }
+
+      this.log(`Expanded ${config.scenarios.length} input scenarios to ${scenarios.length} trials`);
+
+      // Store expanded scenarios in database
+      await this.storeScenarios(scenarios);
+      this.log(`Stored ${scenarios.length} scenarios in database`);
+
+      // Queue all trials
+      const experimentConfig: ExperimentConfig = {
+        experimentId: config.experimentId,
+        name: config.name,
+        description: config.description,
+        domains: [...new Set(scenarios.map((s) => s.domain))],
+        tiers: [...new Set(scenarios.map((s) => s.tier))],
+        repetitionsPerDomainTier: 1,
+        models: config.models,
+        toolConfigs: config.toolConfigs,
+        parallelism: config.parallelism || 10,
+        timeout: config.timeout || 60000,
+      };
+
+      const jobs = await this.queueTrials(experimentConfig, scenarios);
+      this.log(`Queued ${jobs.length} trials`);
+
+      return {
+        experimentId: config.experimentId,
+        totalTrials: scenarios.length,
+        status: 'queued',
+        queuedAt: new Date(),
+      };
+    } catch (error) {
+      this._isRunning = false;
+      throw error;
+    }
+  }
+
+  /**
    * Get experiment status
    */
   async getExperimentStatus(experimentId: string): Promise<ExperimentStatus> {
@@ -1015,35 +1114,60 @@ export class AdvancedExperimentOrchestrator {
 // VALIDATION SCHEMAS
 // ============================================================================
 
-export const CreateExperimentSchema = z.object({
-  name: z.string().min(1).max(255),
-  description: z.string().max(2000).optional(),
-  domains: z.array(z.enum(['analytical', 'planning', 'communication', 'problem_solving'])).min(1),
-  tiers: z.array(z.enum(['simple', 'moderate', 'complex'])).min(1),
-  repetitionsPerDomainTier: z.number().int().min(1).max(200),
-  models: z.array(z.enum(['deepseek_v3', 'sonnet_37', 'gpt_4o', 'llama_maverick'])).min(1),
-  toolConfigs: z
-    .array(
-      z.object({
-        configId: z.string(),
-        name: z.string(),
-        description: z.string().optional(),
-        toolConfiguration: z.object({
-          enableGoalEngine: z.boolean().optional(),
-          enablePlanningEngine: z.boolean().optional(),
-          enableClarificationEngine: z.boolean().optional(),
-          enableValidationEngine: z.boolean().optional(),
-          enableEvaluationEngine: z.boolean().optional(),
-          enableReflectionEngine: z.boolean().optional(),
-          enableMemoryStore: z.boolean().optional(),
-          enableMemoryQuery: z.boolean().optional(),
-          enableThinkTool: z.boolean().optional(),
+/**
+ * Create Experiment Schema supports two modes:
+ * 1. scenarioIds mode: Use existing MAACExperimentScenario records
+ * 2. matrix mode: Generate trials from domain/tier combinations
+ */
+export const CreateExperimentSchema = z
+  .object({
+    name: z.string().min(1).max(255),
+    description: z.string().max(2000).optional(),
+    // Mode 1: Use pre-generated scenarios
+    scenarioIds: z.array(z.string().uuid()).optional(),
+    // Mode 2: Domain/Tier matrix
+    domains: z
+      .array(z.enum(['analytical', 'planning', 'communication', 'problem_solving']))
+      .optional(),
+    tiers: z.array(z.enum(['simple', 'moderate', 'complex'])).optional(),
+    repetitionsPerDomainTier: z.number().int().min(1).max(200).optional(),
+    // Common fields
+    models: z.array(z.enum(['deepseek_v3', 'sonnet_37', 'gpt_4o', 'llama_maverick'])).min(1),
+    toolConfigs: z
+      .array(
+        z.object({
+          configId: z.string(),
+          name: z.string(),
+          description: z.string().optional(),
+          toolConfiguration: z.object({
+            enableGoalEngine: z.boolean().optional(),
+            enablePlanningEngine: z.boolean().optional(),
+            enableClarificationEngine: z.boolean().optional(),
+            enableValidationEngine: z.boolean().optional(),
+            enableEvaluationEngine: z.boolean().optional(),
+            enableReflectionEngine: z.boolean().optional(),
+            enableMemoryStore: z.boolean().optional(),
+            enableMemoryQuery: z.boolean().optional(),
+            enableThinkTool: z.boolean().optional(),
+          }),
         }),
-      }),
-    )
-    .min(1),
-  parallelism: z.number().int().min(1).max(100).optional(),
-  timeout: z.number().int().min(1000).optional(),
-});
+      )
+      .min(1),
+    parallelism: z.number().int().min(1).max(100).optional(),
+    timeout: z.number().int().min(1000).optional(),
+  })
+  .refine(
+    (data) => {
+      // Either scenarioIds OR (domains AND tiers) must be provided
+      const hasScenarios = data.scenarioIds && data.scenarioIds.length > 0;
+      const hasMatrix =
+        data.domains && data.domains.length > 0 && data.tiers && data.tiers.length > 0;
+      return hasScenarios || hasMatrix;
+    },
+    {
+      message:
+        'Either scenarioIds or both domains and tiers must be provided',
+    },
+  );
 
 export type CreateExperimentInput = z.infer<typeof CreateExperimentSchema>;
