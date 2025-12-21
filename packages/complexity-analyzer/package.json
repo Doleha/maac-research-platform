@@ -1,0 +1,40 @@
+{
+  "name": "@maac/complexity-analyzer",
+  "version": "1.0.0",
+  "description": "Academically-grounded complexity tier validation system based on Wood (1986), Campbell (1988), and Liu & Li (2012) frameworks",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "complexity",
+    "validation",
+    "cognitive-load",
+    "task-complexity",
+    "wood-1986",
+    "campbell-1988",
+    "liu-li-2012",
+    "maac"
+  ],
+  "author": "MAAC Research Platform",
+  "license": "MIT",
+  "dependencies": {
+    "@maac/types": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "typescript": "^5.4.5",
+    "vitest": "^1.5.0",
+    "@vitest/coverage-v8": "^1.5.0"
+  },
+  "peerDependencies": {
+    "@maac/types": "workspace:*"
+  }
+}
