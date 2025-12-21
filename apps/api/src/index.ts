@@ -66,6 +66,40 @@ const prisma = new PrismaClient({
   log: ['error', 'warn'],
 });
 
+// =============================================================================
+// SYNC ENVIRONMENT VARIABLES TO DATABASE
+// =============================================================================
+
+/**
+ * Sync API keys from environment variables to database on startup
+ * This ensures settings are available even after database resets
+ */
+async function syncEnvironmentToDatabase(): Promise<void> {
+  const apiKeys: Record<string, string | undefined> = {
+    deepseek: process.env.DEEPSEEK_API_KEY,
+    openai: process.env.OPENAI_API_KEY,
+    anthropic: process.env.ANTHROPIC_API_KEY,
+    openrouter: process.env.OPENROUTER_API_KEY,
+    grok: process.env.GROK_API_KEY,
+    gemini: process.env.GEMINI_API_KEY,
+  };
+
+  try {
+    for (const [provider, key] of Object.entries(apiKeys)) {
+      if (key && key.trim().length > 0) {
+        await prisma.setting.upsert({
+          where: { key: `api_key_${provider}` },
+          update: { value: key, encrypted: true },
+          create: { key: `api_key_${provider}`, value: key, encrypted: true },
+        });
+        console.log(`   ✓ Synced ${provider} API key to database`);
+      }
+    }
+  } catch (error) {
+    console.warn('   ⚠️  Failed to sync environment variables to database:', error);
+  }
+}
+
 // Initialize LLM provider using Vercel AI SDK
 async function createLLMProvider(): Promise<VercelAIProvider> {
   let model: any;
@@ -476,6 +510,9 @@ async function main() {
   // =============================================================================
   // START SERVER
   // =============================================================================
+
+  // Sync environment variables to database before starting
+  await syncEnvironmentToDatabase();
 
   try {
     await fastify.listen({ port: config.port, host: '0.0.0.0' });
