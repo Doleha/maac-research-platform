@@ -5,6 +5,7 @@ This guide explains how to calibrate and tune the complexity validation system f
 ## Overview
 
 The complexity validation system uses configurable thresholds and weights that can be adjusted based on:
+
 - Domain-specific requirements
 - Expert validation studies
 - Empirical performance data
@@ -54,6 +55,7 @@ export const DEFAULT_COMPLEXITY_CONFIG: ComplexityValidationConfig = {
    - Calculate inter-rater reliability (Cronbach's α > 0.7)
 
 3. **Run Initial Validation**
+
 ```typescript
 import { validateBatch } from '@maac/complexity-analyzer';
 
@@ -66,34 +68,35 @@ const results = await validateBatch(referenceScenarios);
 
 // Analyze mismatches
 const mismatches = results.results.filter(
-  r => r.complexityScore.predictedTier !== r.scenarioId.split('-')[1]
+  (r) => r.complexityScore.predictedTier !== r.scenarioId.split('-')[1],
 );
 
 console.log(`Accuracy: ${(1 - mismatches.length / 30) * 100}%`);
 ```
 
 4. **Calculate Baseline Metrics**
+
 ```typescript
 // Collect scores by tier
 const scoresByTier = {
   simple: results.results
-    .filter(r => r.scenarioId.includes('simple'))
-    .map(r => r.complexityScore.overallScore),
+    .filter((r) => r.scenarioId.includes('simple'))
+    .map((r) => r.complexityScore.overallScore),
   moderate: results.results
-    .filter(r => r.scenarioId.includes('moderate'))
-    .map(r => r.complexityScore.overallScore),
+    .filter((r) => r.scenarioId.includes('moderate'))
+    .map((r) => r.complexityScore.overallScore),
   complex: results.results
-    .filter(r => r.scenarioId.includes('complex'))
-    .map(r => r.complexityScore.overallScore),
+    .filter((r) => r.scenarioId.includes('complex'))
+    .map((r) => r.complexityScore.overallScore),
 };
 
 // Calculate statistics
 for (const [tier, scores] of Object.entries(scoresByTier)) {
   const mean = scores.reduce((a, b) => a + b) / scores.length;
   const stdDev = Math.sqrt(
-    scores.reduce((sum, score) => sum + Math.pow(score - mean, 2), 0) / scores.length
+    scores.reduce((sum, score) => sum + Math.pow(score - mean, 2), 0) / scores.length,
   );
-  
+
   console.log(`${tier}: mean=${mean.toFixed(2)}, stdDev=${stdDev.toFixed(2)}`);
   console.log(`  Suggested range: ${(mean - stdDev).toFixed(2)} - ${(mean + stdDev).toFixed(2)}`);
 }
@@ -108,17 +111,17 @@ Based on baseline metrics, adjust tier thresholds:
 const calibratedConfig = {
   ...DEFAULT_COMPLEXITY_CONFIG,
   tierThresholds: {
-    simple: { 
-      min: 0, 
-      max: 14  // Mean + 1 std dev
+    simple: {
+      min: 0,
+      max: 14, // Mean + 1 std dev
     },
-    moderate: { 
-      min: 14, 
-      max: 32  // Based on moderate tier statistics
+    moderate: {
+      min: 14,
+      max: 32, // Based on moderate tier statistics
     },
-    complex: { 
-      min: 32, 
-      max: Infinity 
+    complex: {
+      min: 32,
+      max: Infinity,
     },
   },
 };
@@ -129,21 +132,18 @@ const calibratedConfig = {
 Use gradient descent or manual tuning to optimize weights:
 
 ```typescript
-function evaluateWeights(
-  weights: ScoringWeights,
-  scenarios: ReferenceScenario[]
-): number {
+function evaluateWeights(weights: ScoringWeights, scenarios: ReferenceScenario[]): number {
   let correctPredictions = 0;
-  
+
   for (const scenario of scenarios) {
     const score = calculateComplexityWithWeights(scenario, weights);
     const predictedTier = scoreToPredictedTier(score);
-    
+
     if (predictedTier === scenario.expertTier) {
       correctPredictions++;
     }
   }
-  
+
   return correctPredictions / scenarios.length;
 }
 
@@ -167,9 +167,9 @@ for (const woodActs of weightRanges.woodDistinctActs) {
         woodCoordinative: woodCoord,
         elementInteractivity: elemInt,
       };
-      
+
       const accuracy = evaluateWeights(testWeights, referenceScenarios);
-      
+
       if (accuracy > bestAccuracy) {
         bestAccuracy = accuracy;
         bestWeights = testWeights;
@@ -199,9 +199,9 @@ const validationResults = await validateBatch(validationSet, {
   config: calibratedConfig,
 });
 
-const accuracy = validationResults.results.filter(
-  r => r.complexityScore.tierMatch
-).length / validationSet.length;
+const accuracy =
+  validationResults.results.filter((r) => r.complexityScore.tierMatch).length /
+  validationSet.length;
 
 console.log(`Cross-validation accuracy: ${accuracy * 100}%`);
 
@@ -221,7 +221,7 @@ const domainConfigs: Record<Domain, ComplexityValidationConfig> = {
     ...DEFAULT_COMPLEXITY_CONFIG,
     weights: {
       ...DEFAULT_COMPLEXITY_CONFIG.weights,
-      woodInformationCues: 2.0,  // Higher weight for data-heavy domain
+      woodInformationCues: 2.0, // Higher weight for data-heavy domain
       liuLiVariety: 1.5,
     },
   },
@@ -229,7 +229,7 @@ const domainConfigs: Record<Domain, ComplexityValidationConfig> = {
     ...DEFAULT_COMPLEXITY_CONFIG,
     weights: {
       ...DEFAULT_COMPLEXITY_CONFIG.weights,
-      woodCoordinative: 3.5,  // Planning requires coordination
+      woodCoordinative: 3.5, // Planning requires coordination
       liuLiAmbiguity: 3.0,
     },
   },
@@ -237,7 +237,7 @@ const domainConfigs: Record<Domain, ComplexityValidationConfig> = {
     ...DEFAULT_COMPLEXITY_CONFIG,
     weights: {
       ...DEFAULT_COMPLEXITY_CONFIG.weights,
-      campbellAttribute: 3.5,  // Emphasis on Campbell attributes
+      campbellAttribute: 3.5, // Emphasis on Campbell attributes
       liuLiAmbiguity: 3.0,
     },
   },
@@ -245,7 +245,7 @@ const domainConfigs: Record<Domain, ComplexityValidationConfig> = {
     ...DEFAULT_COMPLEXITY_CONFIG,
     weights: {
       ...DEFAULT_COMPLEXITY_CONFIG.weights,
-      elementInteractivity: 4.5,  // Complex problem-solving
+      elementInteractivity: 4.5, // Complex problem-solving
       woodCoordinative: 3.5,
     },
   },
@@ -261,24 +261,22 @@ const result = await validateScenario(scenario, { config });
 ### Confusion Matrix
 
 ```typescript
-async function generateConfusionMatrix(
-  scenarios: ReferenceScenario[]
-): Promise<number[][]> {
+async function generateConfusionMatrix(scenarios: ReferenceScenario[]): Promise<number[][]> {
   const matrix = [
-    [0, 0, 0],  // simple predictions
-    [0, 0, 0],  // moderate predictions
-    [0, 0, 0],  // complex predictions
+    [0, 0, 0], // simple predictions
+    [0, 0, 0], // moderate predictions
+    [0, 0, 0], // complex predictions
   ];
-  
+
   const tierIndex = { simple: 0, moderate: 1, complex: 2 };
-  
+
   for (const scenario of scenarios) {
     const result = await validateScenario(scenario);
     const actualIdx = tierIndex[scenario.intendedTier];
     const predictedIdx = tierIndex[result.complexityScore.predictedTier];
     matrix[predictedIdx][actualIdx]++;
   }
-  
+
   return matrix;
 }
 
@@ -295,21 +293,19 @@ async function generateConfusionMatrix(
 ```typescript
 function calculateMetrics(matrix: number[][]) {
   const tiers = ['simple', 'moderate', 'complex'];
-  
+
   for (let i = 0; i < 3; i++) {
     const truePositives = matrix[i][i];
-    const falsePositives = matrix[i].reduce((sum, val, j) => 
-      j !== i ? sum + val : sum, 0
-    );
-    const falseNegatives = matrix.reduce((sum, row, j) => 
-      j !== i ? sum + row[i] : sum, 0
-    );
-    
+    const falsePositives = matrix[i].reduce((sum, val, j) => (j !== i ? sum + val : sum), 0);
+    const falseNegatives = matrix.reduce((sum, row, j) => (j !== i ? sum + row[i] : sum), 0);
+
     const precision = truePositives / (truePositives + falsePositives);
     const recall = truePositives / (truePositives + falseNegatives);
-    const f1 = 2 * (precision * recall) / (precision + recall);
-    
-    console.log(`${tiers[i]}: P=${(precision*100).toFixed(1)}%, R=${(recall*100).toFixed(1)}%, F1=${f1.toFixed(3)}`);
+    const f1 = (2 * (precision * recall)) / (precision + recall);
+
+    console.log(
+      `${tiers[i]}: P=${(precision * 100).toFixed(1)}%, R=${(recall * 100).toFixed(1)}%, F1=${f1.toFixed(3)}`,
+    );
   }
 }
 ```
@@ -337,23 +333,24 @@ async function recordFeedback(feedback: ExpertFeedback) {
 async function recalibrate() {
   const feedback = await prisma.complexityFeedback.findMany({
     where: {
-      timestamp: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }  // Last 30 days
+      timestamp: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) }, // Last 30 days
     },
   });
-  
+
   if (feedback.length < 50) {
     console.log('Insufficient feedback for recalibration');
     return;
   }
-  
+
   // Run calibration algorithm
   const newConfig = await calibrateFromFeedback(feedback);
-  
+
   // Validate improvement
   const improvement = await validateCalibrationImprovement(newConfig);
-  
-  if (improvement > 0.02) {  // 2% improvement
-    console.log(`✓ New calibration improves accuracy by ${(improvement*100).toFixed(1)}%`);
+
+  if (improvement > 0.02) {
+    // 2% improvement
+    console.log(`✓ New calibration improves accuracy by ${(improvement * 100).toFixed(1)}%`);
     saveConfiguration(newConfig);
   }
 }
@@ -366,29 +363,25 @@ async function recalibrate() {
 ```typescript
 function calculateCronbachAlpha(ratings: number[][]): number {
   // ratings[i][j] = rating from expert i for scenario j
-  const k = ratings.length;  // number of raters
-  const n = ratings[0].length;  // number of scenarios
-  
+  const k = ratings.length; // number of raters
+  const n = ratings[0].length; // number of scenarios
+
   // Calculate variance for each rater
-  const raterVariances = ratings.map(raterScores => {
+  const raterVariances = ratings.map((raterScores) => {
     const mean = raterScores.reduce((a, b) => a + b) / n;
-    return raterScores.reduce((sum, score) => 
-      sum + Math.pow(score - mean, 2), 0
-    ) / n;
+    return raterScores.reduce((sum, score) => sum + Math.pow(score - mean, 2), 0) / n;
   });
-  
+
   // Calculate variance of sum scores
   const sumScores = Array.from({ length: n }, (_, j) =>
-    ratings.reduce((sum, rater) => sum + rater[j], 0)
+    ratings.reduce((sum, rater) => sum + rater[j], 0),
   );
   const sumMean = sumScores.reduce((a, b) => a + b) / n;
-  const sumVariance = sumScores.reduce((sum, score) =>
-    sum + Math.pow(score - sumMean, 2), 0
-  ) / n;
-  
+  const sumVariance = sumScores.reduce((sum, score) => sum + Math.pow(score - sumMean, 2), 0) / n;
+
   // Cronbach's α
   const alpha = (k / (k - 1)) * (1 - raterVariances.reduce((a, b) => a + b) / sumVariance);
-  
+
   return alpha;
 }
 
@@ -400,27 +393,22 @@ function calculateCronbachAlpha(ratings: number[][]): number {
 ### Cohen's Kappa (Agreement)
 
 ```typescript
-function calculateCohenKappa(
-  predicted: Tier[],
-  actual: Tier[]
-): number {
+function calculateCohenKappa(predicted: Tier[], actual: Tier[]): number {
   const tiers = ['simple', 'moderate', 'complex'];
   const n = predicted.length;
-  
+
   // Observed agreement
-  const observedAgreement = predicted.filter(
-    (p, i) => p === actual[i]
-  ).length / n;
-  
+  const observedAgreement = predicted.filter((p, i) => p === actual[i]).length / n;
+
   // Expected agreement by chance
   const expectedAgreement = tiers.reduce((sum, tier) => {
-    const pPredicted = predicted.filter(t => t === tier).length / n;
-    const pActual = actual.filter(t => t === tier).length / n;
+    const pPredicted = predicted.filter((t) => t === tier).length / n;
+    const pActual = actual.filter((t) => t === tier).length / n;
     return sum + pPredicted * pActual;
   }, 0);
-  
+
   const kappa = (observedAgreement - expectedAgreement) / (1 - expectedAgreement);
-  
+
   return kappa;
 }
 
@@ -450,38 +438,38 @@ import { ReferenceScenarios } from './reference-scenarios';
 
 async function runCalibration() {
   console.log('🔬 Starting complexity validation calibration...\n');
-  
+
   // Step 1: Baseline
   console.log('Step 1: Baseline validation');
   const baseline = await validateBatch(ReferenceScenarios);
   const baselineAccuracy = baseline.stats.successRate / 100;
   console.log(`Baseline accuracy: ${(baselineAccuracy * 100).toFixed(1)}%\n`);
-  
+
   // Step 2: Optimize weights
   console.log('Step 2: Optimizing weights...');
   const optimizedWeights = await optimizeWeights(ReferenceScenarios);
   console.log('Optimal weights:', optimizedWeights, '\n');
-  
+
   // Step 3: Test optimized config
   console.log('Step 3: Testing optimized configuration');
   const optimizedConfig = {
     ...DEFAULT_COMPLEXITY_CONFIG,
     weights: optimizedWeights,
   };
-  
+
   const optimized = await validateBatch(ReferenceScenarios, {
     config: optimizedConfig,
   });
-  
+
   const optimizedAccuracy = optimized.stats.successRate / 100;
   console.log(`Optimized accuracy: ${(optimizedAccuracy * 100).toFixed(1)}%`);
   console.log(`Improvement: ${((optimizedAccuracy - baselineAccuracy) * 100).toFixed(1)}%\n`);
-  
+
   // Step 4: Cross-validation
   console.log('Step 4: Cross-validation');
   const cvAccuracy = await crossValidate(ReferenceScenarios, optimizedConfig);
   console.log(`CV accuracy: ${(cvAccuracy * 100).toFixed(1)}%\n`);
-  
+
   if (cvAccuracy >= 0.85) {
     console.log('✅ Calibration successful!');
     saveConfiguration(optimizedConfig);
@@ -506,6 +494,7 @@ runCalibration().catch(console.error);
 ### High False Positives
 
 Scenarios incorrectly classified as more complex:
+
 - Reduce `elementInteractivity` weight
 - Increase tier threshold maximums
 - Check for overly detailed scenarios
@@ -513,6 +502,7 @@ Scenarios incorrectly classified as more complex:
 ### High False Negatives
 
 Scenarios incorrectly classified as simpler:
+
 - Increase framework weights (especially `woodCoordinative`)
 - Decrease tier threshold maximums
 - Ensure scenarios include all complexity markers
@@ -529,18 +519,21 @@ Document all calibration results:
 **Dataset**: 90 expert-reviewed scenarios (30 per tier)
 
 ### Results
+
 - Baseline Accuracy: 82.5%
 - Optimized Accuracy: 89.2%
 - Cross-Validation: 87.8%
 - Inter-Rater Reliability (α): 0.83
 
 ### Optimized Configuration
+
 - Tier Thresholds: simple: 0-14, moderate: 14-32, complex: 32+
 - Key Weight Adjustments:
   - elementInteractivity: 4.0 → 4.5
   - woodCoordinative: 3.0 → 3.5
 
 ### Recommendations
+
 - Deploy optimized configuration to production
 - Monitor for 30 days
 - Recalibrate quarterly with new feedback
@@ -549,6 +542,7 @@ Document all calibration results:
 ## Support
 
 For calibration assistance:
+
 - Review framework document: `context/complexity-tier-robustness-framwork.md`
 - Consult academic references (Wood 1986, Campbell 1988, Liu & Li 2012)
 - Contact domain experts for scenario reviews
