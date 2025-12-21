@@ -63,7 +63,8 @@ describe('Wood Analyzer', () => {
 
     it('should detect high coordinative complexity with many dependencies', () => {
       const input = {
-        taskDescription: 'Analyze multi-regional performance with budget variance and market benchmarking.',
+        taskDescription:
+          'Analyze multi-regional performance with budget variance and market benchmarking.',
         calculationSteps: [
           'Calculate region A profit',
           'Calculate region B profit',
@@ -78,7 +79,11 @@ describe('Wood Analyzer', () => {
           { name: 'budget', type: 'number' },
           { name: 'marketFactor', type: 'number' },
           { name: 'weight', type: 'number' },
-          { name: 'result', type: 'number', dependsOn: ['regionA', 'regionB', 'budget', 'marketFactor', 'weight'] },
+          {
+            name: 'result',
+            type: 'number',
+            dependsOn: ['regionA', 'regionB', 'budget', 'marketFactor', 'weight'],
+          },
         ],
         relationships: [
           { from: 'regionA', to: 'result', type: 'contributes' },
@@ -142,7 +147,7 @@ describe('Wood Analyzer', () => {
       };
 
       const score = calculateWoodScore(metrics);
-      
+
       expect(score).toBeLessThan(15);
       expect(score).toBeGreaterThan(0);
     });
@@ -167,7 +172,7 @@ describe('Wood Analyzer', () => {
       };
 
       const score = calculateWoodScore(metrics);
-      
+
       expect(score).toBeGreaterThanOrEqual(10);
       expect(score).toBeLessThan(30);
     });
@@ -192,7 +197,7 @@ describe('Wood Analyzer', () => {
       };
 
       const score = calculateWoodScore(metrics);
-      
+
       expect(score).toBeGreaterThanOrEqual(25);
     });
   });

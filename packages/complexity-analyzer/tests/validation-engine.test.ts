@@ -257,7 +257,12 @@ describe('Validation Engine', () => {
       const scenarios = [
         { id: '1', intendedTier: 'simple' as const, content: 'Task 1', domain: 'analytical' },
         { id: '2', intendedTier: 'simple' as const, content: 'Task 2', domain: 'planning' },
-        { id: '3', intendedTier: 'moderate' as const, content: 'Task 3 with more steps', domain: 'communication' },
+        {
+          id: '3',
+          intendedTier: 'moderate' as const,
+          content: 'Task 3 with more steps',
+          domain: 'communication',
+        },
       ];
 
       const result = await validateBatch(scenarios);

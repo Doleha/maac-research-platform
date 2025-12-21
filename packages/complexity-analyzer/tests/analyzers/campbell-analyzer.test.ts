@@ -5,7 +5,11 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { analyzeCampbellAttributes, calculateCampbellScore, getCampbellTypeDescription } from '../../src/analyzers/campbell-analyzer';
+import {
+  analyzeCampbellAttributes,
+  calculateCampbellScore,
+  getCampbellTypeDescription,
+} from '../../src/analyzers/campbell-analyzer';
 
 describe('Campbell Analyzer', () => {
   describe('analyzeCampbellAttributes', () => {
@@ -77,11 +81,7 @@ describe('Campbell Analyzer', () => {
           You must make trade-offs between competing priorities.
           These goals are mutually exclusive in some aspects.
         `,
-        successCriteria: [
-          'Optimize profit',
-          'Maintain quality',
-          'Reduce environmental impact',
-        ],
+        successCriteria: ['Optimize profit', 'Maintain quality', 'Reduce environmental impact'],
         solutionPaths: [],
       };
 

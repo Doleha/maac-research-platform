@@ -304,9 +304,24 @@ describe('Integration: Complete Validation Pipeline', () => {
 
     it('should provide accurate batch statistics', async () => {
       const scenarios = [
-        { id: '1', intendedTier: 'simple' as const, content: 'Simple task 1', domain: 'analytical' },
-        { id: '2', intendedTier: 'simple' as const, content: 'Simple task 2', domain: 'analytical' },
-        { id: '3', intendedTier: 'simple' as const, content: 'Simple task 3', domain: 'analytical' },
+        {
+          id: '1',
+          intendedTier: 'simple' as const,
+          content: 'Simple task 1',
+          domain: 'analytical',
+        },
+        {
+          id: '2',
+          intendedTier: 'simple' as const,
+          content: 'Simple task 2',
+          domain: 'analytical',
+        },
+        {
+          id: '3',
+          intendedTier: 'simple' as const,
+          content: 'Simple task 3',
+          domain: 'analytical',
+        },
       ];
 
       const result = await validateBatch(scenarios);
@@ -314,7 +329,7 @@ describe('Integration: Complete Validation Pipeline', () => {
       expect(result.stats.totalScenarios).toBe(3);
       expect(result.stats.validCount + result.stats.invalidCount).toBe(3);
       expect(result.stats.successRate).toBe(
-        (result.stats.validCount / result.stats.totalScenarios) * 100
+        (result.stats.validCount / result.stats.totalScenarios) * 100,
       );
     });
   });
@@ -333,7 +348,7 @@ describe('Integration: Complete Validation Pipeline', () => {
 
       if (!validation.isValid && validation.promptEnhancements) {
         expect(validation.promptEnhancements.length).toBeGreaterThan(0);
-        
+
         // Enhancements should be actionable
         for (const enhancement of validation.promptEnhancements) {
           expect(typeof enhancement).toBe('string');

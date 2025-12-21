@@ -5,7 +5,11 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { calculateCompositeScore, isValidScenario, DEFAULT_WEIGHTS } from '../../src/scoring/composite-scorer';
+import {
+  calculateCompositeScore,
+  isValidScenario,
+  DEFAULT_WEIGHTS,
+} from '../../src/scoring/composite-scorer';
 
 describe('Composite Scorer', () => {
   describe('calculateCompositeScore', () => {

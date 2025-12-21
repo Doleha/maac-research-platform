@@ -5,7 +5,10 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { analyzeElementInteractivity, calculateInteractivityScore } from '../../src/analyzers/interactivity-analyzer';
+import {
+  analyzeElementInteractivity,
+  calculateInteractivityScore,
+} from '../../src/analyzers/interactivity-analyzer';
 
 describe('Element Interactivity Analyzer', () => {
   describe('analyzeElementInteractivity', () => {
@@ -183,7 +186,11 @@ describe('Element Interactivity Analyzer', () => {
       };
 
       const lowRatio = { ...base, interactivityRatio: 0.2, cognitiveLoadLevel: 'low' as const };
-      const midRatio = { ...base, interactivityRatio: 0.5, cognitiveLoadLevel: 'moderate' as const };
+      const midRatio = {
+        ...base,
+        interactivityRatio: 0.5,
+        cognitiveLoadLevel: 'moderate' as const,
+      };
       const highRatio = { ...base, interactivityRatio: 0.8, cognitiveLoadLevel: 'high' as const };
 
       const lowScore = calculateInteractivityScore(lowRatio);
