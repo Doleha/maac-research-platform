@@ -1658,11 +1658,13 @@ export async function scenarioRoutes(
     try {
       // Delete all scenarios first (foreign key constraint)
       const deletedScenarios = await prisma.mAACExperimentScenario.deleteMany({});
-      
+
       // Delete all experiments
       const deletedExperiments = await prisma.mAACExperiment.deleteMany({});
 
-      fastify.log.info(`Deleted ${deletedScenarios.count} scenarios and ${deletedExperiments.count} experiments`);
+      fastify.log.info(
+        `Deleted ${deletedScenarios.count} scenarios and ${deletedExperiments.count} experiments`,
+      );
 
       return reply.send({
         success: true,

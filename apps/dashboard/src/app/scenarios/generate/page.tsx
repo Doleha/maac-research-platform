@@ -81,25 +81,31 @@ export default function GenerateScenariosPage() {
 
   // Handle delete all scenarios
   const handleDeleteAll = async () => {
-    if (!confirm('Are you sure you want to delete ALL scenarios and experiments? This cannot be undone.')) {
+    if (
+      !confirm(
+        'Are you sure you want to delete ALL scenarios and experiments? This cannot be undone.',
+      )
+    ) {
       return;
     }
-    
+
     setDeleting(true);
     setDeleteSuccess(null);
     setError(null);
-    
+
     try {
       const response = await fetch(`${apiUrl}/scenarios/all`, {
         method: 'DELETE',
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to delete scenarios');
       }
-      
+
       const result = await response.json();
-      setDeleteSuccess(`Deleted ${result.deleted.scenarios} scenarios and ${result.deleted.experiments} experiments`);
+      setDeleteSuccess(
+        `Deleted ${result.deleted.scenarios} scenarios and ${result.deleted.experiments} experiments`,
+      );
       setGeneratedScenarios([]);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete scenarios');
