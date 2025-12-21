@@ -39,6 +39,10 @@ export async function experimentRoutes(
   /**
    * POST /experiments
    * Create and start a new experiment
+   * 
+   * Supports two modes:
+   * 1. scenarioIds provided: Uses existing MAACExperimentScenario records
+   * 2. domains/tiers provided: Creates trials based on domain/tier combinations
    */
   fastify.post<{ Body: CreateExperimentInput }>(
     '/experiments',
@@ -48,27 +52,29 @@ export async function experimentRoutes(
           type: 'object',
           required: [
             'name',
-            'domains',
-            'tiers',
-            'repetitionsPerDomainTier',
             'models',
             'toolConfigs',
           ],
           properties: {
             name: { type: 'string', minLength: 1, maxLength: 255 },
             description: { type: 'string', maxLength: 2000 },
+            // Mode 1: Use existing scenarios
+            scenarioIds: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'IDs of existing MAACExperimentScenario records to use',
+            },
+            // Mode 2: Generate trials from domain/tier combinations
             domains: {
               type: 'array',
               items: {
                 type: 'string',
                 enum: ['analytical', 'planning', 'communication', 'problem_solving'],
               },
-              minItems: 1,
             },
             tiers: {
               type: 'array',
               items: { type: 'string', enum: ['simple', 'moderate', 'complex'] },
-              minItems: 1,
             },
             repetitionsPerDomainTier: { type: 'integer', minimum: 1, maximum: 200 },
             models: {

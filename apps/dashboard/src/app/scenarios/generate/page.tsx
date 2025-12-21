@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Wand2, Loader2, CheckCircle, AlertCircle, FileText, Clock, Target } from 'lucide-react';
+import { Wand2, Loader2, CheckCircle, AlertCircle, FileText, Clock, Target, XCircle } from 'lucide-react';
 import { useScenariosState } from '@/contexts/DashboardStateContext';
 
 interface GenerationRequest {
@@ -57,6 +57,7 @@ export default function GenerateScenariosPage() {
   const totalScenarios = formData.domains.length * formData.tiers.length * formData.repetitions;
 
   const [generating, setGenerating] = useState(false);
+  const [paused, setPaused] = useState(false);
   const [generatedScenarios, setGeneratedScenarios] = useState<any[]>([]);
   const [streamingText, setStreamingText] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -69,10 +70,11 @@ export default function GenerateScenariosPage() {
     elapsedSeconds: 0,
   });
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Update elapsed time while generating
+  // Update elapsed time while generating (but not when paused)
   useEffect(() => {
-    if (generating && progress.startTime) {
+    if (generating && !paused && progress.startTime) {
       timerRef.current = setInterval(() => {
         setProgress((prev) => ({
           ...prev,
@@ -90,11 +92,25 @@ export default function GenerateScenariosPage() {
         clearInterval(timerRef.current);
       }
     };
-  }, [generating, progress.startTime]);
+  }, [generating, paused, progress.startTime]);
+
+  // Cancel generation
+  const handleCancel = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    setGenerating(false);
+    setPaused(false);
+    setError('Generation cancelled by user');
+  };
 
   // Generate scenarios with SSE streaming
   const handleGenerate = async () => {
+    // Create new abort controller for this generation
+    abortControllerRef.current = new AbortController();
+    
     setGenerating(true);
+    setPaused(false);
     setError(null);
     setGeneratedScenarios([]);
     setStreamingText('');
@@ -108,15 +124,29 @@ export default function GenerateScenariosPage() {
     });
 
     try {
+      console.log('Sending request to:', `${apiUrl}/scenarios/generate-llm-stream`);
+      console.log('Request body:', JSON.stringify(formData, null, 2));
+      
       const response = await fetch(`${apiUrl}/scenarios/generate-llm-stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
+        signal: abortControllerRef.current?.signal,
       });
 
+      console.log('Response status:', response.status);
+      
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || errorData.error || 'Failed to start generation');
+        const errorText = await response.text();
+        console.error('Error response:', errorText);
+        let errorMessage = 'Failed to start generation';
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.message || errorData.error || errorMessage;
+        } catch (e) {
+          errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
 
       const reader = response.body?.getReader();
@@ -147,16 +177,24 @@ export default function GenerateScenariosPage() {
               setStreamingText('');
             } else if (data.type === 'complete') {
               setGenerating(false);
+              setPaused(false);
             } else if (data.type === 'error') {
               setError(data.message);
               setGenerating(false);
+              setPaused(false);
             }
           }
         }
       }
     } catch (err) {
+      // Don't show error if user cancelled
+      if (err instanceof Error && err.name === 'AbortError') {
+        // Already handled in handleCancel
+        return;
+      }
       setError(err instanceof Error ? err.message : 'Generation failed');
       setGenerating(false);
+      setPaused(false);
     }
   };
 
@@ -243,7 +281,7 @@ export default function GenerateScenariosPage() {
                 <input
                   type="number"
                   min="1"
-                  max="50"
+                  max="150"
                   value={formData.repetitions}
                   onChange={(e) => {
                     setFormData({ ...formData, repetitions: parseInt(e.target.value) || 1 });
@@ -278,23 +316,30 @@ export default function GenerateScenariosPage() {
 
             {/* Action Buttons */}
             <div className="mt-6 flex flex-wrap items-center gap-3">
-              <button
-                onClick={handleGenerate}
-                disabled={generating || totalScenarios === 0}
-                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {generating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Generating {totalScenarios} scenarios...
-                  </>
-                ) : (
-                  <>
-                    <Wand2 className="h-4 w-4" />
-                    Generate {totalScenarios} Scenarios
-                  </>
-                )}
-              </button>
+              {!generating ? (
+                <button
+                  onClick={handleGenerate}
+                  disabled={totalScenarios === 0}
+                  className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Wand2 className="h-4 w-4" />
+                  Generate {totalScenarios} Scenarios
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={handleCancel}
+                    className="inline-flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+                  >
+                    <XCircle className="h-4 w-4" />
+                    Cancel Generation
+                  </button>
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                    Generating {progress.currentCount}/{totalScenarios}...
+                  </div>
+                </>
+              )}
 
               <div className="flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2">
                 <Target className="h-4 w-4 text-gray-600" />

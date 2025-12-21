@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { LLMSelector, type LLMConfig } from './llm-selector';
 import { ToolConfiguration, type ToolConfig } from './tool-config';
@@ -9,6 +9,8 @@ import {
   type ControlExpectations as ControlExpectationsType,
 } from './control-expectations';
 import { APIKeyModeSelector, type APIKeyMode, type SessionAPIKeys } from './api-key-mode';
+import { ScenarioSelector } from './scenario-selector';
+import { Loader2, AlertCircle, CheckCircle, Target, Clock, XCircle } from 'lucide-react';
 
 // Updated domains to match backend API
 const domains = [
@@ -45,13 +47,17 @@ const modelOptions = [
   { value: 'llama_maverick', label: 'Llama Maverick' },
 ];
 
+type ScenarioMode = 'generated' | 'matrix';
+
 interface FormData {
   name: string;
   description: string;
-  domains: string[];      // Changed to array
-  tiers: string[];        // Changed to array
-  models: string[];       // Changed to array (replaces single llmConfig.model)
-  repetitionsPerDomainTier: number;  // Renamed from replicationCount
+  scenarioMode: ScenarioMode;
+  selectedScenarioIds: string[];  // For generated scenarios mode
+  domains: string[];      // For matrix mode
+  tiers: string[];        // For matrix mode
+  models: string[];
+  repetitionsPerDomainTier: number;
   apiKeyMode: APIKeyMode;
   sessionKeys: SessionAPIKeys;
   llmConfig: LLMConfig;
@@ -59,25 +65,80 @@ interface FormData {
   controlExpectations: ControlExpectationsType;
 }
 
+interface ExperimentProgress {
+  status: 'idle' | 'running' | 'completed' | 'failed' | 'cancelled';
+  experimentId: string | null;
+  currentTrial: number;
+  totalTrials: number;
+  elapsedSeconds: number;
+  message: string;
+}
+
+function formatTime(seconds: number): string {
+  if (seconds < 60) return `${Math.round(seconds)}s`;
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.round(seconds % 60);
+  if (mins < 60) return `${mins}m ${secs}s`;
+  const hours = Math.floor(mins / 60);
+  const remainMins = mins % 60;
+  return `${hours}h ${remainMins}m`;
+}
+
 export function ExperimentForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userCredits, setUserCredits] = useState(0);
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+  
+  // Progress tracking
+  const [progress, setProgress] = useState<ExperimentProgress>({
+    status: 'idle',
+    experimentId: null,
+    currentTrial: 0,
+    totalTrials: 0,
+    elapsedSeconds: 0,
+    message: '',
+  });
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     // Fetch user's credit balance
-    fetch('http://localhost:3001/api/billing/credits')
+    fetch(`${apiUrl}/billing/credits`)
       .then((res) => res.json())
       .then((data) => setUserCredits(data.balance?.remainingCredits || 0))
       .catch((err) => console.error('Failed to fetch credits', err));
-  }, []);
+  }, [apiUrl]);
+
+  // Timer for elapsed time
+  useEffect(() => {
+    if (progress.status === 'running') {
+      const startTime = Date.now() - progress.elapsedSeconds * 1000;
+      timerRef.current = setInterval(() => {
+        setProgress(prev => ({
+          ...prev,
+          elapsedSeconds: (Date.now() - startTime) / 1000,
+        }));
+      }, 1000);
+    } else {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [progress.status]);
 
   const [formData, setFormData] = useState<FormData>({
     name: '',
     description: '',
-    domains: [],           // Multi-select array
-    tiers: [],             // Multi-select array
-    models: [],            // Multi-select array
+    scenarioMode: 'generated',  // Default to using generated scenarios
+    selectedScenarioIds: [],
+    domains: [],
+    tiers: [],
+    models: [],
     repetitionsPerDomainTier: 1,
     apiKeyMode: 'system',
     sessionKeys: {
@@ -142,20 +203,25 @@ export function ExperimentForm() {
       newErrors.name = 'Experiment name is required';
     }
 
-    if (formData.domains.length === 0) {
-      newErrors.domains = 'Please select at least one domain';
-    }
-
-    if (formData.tiers.length === 0) {
-      newErrors.tiers = 'Please select at least one tier';
+    // Validate based on scenario mode
+    if (formData.scenarioMode === 'generated') {
+      if (formData.selectedScenarioIds.length === 0) {
+        newErrors.scenarios = 'Please select at least one scenario';
+      }
+    } else {
+      if (formData.domains.length === 0) {
+        newErrors.domains = 'Please select at least one domain';
+      }
+      if (formData.tiers.length === 0) {
+        newErrors.tiers = 'Please select at least one tier';
+      }
+      if (formData.repetitionsPerDomainTier < 1 || formData.repetitionsPerDomainTier > 200) {
+        newErrors.repetitionsPerDomainTier = 'Repetitions must be between 1 and 200';
+      }
     }
 
     if (formData.models.length === 0) {
       newErrors.models = 'Please select at least one model';
-    }
-
-    if (formData.repetitionsPerDomainTier < 1 || formData.repetitionsPerDomainTier > 200) {
-      newErrors.repetitionsPerDomainTier = 'Repetitions must be between 1 and 200';
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -164,41 +230,51 @@ export function ExperimentForm() {
     }
 
     setIsSubmitting(true);
+    abortControllerRef.current = new AbortController();
 
     try {
-      // Format data for backend API
-      const apiPayload = {
+      // Format data for backend API based on mode
+      const toolConfig = {
+        configId: 'config-' + Date.now(),
+        name: 'Default Configuration',
+        description: 'Auto-generated tool configuration',
+        toolConfiguration: {
+          enableGoalEngine: true,
+          enablePlanningEngine: formData.toolConfig.planning,
+          enableClarificationEngine: formData.toolConfig.clarification,
+          enableValidationEngine: formData.toolConfig.validation,
+          enableEvaluationEngine: formData.toolConfig.evaluation,
+          enableReflectionEngine: formData.toolConfig.reflection,
+          enableMemoryStore: formData.toolConfig.memory,
+          enableMemoryQuery: formData.toolConfig.memory,
+          enableThinkTool: true,
+        },
+      };
+
+      const apiPayload: Record<string, unknown> = {
         name: formData.name,
         description: formData.description,
-        domains: formData.domains,
-        tiers: formData.tiers,
         models: formData.models,
-        repetitionsPerDomainTier: formData.repetitionsPerDomainTier,
-        toolConfigs: [{
-          configId: 'config-' + Date.now(),
-          name: 'Default Configuration',
-          description: 'Auto-generated tool configuration',
-          toolConfiguration: {
-            enableGoalEngine: true,
-            enablePlanningEngine: formData.toolConfig.planning,
-            enableClarificationEngine: formData.toolConfig.clarification,
-            enableValidationEngine: formData.toolConfig.validation,
-            enableEvaluationEngine: formData.toolConfig.evaluation,
-            enableReflectionEngine: formData.toolConfig.reflection,
-            enableMemoryStore: formData.toolConfig.memory,
-            enableMemoryQuery: formData.toolConfig.memory,
-            enableThinkTool: true,
-          },
-        }],
+        toolConfigs: [toolConfig],
         parallelism: 10,
         timeout: 60000,
       };
 
-      // Connect to backend API
-      const response = await fetch('http://localhost:3001/api/experiments', {
+      // Add mode-specific fields
+      if (formData.scenarioMode === 'generated') {
+        apiPayload.scenarioIds = formData.selectedScenarioIds;
+      } else {
+        apiPayload.domains = formData.domains;
+        apiPayload.tiers = formData.tiers;
+        apiPayload.repetitionsPerDomainTier = formData.repetitionsPerDomainTier;
+      }
+
+      // Create experiment
+      const response = await fetch(`${apiUrl}/experiments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(apiPayload),
+        signal: abortControllerRef.current.signal,
       });
 
       if (!response.ok) {
@@ -208,14 +284,124 @@ export function ExperimentForm() {
 
       const result = await response.json();
 
-      // Redirect to experiment detail page
-      router.push(`/experiments/${result.experimentId}`);
+      // Set up progress tracking
+      setProgress({
+        status: 'running',
+        experimentId: result.experimentId,
+        currentTrial: 0,
+        totalTrials: result.totalTrials || 0,
+        elapsedSeconds: 0,
+        message: 'Experiment created, starting trials...',
+      });
+
+      // Connect to SSE for progress updates
+      const eventSource = new EventSource(`${apiUrl}/experiments/${result.experimentId}/stream`);
+      
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'trial_complete') {
+            setProgress(prev => ({
+              ...prev,
+              currentTrial: data.completedTrials || prev.currentTrial + 1,
+              message: `Trial ${data.trialId} completed`,
+            }));
+          } else if (data.type === 'experiment_complete') {
+            setProgress(prev => ({
+              ...prev,
+              status: 'completed',
+              currentTrial: prev.totalTrials,
+              message: 'Experiment completed successfully!',
+            }));
+            eventSource.close();
+            // Redirect after a short delay
+            setTimeout(() => {
+              router.push(`/experiments/${result.experimentId}`);
+            }, 2000);
+          } else if (data.type === 'error') {
+            setProgress(prev => ({
+              ...prev,
+              status: 'failed',
+              message: data.message || 'Experiment failed',
+            }));
+            eventSource.close();
+          }
+        } catch (e) {
+          console.error('Failed to parse progress event:', e);
+        }
+      };
+
+      eventSource.onerror = () => {
+        // SSE connection failed - check experiment status via polling
+        eventSource.close();
+        // Start polling for status instead
+        pollExperimentStatus(result.experimentId);
+      };
+
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        setProgress(prev => ({ ...prev, status: 'cancelled', message: 'Experiment cancelled' }));
+        return;
+      }
       console.error('Failed to create experiment:', error);
       setErrors({ submit: error instanceof Error ? error.message : 'Failed to create experiment. Please try again.' });
+      setProgress(prev => ({ ...prev, status: 'failed', message: 'Failed to create experiment' }));
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Fallback polling for experiment status
+  const pollExperimentStatus = async (experimentId: string) => {
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await fetch(`${apiUrl}/experiments/${experimentId}/status`);
+        if (!response.ok) {
+          clearInterval(pollInterval);
+          return;
+        }
+        const data = await response.json();
+        
+        setProgress(prev => ({
+          ...prev,
+          currentTrial: data.completedTrials + data.failedTrials,
+          totalTrials: data.totalTrials,
+          message: `Completed ${data.completedTrials}/${data.totalTrials} trials`,
+        }));
+
+        if (data.status === 'completed' || data.status === 'failed') {
+          clearInterval(pollInterval);
+          setProgress(prev => ({
+            ...prev,
+            status: data.status,
+            message: data.status === 'completed' ? 'Experiment completed!' : 'Experiment failed',
+          }));
+          if (data.status === 'completed') {
+            setTimeout(() => router.push(`/experiments/${experimentId}`), 2000);
+          }
+        }
+      } catch (e) {
+        console.error('Polling error:', e);
+      }
+    }, 2000);
+  };
+
+  // Cancel experiment
+  const handleCancel = async () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    if (progress.experimentId) {
+      try {
+        await fetch(`${apiUrl}/experiments/${progress.experimentId}/stop`, {
+          method: 'POST',
+        });
+      } catch (e) {
+        console.error('Failed to stop experiment:', e);
+      }
+    }
+    setProgress(prev => ({ ...prev, status: 'cancelled', message: 'Experiment cancelled' }));
+    setIsSubmitting(false);
   };
 
   const handleChange = (field: string, value: string | number) => {
@@ -321,10 +507,92 @@ export function ExperimentForm() {
         </div>
       </div>
 
-      {/* Experiment Configuration */}
+      {/* Scenario Configuration Mode */}
       <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-gray-900">Configuration</h2>
-        <p className="mt-1 text-sm text-gray-500">Select domain and tier settings</p>
+        <h2 className="text-lg font-semibold text-gray-900">Scenario Configuration</h2>
+        <p className="mt-1 text-sm text-gray-500">Choose how to configure scenarios for this experiment</p>
+
+        <div className="mt-6 space-y-4">
+          {/* Mode Selection */}
+          <div className="grid grid-cols-2 gap-4">
+            <label
+              className={`relative flex cursor-pointer flex-col rounded-lg border p-4 hover:bg-gray-50 ${
+                formData.scenarioMode === 'generated'
+                  ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500'
+                  : 'border-gray-300'
+              }`}
+            >
+              <div className="flex items-center">
+                <input
+                  type="radio"
+                  name="scenarioMode"
+                  value="generated"
+                  checked={formData.scenarioMode === 'generated'}
+                  onChange={() => handleChange('scenarioMode', 'generated')}
+                  className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="ml-3 text-sm font-medium text-gray-900">Use Generated Scenarios</span>
+              </div>
+              <p className="mt-2 text-xs text-gray-500 ml-7">
+                Select from pre-generated LLM scenarios for rigorous testing
+              </p>
+            </label>
+
+            <label
+              className={`relative flex cursor-pointer flex-col rounded-lg border p-4 hover:bg-gray-50 ${
+                formData.scenarioMode === 'matrix'
+                  ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500'
+                  : 'border-gray-300'
+              }`}
+            >
+              <div className="flex items-center">
+                <input
+                  type="radio"
+                  name="scenarioMode"
+                  value="matrix"
+                  checked={formData.scenarioMode === 'matrix'}
+                  onChange={() => handleChange('scenarioMode', 'matrix')}
+                  className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="ml-3 text-sm font-medium text-gray-900">Define Domain/Tier Matrix</span>
+              </div>
+              <p className="mt-2 text-xs text-gray-500 ml-7">
+                Auto-generate scenarios during experiment execution
+              </p>
+            </label>
+          </div>
+
+          {/* Scenario Selector - shown when mode is 'generated' */}
+          {formData.scenarioMode === 'generated' && (
+            <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Target className="h-5 w-5 text-blue-600" />
+                <h3 className="font-medium text-blue-900">Select Pre-Generated Scenarios</h3>
+              </div>
+              <p className="text-sm text-blue-700 mb-4">
+                Choose scenarios that were generated via the Scenario Generation page. Each scenario has been
+                carefully crafted by the LLM with specific domain and complexity characteristics.
+              </p>
+              <ScenarioSelector
+                selectedIds={formData.selectedScenarioIds}
+                onSelectionChange={(ids) => handleChange('selectedScenarioIds', ids)}
+              />
+              {formData.selectedScenarioIds.length === 0 && (
+                <p className="mt-2 text-sm text-amber-600 flex items-center gap-1">
+                  <AlertCircle className="h-4 w-4" />
+                  No scenarios selected. Please select at least one scenario or switch to matrix mode.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Experiment Configuration - shown when mode is 'matrix' */}
+      {formData.scenarioMode === 'matrix' && (
+      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-gray-900">Domain & Tier Matrix</h2>
+        <p className="mt-1 text-sm text-gray-500">Configure domain and tier settings for auto-generated scenarios</p>
 
         <div className="mt-6 space-y-4">
           {/* Domain Selection - Multi-select */}
@@ -390,35 +658,6 @@ export function ExperimentForm() {
             {errors.tiers && <p className="mt-1 text-sm text-red-600">{errors.tiers}</p>}
           </div>
 
-          {/* Model Selection - Multi-select */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Models <span className="text-red-500">*</span>
-              <span className="ml-2 text-xs text-gray-500">(Select one or more)</span>
-            </label>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              {modelOptions.map((model) => (
-                <label
-                  key={model.value}
-                  className={`relative flex cursor-pointer items-center rounded-lg border p-3 hover:bg-gray-50 ${
-                    formData.models.includes(model.value)
-                      ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500'
-                      : 'border-gray-300'
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={formData.models.includes(model.value)}
-                    onChange={() => handleArrayToggle('models', model.value)}
-                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="ml-3 text-sm font-medium text-gray-900">{model.label}</span>
-                </label>
-              ))}
-            </div>
-            {errors.models && <p className="mt-1 text-sm text-red-600">{errors.models}</p>}
-          </div>
-
           {/* Repetitions Per Domain-Tier */}
           <div>
             <label htmlFor="repetitionsPerDomainTier" className="block text-sm font-medium text-gray-700">
@@ -450,6 +689,41 @@ export function ExperimentForm() {
               </p>
             )}
           </div>
+        </div>
+      </div>
+      )}
+
+      {/* Model Selection - Always visible */}
+      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 className="text-lg font-semibold text-gray-900">Model Selection</h2>
+        <p className="mt-1 text-sm text-gray-500">Select the LLM models to evaluate in this experiment</p>
+
+        <div className="mt-6">
+          <label className="block text-sm font-medium text-gray-700">
+            Models <span className="text-red-500">*</span>
+            <span className="ml-2 text-xs text-gray-500">(Select one or more)</span>
+          </label>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            {modelOptions.map((model) => (
+              <label
+                key={model.value}
+                className={`relative flex cursor-pointer items-center rounded-lg border p-3 hover:bg-gray-50 ${
+                  formData.models.includes(model.value)
+                    ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500'
+                    : 'border-gray-300'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={formData.models.includes(model.value)}
+                  onChange={() => handleArrayToggle('models', model.value)}
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="ml-3 text-sm font-medium text-gray-900">{model.label}</span>
+              </label>
+            ))}
+          </div>
+          {errors.models && <p className="mt-1 text-sm text-red-600">{errors.models}</p>}
         </div>
       </div>
 
@@ -553,6 +827,96 @@ export function ExperimentForm() {
           />
         </div>
       </div>
+
+      {/* Experiment Progress - shown when running */}
+      {progress.status !== 'idle' && (
+        <div className={`rounded-lg border p-6 ${
+          progress.status === 'completed' ? 'border-green-200 bg-green-50' :
+          progress.status === 'failed' || progress.status === 'cancelled' ? 'border-red-200 bg-red-50' :
+          'border-blue-200 bg-blue-50'
+        }`}>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              {progress.status === 'running' && (
+                <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+              )}
+              {progress.status === 'completed' && (
+                <CheckCircle className="h-5 w-5 text-green-600" />
+              )}
+              {(progress.status === 'failed' || progress.status === 'cancelled') && (
+                <AlertCircle className="h-5 w-5 text-red-600" />
+              )}
+              <h3 className={`font-semibold ${
+                progress.status === 'completed' ? 'text-green-900' :
+                progress.status === 'failed' || progress.status === 'cancelled' ? 'text-red-900' :
+                'text-blue-900'
+              }`}>
+                {progress.status === 'running' ? 'Experiment Running...' :
+                 progress.status === 'completed' ? 'Experiment Completed!' :
+                 progress.status === 'cancelled' ? 'Experiment Cancelled' :
+                 'Experiment Failed'}
+              </h3>
+            </div>
+            {progress.status === 'running' && (
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="flex items-center gap-1 rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-red-700"
+              >
+                <XCircle className="h-4 w-4" />
+                Cancel
+              </button>
+            )}
+          </div>
+
+          {progress.message && (
+            <p className={`text-sm mb-4 ${
+              progress.status === 'completed' ? 'text-green-700' :
+              progress.status === 'failed' || progress.status === 'cancelled' ? 'text-red-700' :
+              'text-blue-700'
+            }`}>
+              {progress.message}
+            </p>
+          )}
+
+          {progress.status === 'running' && (
+            <>
+              {/* Progress bar */}
+              <div className="h-3 w-full rounded-full bg-blue-200 overflow-hidden mb-3">
+                <div
+                  className="h-full bg-blue-600 transition-all duration-300"
+                  style={{ width: `${progress.percentage}%` }}
+                />
+              </div>
+
+              {/* Progress stats */}
+              <div className="grid grid-cols-4 gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <Target className="h-4 w-4 text-blue-600" />
+                  <span className="text-blue-700">
+                    <strong>{progress.completedTrials}</strong> / {progress.totalTrials} trials
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-blue-600" />
+                  <span className="text-blue-700">
+                    Elapsed: <strong>{formatTime(progress.elapsedTime)}</strong>
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-blue-600" />
+                  <span className="text-blue-700">
+                    Remaining: <strong>{formatTime(progress.estimatedRemaining)}</strong>
+                  </span>
+                </div>
+                <div className="text-right text-blue-700 font-semibold">
+                  {progress.percentage.toFixed(1)}%
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Submit Error */}
       {errors.submit && (

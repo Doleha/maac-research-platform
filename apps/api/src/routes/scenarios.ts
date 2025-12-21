@@ -310,7 +310,7 @@ export async function scenarioRoutes(
             repetitions: {
               type: 'integer',
               minimum: 1,
-              maximum: 50,
+              maximum: 150,
               default: 1,
             },
             model: {
@@ -530,7 +530,7 @@ export async function scenarioRoutes(
             repetitions: {
               type: 'integer',
               minimum: 1,
-              maximum: 50,
+              maximum: 150,
               default: 1,
             },
             model: {
