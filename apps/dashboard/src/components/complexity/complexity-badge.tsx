@@ -38,7 +38,6 @@ export function ComplexityBadge({
   // Determine status
   const isValidated = validationPassed !== null && validationPassed !== undefined;
   const isPassed = validationPassed === true;
-  const isFailed = validationPassed === false;
 
   // Status-based styling
   const getStatusStyles = () => {
