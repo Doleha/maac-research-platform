@@ -12,7 +12,7 @@
  */
 
 import { z } from 'zod';
-import { Domain, Tier, ModelId } from '@maac/types';
+import { Domain, Tier } from '@maac/types';
 import { getDomainPatterns } from './domain-patterns';
 import { EXPERIMENT_DESIGN } from './types';
 
@@ -579,7 +579,7 @@ export class LLMScenarioGenerator {
     domains?: Domain[];
     tiers?: Tier[];
     repetitions?: number;
-    model?: ModelId;
+    model?: string;
     startIndex?: number;
     onProgress?: ProgressCallback;
     /** Number of parallel API calls (overrides config) */
