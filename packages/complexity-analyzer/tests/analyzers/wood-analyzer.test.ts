@@ -82,7 +82,9 @@ describe('Wood Analyzer', () => {
       const result = analyzeWoodMetrics(input);
 
       expect(result.coordinativeComplexity).toBeDefined();
-      expect(['sequential', 'interdependent', 'networked']).toContain(result.coordinativeComplexity);
+      expect(['sequential', 'interdependent', 'networked']).toContain(
+        result.coordinativeComplexity,
+      );
     });
 
     it('should detect dynamic complexity with state changes', () => {
