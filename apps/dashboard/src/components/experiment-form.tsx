@@ -423,6 +423,18 @@ export function ExperimentForm() {
     setIsSubmitting(false);
   };
 
+  const handleChange = (field: string, value: string | number | string[]) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear error for this field
+    if (errors[field]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
   const handleArrayToggle = (field: 'domains' | 'tiers', value: string) => {
     setFormData((prev) => {
       const currentArray = prev[field];
@@ -489,22 +501,7 @@ export function ExperimentForm() {
         delete newErrors[`model_${index}_model`];
         return newErrors;
       });
-    } const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
     }
-  };
-
-  const handleLLMChange = (config: LLMConfig) => {
-    setFormData((prev) => ({ ...prev, llmConfig: config }));
-    // Clear LLM-related errors
-    setErrors((prev) => {
-      const newErrors = { ...prev };
-      delete newErrors.provider;
-      delete newErrors.model;
-      return newErrors;
-    });
   };
 
   const handleToolChange = (config: ToolConfig) => {
@@ -976,30 +973,6 @@ export function ExperimentForm() {
             </div>
           </div>
         )}
-              <h3 className="text-sm font-semibold text-blue-900">Experiment Configuration</h3>
-              <p className="mt-1 text-sm text-blue-800">
-                This experiment will run{' '}
-                <strong>
-                  {formData.domains.length *
-                    formData.tiers.length *
-                    formData.models.length *
-                    formData.repetitionsPerDomainTier}
-                </strong>{' '}
-                total trials across {formData.domains.length} domain(s), {formData.tiers.length}{' '}
-                tier(s), and {formData.models.length} model(s).
-              </p>
-              <p className="mt-2 text-xs text-blue-700">
-                Your balance: {userCredits.toLocaleString()} credits
-                {userCredits < 100 && (
-                  <span className="ml-2 font-semibold">
-                    • Low balance - consider purchasing more credits
-                  </span>
-                )}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Tool Configuration */}
       <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
