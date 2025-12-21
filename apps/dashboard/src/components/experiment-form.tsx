@@ -957,8 +957,8 @@ export function ExperimentForm() {
                     <strong>
                       {progress.currentTrial > 0
                         ? formatTime(
-                            ((progress.elapsedSeconds / progress.currentTrial) *
-                              (progress.totalTrials - progress.currentTrial))
+                            (progress.elapsedSeconds / progress.currentTrial) *
+                              (progress.totalTrials - progress.currentTrial),
                           )
                         : '--'}
                     </strong>

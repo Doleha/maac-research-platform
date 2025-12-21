@@ -193,7 +193,11 @@ export async function experimentRoutes(
           tiers = validated.tiers || [];
           const repetitions = validated.repetitionsPerDomainTier || 1;
           totalTrials =
-            domains.length * tiers.length * repetitions * validated.models.length * validated.toolConfigs.length;
+            domains.length *
+            tiers.length *
+            repetitions *
+            validated.models.length *
+            validated.toolConfigs.length;
 
           logger.info('experiment', `Creating experiment (matrix mode): ${validated.name}`, {
             experimentId,

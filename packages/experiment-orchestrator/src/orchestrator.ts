@@ -1165,8 +1165,7 @@ export const CreateExperimentSchema = z
       return hasScenarios || hasMatrix;
     },
     {
-      message:
-        'Either scenarioIds or both domains and tiers must be provided',
+      message: 'Either scenarioIds or both domains and tiers must be provided',
     },
   );
 
