@@ -32,10 +32,10 @@ describe('Integration: Complete Validation Pipeline', () => {
 
       expect(result.scenarioId).toBe('integration-simple');
       expect(result.complexityScore).toBeDefined();
-      expect(result.complexityScore.woodScore).toBeDefined();
-      expect(result.complexityScore.campbellScore).toBeDefined();
-      expect(result.complexityScore.liuLiScore).toBeDefined();
-      expect(result.complexityScore.interactivityScore).toBeDefined();
+      expect(result.complexityScore.woodMetrics).toBeDefined();
+      expect(result.complexityScore.campbellAttributes).toBeDefined();
+      expect(result.complexityScore.liuLiDimensions).toBeDefined();
+      expect(result.complexityScore.elementInteractivity).toBeDefined();
       expect(result.validationTimestamp).toBeInstanceOf(Date);
     });
 

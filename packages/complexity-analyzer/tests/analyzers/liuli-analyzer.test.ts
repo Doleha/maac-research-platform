@@ -75,7 +75,8 @@ describe('Liu & Li Analyzer', () => {
 
       const result = analyzeLiuLiDimensions(input);
 
-      expect(result.novelty).toBeGreaterThanOrEqual(0);
+      // novelty returns NoveltyLevel: 'routine' | 'semi-familiar' | 'novel'
+      expect(['routine', 'semi-familiar', 'novel']).toContain(result.novelty);
     });
 
     it('should detect time pressure', () => {
@@ -89,10 +90,11 @@ describe('Liu & Li Analyzer', () => {
 
       const result = analyzeLiuLiDimensions(input);
 
-      expect(result.temporalDemand).toBeDefined();
+      // timePressure returns TimePressure: 'low' | 'moderate' | 'high'
+      expect(result.timePressure).toBeDefined();
     });
 
-    it('should detect scope for large tasks', () => {
+    it('should detect size for large tasks', () => {
       const input: LiuLiAnalysisInput = {
         content: `
           Enterprise-wide analysis spanning:
@@ -106,7 +108,8 @@ describe('Liu & Li Analyzer', () => {
 
       const result = analyzeLiuLiDimensions(input);
 
-      expect(result.scope).toBeGreaterThan(0);
+      // size is the 'scope' dimension
+      expect(result.size).toBeGreaterThan(0);
     });
   });
 

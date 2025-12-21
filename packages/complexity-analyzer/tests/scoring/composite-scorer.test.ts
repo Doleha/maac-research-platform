@@ -17,7 +17,10 @@ import {
   analyzeCampbellAttributes,
   type CampbellAnalysisInput,
 } from '../../src/analyzers/campbell-analyzer';
-import { analyzeLiuLiDimensions, type LiuLiAnalysisInput } from '../../src/analyzers/liuli-analyzer';
+import {
+  analyzeLiuLiDimensions,
+  type LiuLiAnalysisInput,
+} from '../../src/analyzers/liuli-analyzer';
 import {
   analyzeElementInteractivity,
   type ElementInteractivityInput,
@@ -55,11 +58,9 @@ function createCompositeInput(
 describe('Composite Scorer', () => {
   describe('calculateCompositeScore', () => {
     it('should calculate score for simple scenario', () => {
-      const input = createCompositeInput(
-        'simple',
-        'Calculate the sum of 5 and 10.',
-        ['Add numbers'],
-      );
+      const input = createCompositeInput('simple', 'Calculate the sum of 5 and 10.', [
+        'Add numbers',
+      ]);
 
       const result = calculateCompositeScore(input);
 

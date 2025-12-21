@@ -97,7 +97,7 @@ describe('Campbell Analyzer', () => {
       const result = analyzeCampbellAttributes(input);
 
       expect(result.uncertaintyLevel).toBeDefined();
-      expect(['low', 'medium', 'high', 'none']).toContain(result.uncertaintyLevel);
+      expect(['none', 'bounded', 'high']).toContain(result.uncertaintyLevel);
     });
   });
 

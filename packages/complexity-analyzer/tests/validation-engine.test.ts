@@ -229,7 +229,12 @@ describe('Validation Engine', () => {
       const scenarios: ScenarioInput[] = [
         { id: '1', intendedTier: 'simple', content: 'Task 1', domain: 'analytical' },
         { id: '2', intendedTier: 'simple', content: 'Task 2', domain: 'planning' },
-        { id: '3', intendedTier: 'moderate', content: 'Task 3 with more steps', domain: 'communication' },
+        {
+          id: '3',
+          intendedTier: 'moderate',
+          content: 'Task 3 with more steps',
+          domain: 'communication',
+        },
       ];
 
       const result = await validateBatch(scenarios);
