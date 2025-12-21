@@ -2,3 +2,4 @@
 export * from './cognitive';
 export * from './experiment';
 export * from './database';
+export * from './complexity';
