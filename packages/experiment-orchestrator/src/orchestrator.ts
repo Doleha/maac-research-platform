@@ -460,7 +460,7 @@ export class AdvancedExperimentOrchestrator extends EventEmitter {
 
   constructor(config: OrchestratorConfig) {
     super(); // Initialize EventEmitter
-    
+
     this.config = {
       cognitiveSystem: config.cognitiveSystem,
       maacEvaluator: config.maacEvaluator,
@@ -964,7 +964,7 @@ export class AdvancedExperimentOrchestrator extends EventEmitter {
   private async storeScenarios(scenarios: Scenario[]): Promise<void> {
     this.log(`Validating ${scenarios.length} scenarios before database storage...`);
     this.emit('validation:started', { total: scenarios.length });
-    
+
     // Validate all scenarios with complexity analysis (parallel for performance)
     const validatedScenarios = await Promise.all(
       scenarios.map(async (scenario, index) => {
@@ -976,9 +976,9 @@ export class AdvancedExperimentOrchestrator extends EventEmitter {
           calculationSteps: scenario.expectedCalculations,
           domain: scenario.domain,
         };
-        
+
         const validation = await validateScenario(scenarioInput);
-        
+
         this.emit('validation:progress', {
           current: index + 1,
           total: scenarios.length,
@@ -986,23 +986,23 @@ export class AdvancedExperimentOrchestrator extends EventEmitter {
           isValid: validation.isValid,
           complexityScore: validation.complexityScore.overallScore,
         });
-        
+
         if (!validation.isValid) {
           this.emit('validation:failed', {
             scenarioId: scenario.scenarioId,
             rejectionReasons: validation.complexityScore.rejectionReasons,
           });
-          
+
           throw new Error(
-            `Scenario ${scenario.scenarioId} failed complexity validation: ${validation.complexityScore.rejectionReasons.join(', ')}`
+            `Scenario ${scenario.scenarioId} failed complexity validation: ${validation.complexityScore.rejectionReasons.join(', ')}`,
           );
         }
-        
+
         return {
           scenario,
           complexityMetrics: validation.complexityScore!,
         };
-      })
+      }),
     );
 
     this.log(`All ${validatedScenarios.length} scenarios passed complexity validation`);
@@ -1036,7 +1036,7 @@ export class AdvancedExperimentOrchestrator extends EventEmitter {
         validationPassed: true,
       })),
     });
-    
+
     this.log(`Stored ${validatedScenarios.length} validated scenarios in database`);
   }
 

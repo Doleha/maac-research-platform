@@ -47,6 +47,7 @@ This guide explains how the complexity tier validation system is integrated into
 ## Data Flow
 
 ### 1. Scenario Generation
+
 ```typescript
 // In AdvancedExperimentOrchestrator.runExperiment()
 const scenarios = await this.generateScenarios(experimentConfig);
@@ -54,6 +55,7 @@ const scenarios = await this.generateScenarios(experimentConfig);
 ```
 
 ### 2. Validation Gate (NEW - CRITICAL)
+
 ```typescript
 // In AdvancedExperimentOrchestrator.storeScenarios()
 const validatedScenarios = await Promise.all(
@@ -66,28 +68,29 @@ const validatedScenarios = await Promise.all(
       calculationSteps: scenario.expectedCalculations,
       domain: scenario.domain,
     };
-    
+
     // VALIDATION - Blocks if fails
     const validation = await validateScenario(scenarioInput);
-    
+
     if (!validation.isValid) {
       throw new Error(`Validation failed: ${validation.complexityScore.rejectionReasons}`);
     }
-    
+
     return {
       scenario,
       complexityMetrics: validation.complexityScore,
     };
-  })
+  }),
 );
 ```
 
 ### 3. Database Storage with Metrics
+
 ```typescript
 await this.config.database.mAACExperimentScenario.createMany({
   data: validatedScenarios.map(({ scenario, complexityMetrics }) => ({
     // ... standard scenario fields ...
-    
+
     // Complexity validation fields (NEW)
     validationPassed: true,
     complexityScore: complexityMetrics.overallScore,
@@ -111,9 +114,14 @@ orchestrator.on('validation:started', ({ total }) => {
   console.log(`🔍 Starting validation of ${total} scenarios`);
 });
 
-orchestrator.on('validation:progress', ({ current, total, scenarioId, isValid, complexityScore }) => {
-  console.log(`[${current}/${total}] ${scenarioId}: ${isValid ? '✓' : '✗'} (score: ${complexityScore})`);
-});
+orchestrator.on(
+  'validation:progress',
+  ({ current, total, scenarioId, isValid, complexityScore }) => {
+    console.log(
+      `[${current}/${total}] ${scenarioId}: ${isValid ? '✓' : '✗'} (score: ${complexityScore})`,
+    );
+  },
+);
 
 orchestrator.on('validation:completed', ({ total }) => {
   console.log(`✅ All ${total} scenarios validated successfully`);
@@ -127,6 +135,7 @@ orchestrator.on('validation:failed', ({ scenarioId, rejectionReasons }) => {
 ## API Endpoints
 
 ### Get Validation Statistics
+
 ```http
 GET /api/scenarios/validation/stats
 
@@ -152,6 +161,7 @@ Response:
 ```
 
 ### Get Scenario Validation Details
+
 ```http
 GET /api/scenarios/:scenarioId/validation
 
@@ -188,6 +198,7 @@ Response:
 ```
 
 ### Get Score Distribution
+
 ```http
 GET /api/scenarios/validation/distribution
 
@@ -229,7 +240,7 @@ import { DEFAULT_COMPLEXITY_CONFIG } from '@maac/complexity-analyzer';
 
 const customConfig = {
   ...DEFAULT_COMPLEXITY_CONFIG,
-  strictMode: true,  // No tier deviation
+  strictMode: true, // No tier deviation
   tierThresholds: {
     simple: { min: 0, max: 12 },
     moderate: { min: 12, max: 35 },
@@ -237,7 +248,7 @@ const customConfig = {
   },
   weights: {
     ...DEFAULT_COMPLEXITY_CONFIG.weights,
-    elementInteractivity: 5.0,  // Increase weight
+    elementInteractivity: 5.0, // Increase weight
   },
 };
 
@@ -258,11 +269,12 @@ const validatedScenarios = await Promise.all(
     const validation = await validateScenario(scenario);
     // Each scenario validated independently
     return { scenario, complexityMetrics: validation.complexityScore };
-  })
+  }),
 );
 ```
 
 **Benefits:**
+
 - ✅ No sequential bottlenecks
 - ✅ Scales with orchestrator parallelism
 - ✅ Typical validation: 50-200ms per scenario
@@ -271,6 +283,7 @@ const validatedScenarios = await Promise.all(
 ## Error Handling
 
 ### Validation Failure
+
 ```typescript
 try {
   await orchestrator.runExperiment(config);
@@ -286,6 +299,7 @@ try {
 ```
 
 ### Graceful Degradation
+
 ```typescript
 // For non-critical experiments, you can skip validation (NOT RECOMMENDED)
 const SKIP_VALIDATION = process.env.SKIP_COMPLEXITY_VALIDATION === 'true';
@@ -302,9 +316,10 @@ if (SKIP_VALIDATION) {
 ## Monitoring & Debugging
 
 ### Check Validation Status
+
 ```sql
 -- PostgreSQL queries for monitoring
-SELECT 
+SELECT
   tier,
   COUNT(*) as total,
   AVG("complexityScore") as avg_score,
@@ -316,8 +331,9 @@ GROUP BY tier;
 ```
 
 ### View Recent Validations
+
 ```sql
-SELECT 
+SELECT
   "scenarioId",
   tier,
   "complexityScore",
@@ -328,20 +344,21 @@ LIMIT 20;
 ```
 
 ### Detect Outliers
+
 ```sql
 -- Scenarios with scores outside expected range
-SELECT 
+SELECT
   "scenarioId",
   tier,
   "complexityScore",
-  CASE 
+  CASE
     WHEN tier = 'simple' AND "complexityScore" > 15 THEN 'Too complex'
     WHEN tier = 'moderate' AND "complexityScore" < 15 THEN 'Too simple'
     WHEN tier = 'moderate' AND "complexityScore" > 30 THEN 'Too complex'
     WHEN tier = 'complex' AND "complexityScore" < 30 THEN 'Too simple'
   END as issue
 FROM "MAACExperimentScenario"
-WHERE 
+WHERE
   (tier = 'simple' AND "complexityScore" > 15) OR
   (tier = 'moderate' AND ("complexityScore" < 15 OR "complexityScore" > 30)) OR
   (tier = 'complex' AND "complexityScore" < 30);
@@ -350,6 +367,7 @@ WHERE
 ## Testing Integration
 
 ### Unit Tests
+
 ```typescript
 import { validateScenario } from '@maac/complexity-analyzer';
 
@@ -362,9 +380,9 @@ describe('Complexity Validation Integration', () => {
       calculationSteps: ['Q1 revenue', 'Q2 revenue', 'Growth rate'],
       domain: 'analytical',
     };
-    
+
     const result = await validateScenario(scenario);
-    
+
     expect(result.isValid).toBe(true);
     expect(result.complexityScore.predictedTier).toBe('simple');
     expect(result.complexityScore.overallScore).toBeLessThan(15);
@@ -373,21 +391,22 @@ describe('Complexity Validation Integration', () => {
 ```
 
 ### Integration Tests
+
 ```typescript
 import { AdvancedExperimentOrchestrator } from '@maac/experiment-orchestrator';
 
 describe('Orchestrator Validation Integration', () => {
   it('should validate scenarios before storage', async () => {
     const orchestrator = new AdvancedExperimentOrchestrator(config);
-    
+
     let validationStarted = false;
     let validationCompleted = false;
-    
-    orchestrator.on('validation:started', () => validationStarted = true);
-    orchestrator.on('validation:completed', () => validationCompleted = true);
-    
+
+    orchestrator.on('validation:started', () => (validationStarted = true));
+    orchestrator.on('validation:completed', () => (validationCompleted = true));
+
     await orchestrator.runExperiment(experimentConfig);
-    
+
     expect(validationStarted).toBe(true);
     expect(validationCompleted).toBe(true);
   });
@@ -397,31 +416,31 @@ describe('Orchestrator Validation Integration', () => {
 ## Performance Optimization
 
 ### Batch Size Tuning
+
 ```typescript
 // For large experiments, validate in batches
 const BATCH_SIZE = 100;
 
 for (let i = 0; i < scenarios.length; i += BATCH_SIZE) {
   const batch = scenarios.slice(i, i + BATCH_SIZE);
-  const validatedBatch = await Promise.all(
-    batch.map(s => validateScenario(s))
-  );
+  const validatedBatch = await Promise.all(batch.map((s) => validateScenario(s)));
   // Process batch...
 }
 ```
 
 ### Caching Results
+
 ```typescript
 // Cache validation results for identical scenarios
 const validationCache = new Map<string, ScenarioValidationResult>();
 
 async function validateWithCache(scenario: ScenarioInput) {
   const cacheKey = `${scenario.content}-${scenario.intendedTier}`;
-  
+
   if (validationCache.has(cacheKey)) {
     return validationCache.get(cacheKey)!;
   }
-  
+
   const result = await validateScenario(scenario);
   validationCache.set(cacheKey, result);
   return result;
@@ -446,7 +465,7 @@ for (const scenario of unvalidatedScenarios) {
     calculationSteps: scenario.expectedCalculations,
     domain: scenario.domain,
   });
-  
+
   await prisma.mAACExperimentScenario.update({
     where: { scenarioId: scenario.scenarioId },
     data: {
@@ -464,15 +483,19 @@ for (const scenario of unvalidatedScenarios) {
 ## Troubleshooting
 
 ### Issue: Validation takes too long
+
 **Solution**: Check parallelism settings, reduce batch size, or use caching
 
 ### Issue: Too many scenarios failing validation
+
 **Solution**: Review generation prompts, adjust tier thresholds, or check framework weights
 
 ### Issue: Scores don't match expected tiers
+
 **Solution**: Calibrate thresholds using expert-reviewed scenarios (see CALIBRATION_GUIDE.md)
 
 ### Issue: Database storage fails after validation
+
 **Solution**: Verify Prisma schema includes all complexity fields, run migrations
 
 ## Next Steps
@@ -485,6 +508,7 @@ for (const scenario of unvalidatedScenarios) {
 ## Support
 
 For integration issues:
+
 - Check logs: `packages/experiment-orchestrator/logs/`
 - Review validation events emitted by orchestrator
 - Inspect database records in `MAACExperimentScenario` table

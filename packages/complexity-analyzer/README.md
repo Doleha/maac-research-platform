@@ -11,31 +11,36 @@ The Complexity Analyzer ensures experimental rigor by validating that all genera
 This package implements three peer-reviewed complexity frameworks:
 
 ### 1. Wood (1986) Component Complexity Model
+
 - **Distinct Acts**: Number of independent steps required
 - **Information Cues**: Unique data points needed
 - **Coordinative Complexity**: Inter-dependencies between actions
 - **Dynamic Complexity**: Changes in states or conditions over time
 
-**Reference**: Wood, R. E. (1986). Task complexity: Definition of the construct. *Organizational Behavior and Human Decision Processes*, 37(1), 60-82.
+**Reference**: Wood, R. E. (1986). Task complexity: Definition of the construct. _Organizational Behavior and Human Decision Processes_, 37(1), 60-82.
 
 ### 2. Campbell (1988) Four Sources of Complexity
+
 - **Multiple Paths**: Existence of alternative solution strategies
 - **Multiple Outcomes**: Multiple possible correct answers
 - **Conflicting Interdependence**: Trade-offs between objectives
 - **Uncertain/Probabilistic Linkages**: Unpredictable relationships
 
-**Reference**: Campbell, D. J. (1988). Task Complexity: A Review and Analysis. *Academy of Management Review*, 13(1), 40-52.
+**Reference**: Campbell, D. J. (1988). Task Complexity: A Review and Analysis. _Academy of Management Review_, 13(1), 40-52.
 
 ### 3. Liu & Li (2012) Ten-Dimension Framework
+
 Ten dimensions capturing task complexity breadth:
+
 - Variety, Ambiguity, Instability, Coupling, Novelty, Time Pressure, Equivocality, Scope, Work Flow, Coordination
 
-**Reference**: Liu, L., & Li, X. (2012). Multidimensional Task Complexity: A Ten-Dimensional Framework. *Procedia Engineering*, 29, 3244-3249.
+**Reference**: Liu, L., & Li, X. (2012). Multidimensional Task Complexity: A Ten-Dimensional Framework. _Procedia Engineering_, 29, 3244-3249.
 
 ### 4. Cognitive Load Theory - Element Interactivity
+
 Measures the degree to which elements must be processed simultaneously, based on Sweller's Cognitive Load Theory.
 
-**Reference**: Sweller, J. (1988). Cognitive load during problem solving: Effects on learning. *Cognitive Science*, 12(2), 257-285.
+**Reference**: Sweller, J. (1988). Cognitive load during problem solving: Effects on learning. _Cognitive Science_, 12(2), 257-285.
 
 ## Features
 
@@ -149,11 +154,11 @@ import { validateScenario, DEFAULT_COMPLEXITY_CONFIG } from '@maac/complexity-an
 const customConfig = {
   ...DEFAULT_COMPLEXITY_CONFIG,
   tierThresholds: {
-    simple: { min: 0, max: 12 },    // Stricter simple tier
+    simple: { min: 0, max: 12 }, // Stricter simple tier
     moderate: { min: 12, max: 35 },
     complex: { min: 35, max: Infinity },
   },
-  strictMode: true,  // No tier deviation allowed
+  strictMode: true, // No tier deviation allowed
   maxRegenerationAttempts: 5,
 };
 
@@ -167,27 +172,33 @@ const result = await validateScenario(scenario, {
 ### Core Functions
 
 #### `validateScenario(scenario, options?)`
+
 Validates a single scenario against all complexity frameworks.
 
 **Parameters:**
+
 - `scenario: ScenarioInput` - Scenario to validate
 - `options?: ValidationOptions` - Configuration and callbacks
 
 **Returns:** `Promise<ScenarioValidationResult>`
 
 #### `validateBatch(scenarios, options?)`
+
 Validates multiple scenarios in parallel.
 
 **Parameters:**
+
 - `scenarios: ScenarioInput[]` - Array of scenarios
 - `options?: ValidationOptions` - Configuration and callbacks
 
 **Returns:** `Promise<ValidationBatchStats>`
 
 #### `analyzeComplexity(scenario)`
+
 Quick complexity analysis without validation.
 
 **Parameters:**
+
 - `scenario: ScenarioInput` - Scenario to analyze
 
 **Returns:** `Promise<ComplexityScore>`
@@ -195,6 +206,7 @@ Quick complexity analysis without validation.
 ### Configuration
 
 #### Default Tier Thresholds
+
 ```typescript
 {
   simple: { min: 0, max: 15 },
@@ -204,6 +216,7 @@ Quick complexity analysis without validation.
 ```
 
 #### Scoring Weights
+
 ```typescript
 {
   woodDistinctActs: 2.0,
@@ -235,7 +248,7 @@ private async storeScenarios(scenarios: Scenario[]): Promise<void> {
       return { scenario, complexityMetrics: validation.complexityScore };
     })
   );
-  
+
   // Store with complexity metrics
   await database.createMany({ data: validatedScenarios });
 }
@@ -249,7 +262,7 @@ Complexity metrics are stored with each scenario:
 model MAACExperimentScenario {
   scenarioId           String   @id
   tier                 String   // simple, moderate, complex
-  
+
   // Validation fields
   validationPassed     Boolean  @default(false)
   complexityScore      Float?
@@ -318,6 +331,7 @@ This implementation follows academic best practices:
 ### Common Issues
 
 **Scenario fails validation unexpectedly:**
+
 ```typescript
 // Check individual framework scores
 console.log(result.complexityScore.calculationBreakdown);
@@ -330,11 +344,13 @@ console.log(result.complexityScore.validationFlags);
 ```
 
 **Scores seem inconsistent:**
+
 - Verify scenario content includes all required information
 - Check that calculationSteps are provided
 - Ensure domain is set correctly for novelty assessment
 
 **Performance issues:**
+
 - Use batch validation for multiple scenarios
 - Increase parallelism in orchestrator config
 - Profile with `validationDurationMs` metric
@@ -355,13 +371,14 @@ MIT - See LICENSE file in repository root
 
 ## References
 
-- Wood, R. E. (1986). Task complexity: Definition of the construct. *Organizational Behavior and Human Decision Processes*, 37(1), 60-82.
-- Campbell, D. J. (1988). Task Complexity: A Review and Analysis. *Academy of Management Review*, 13(1), 40-52.
-- Liu, L., & Li, X. (2012). Multidimensional Task Complexity. *Procedia Engineering*, 29, 3244-3249.
-- Sweller, J. (1988). Cognitive load during problem solving. *Cognitive Science*, 12(2), 257-285.
+- Wood, R. E. (1986). Task complexity: Definition of the construct. _Organizational Behavior and Human Decision Processes_, 37(1), 60-82.
+- Campbell, D. J. (1988). Task Complexity: A Review and Analysis. _Academy of Management Review_, 13(1), 40-52.
+- Liu, L., & Li, X. (2012). Multidimensional Task Complexity. _Procedia Engineering_, 29, 3244-3249.
+- Sweller, J. (1988). Cognitive load during problem solving. _Cognitive Science_, 12(2), 257-285.
 
 ## Support
 
 For issues or questions:
+
 - GitHub Issues: [maac-research-platform/issues](https://github.com/Doleha/maac-research-platform/issues)
 - Documentation: See `/context/complexity-tier-robustness-framwork.md`

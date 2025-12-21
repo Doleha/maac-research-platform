@@ -1473,50 +1473,47 @@ export async function scenarioRoutes(
    * GET /scenarios/:id/validation
    * Get detailed complexity validation metrics for a specific scenario
    */
-  fastify.get<{ Params: { id: string } }>(
-    '/scenarios/:id/validation',
-    async (request, reply) => {
-      try {
-        const scenario = await prisma.mAACExperimentScenario.findUnique({
-          where: { scenarioId: request.params.id },
-          select: {
-            scenarioId: true,
-            domain: true,
-            tier: true,
-            validationPassed: true,
-            complexityScore: true,
-            woodMetrics: true,
-            campbellAttributes: true,
-            liuLiDimensions: true,
-            validatedAt: true,
-          },
-        });
+  fastify.get<{ Params: { id: string } }>('/scenarios/:id/validation', async (request, reply) => {
+    try {
+      const scenario = await prisma.mAACExperimentScenario.findUnique({
+        where: { scenarioId: request.params.id },
+        select: {
+          scenarioId: true,
+          domain: true,
+          tier: true,
+          validationPassed: true,
+          complexityScore: true,
+          woodMetrics: true,
+          campbellAttributes: true,
+          liuLiDimensions: true,
+          validatedAt: true,
+        },
+      });
 
-        if (!scenario) {
-          return reply.status(404).send({ error: 'Scenario not found' });
-        }
-
-        return reply.send({
-          scenarioId: scenario.scenarioId,
-          domain: scenario.domain,
-          tier: scenario.tier,
-          validation: {
-            passed: scenario.validationPassed,
-            timestamp: scenario.validatedAt,
-          },
-          complexityMetrics: {
-            overallScore: scenario.complexityScore,
-            wood: scenario.woodMetrics,
-            campbell: scenario.campbellAttributes,
-            liuLi: scenario.liuLiDimensions,
-          },
-        });
-      } catch (error) {
-        fastify.log.error(error, 'Failed to fetch scenario validation details');
-        return reply.status(500).send({ error: 'Failed to fetch validation details' });
+      if (!scenario) {
+        return reply.status(404).send({ error: 'Scenario not found' });
       }
-    },
-  );
+
+      return reply.send({
+        scenarioId: scenario.scenarioId,
+        domain: scenario.domain,
+        tier: scenario.tier,
+        validation: {
+          passed: scenario.validationPassed,
+          timestamp: scenario.validatedAt,
+        },
+        complexityMetrics: {
+          overallScore: scenario.complexityScore,
+          wood: scenario.woodMetrics,
+          campbell: scenario.campbellAttributes,
+          liuLi: scenario.liuLiDimensions,
+        },
+      });
+    } catch (error) {
+      fastify.log.error(error, 'Failed to fetch scenario validation details');
+      return reply.status(500).send({ error: 'Failed to fetch validation details' });
+    }
+  });
 
   /**
    * GET /scenarios/validation/distribution
