@@ -36,7 +36,7 @@ describe('Reference Scenario Validation', () => {
 
         // Should be classified as simple
         expect(score.predictedTier).toBe('simple');
-      }
+      },
     );
 
     it('should validate all simple reference scenarios', async () => {
@@ -85,7 +85,7 @@ describe('Reference Scenario Validation', () => {
         if (score.overallScore >= 15 && score.overallScore <= 25) {
           expect(score.predictedTier).toBe('moderate');
         }
-      }
+      },
     );
 
     it('should validate at least 70% of moderate reference scenarios', async () => {
@@ -129,7 +129,7 @@ describe('Reference Scenario Validation', () => {
 
         // Should be classified as complex
         expect(score.predictedTier).toBe('complex');
-      }
+      },
     );
 
     it('should validate all complex reference scenarios', async () => {
@@ -241,7 +241,7 @@ describe('Reference Scenario Validation', () => {
       expect(allReferenceScenarios.length).toBe(
         simpleReferenceScenarios.length +
           moderateReferenceScenarios.length +
-          complexReferenceScenarios.length
+          complexReferenceScenarios.length,
       );
     });
   });
@@ -291,9 +291,13 @@ describe('Reference Scenario Validation', () => {
       }
 
       console.log('Accuracy by Tier:');
-      console.log(`  Simple: ${(results.simple.valid / results.simple.total * 100).toFixed(1)}%`);
-      console.log(`  Moderate: ${(results.moderate.valid / results.moderate.total * 100).toFixed(1)}%`);
-      console.log(`  Complex: ${(results.complex.valid / results.complex.total * 100).toFixed(1)}%`);
+      console.log(`  Simple: ${((results.simple.valid / results.simple.total) * 100).toFixed(1)}%`);
+      console.log(
+        `  Moderate: ${((results.moderate.valid / results.moderate.total) * 100).toFixed(1)}%`,
+      );
+      console.log(
+        `  Complex: ${((results.complex.valid / results.complex.total) * 100).toFixed(1)}%`,
+      );
 
       // Each tier should have reasonable accuracy
       expect(results.simple.valid / results.simple.total).toBeGreaterThanOrEqual(0.6);
