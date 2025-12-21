@@ -39,15 +39,11 @@ const tiers = [
   },
 ];
 
-// Model options matching backend API
-const modelOptions = [
-  { value: 'deepseek_v3', label: 'DeepSeek V3' },
-  { value: 'sonnet_37', label: 'Claude 3.5 Sonnet' },
-  { value: 'gpt_4o', label: 'GPT-4o' },
-  { value: 'llama_maverick', label: 'Llama Maverick' },
-];
-
 type ScenarioMode = 'generated' | 'matrix';
+
+interface ModelConfiguration extends LLMConfig {
+  id: string; // Unique identifier for this configuration
+}
 
 interface FormData {
   name: string;
@@ -56,11 +52,10 @@ interface FormData {
   selectedScenarioIds: string[]; // For generated scenarios mode
   domains: string[]; // For matrix mode
   tiers: string[]; // For matrix mode
-  models: string[];
+  modelConfigurations: ModelConfiguration[];
   repetitionsPerDomainTier: number;
   apiKeyMode: APIKeyMode;
   sessionKeys: SessionAPIKeys;
-  llmConfig: LLMConfig;
   toolConfig: ToolConfig;
   controlExpectations: ControlExpectationsType;
 }
@@ -138,7 +133,7 @@ export function ExperimentForm() {
     selectedScenarioIds: [],
     domains: [],
     tiers: [],
-    models: [],
+    modelConfigurations: [],
     repetitionsPerDomainTier: 1,
     apiKeyMode: 'system',
     sessionKeys: {
@@ -149,13 +144,6 @@ export function ExperimentForm() {
       grok: undefined,
       gemini: undefined,
       llama: undefined,
-    },
-    llmConfig: {
-      provider: '',
-      model: '',
-      temperature: 0.7,
-      max_tokens: 4096,
-      top_p: 1.0,
     },
     toolConfig: {
       memory: true,
@@ -220,9 +208,19 @@ export function ExperimentForm() {
       }
     }
 
-    if (formData.models.length === 0) {
-      newErrors.models = 'Please select at least one model';
+    if (formData.modelConfigurations.length === 0) {
+      newErrors.models = 'Please add at least one model configuration';
     }
+
+    // Validate each model configuration
+    formData.modelConfigurations.forEach((config, index) => {
+      if (!config.provider) {
+        newErrors[`model_${index}_provider`] = 'Provider is required';
+      }
+      if (!config.model) {
+        newErrors[`model_${index}_model`] = 'Model is required';
+      }
+    });
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -251,10 +249,25 @@ export function ExperimentForm() {
         },
       };
 
+      // Extract model IDs from configurations
+      const modelIds = formData.modelConfigurations.map((config) => {
+        // Convert provider/model to model_id format (e.g., deepseek/deepseek-chat -> deepseek_v3)
+        // This mapping should match your backend's expected model IDs
+        const modelMapping: Record<string, string> = {
+          'deepseek/deepseek-chat': 'deepseek_v3',
+          'deepseek/deepseek-reasoner': 'deepseek_v3',
+          'anthropic/claude-3-5-sonnet-20241022': 'sonnet_37',
+          'openai/gpt-4o': 'gpt_4o',
+          'openrouter/meta-llama/llama-3.3-70b-instruct': 'llama_maverick',
+        };
+        const key = `${config.provider}/${config.model}`;
+        return modelMapping[key] || config.model;
+      });
+
       const apiPayload: Record<string, unknown> = {
         name: formData.name,
         description: formData.description,
-        models: formData.models,
+        models: modelIds,
         toolConfigs: [toolConfig],
         parallelism: 10,
         timeout: 60000,
@@ -410,20 +423,7 @@ export function ExperimentForm() {
     setIsSubmitting(false);
   };
 
-  const handleChange = (field: string, value: string | number | string[]) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    // Clear error for this field
-    if (errors[field]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
-    }
-  };
-
-  // Handler for multi-select arrays (domains, tiers, models)
-  const handleArrayToggle = (field: 'domains' | 'tiers' | 'models', value: string) => {
+  const handleArrayToggle = (field: 'domains' | 'tiers', value: string) => {
     setFormData((prev) => {
       const currentArray = prev[field];
       const newArray = currentArray.includes(value)
@@ -435,6 +435,61 @@ export function ExperimentForm() {
     if (errors[field]) {
       setErrors((prev) => {
         const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
+  const handleAddModel = () => {
+    const newConfig: ModelConfiguration = {
+      id: `model-${Date.now()}`,
+      provider: '',
+      model: '',
+      temperature: 0.7,
+      max_tokens: 4096,
+      top_p: 1.0,
+    };
+    setFormData((prev) => ({
+      ...prev,
+      modelConfigurations: [...prev.modelConfigurations, newConfig],
+    }));
+  };
+
+  const handleRemoveModel = (id: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      modelConfigurations: prev.modelConfigurations.filter((config) => config.id !== id),
+    }));
+    // Clear related errors
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      Object.keys(newErrors).forEach((key) => {
+        if (key.includes(id)) {
+          delete newErrors[key];
+        }
+      });
+      return newErrors;
+    });
+  };
+
+  const handleModelConfigChange = (id: string, config: LLMConfig) => {
+    setFormData((prev) => ({
+      ...prev,
+      modelConfigurations: prev.modelConfigurations.map((mc) =>
+        mc.id === id ? { ...mc, ...config } : mc,
+      ),
+    }));
+    // Clear related errors
+    const index = formData.modelConfigurations.findIndex((mc) => mc.id === id);
+    if (index !== -1) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[`model_${index}_provider`];
+        delete newErrors[`model_${index}_model`];
+        return newErrors;
+      });
+    } const newErrors = { ...prev };
         delete newErrors[field];
         return newErrors;
       });
@@ -706,12 +761,12 @@ export function ExperimentForm() {
               {/* Trial count estimate */}
               {formData.domains.length > 0 &&
                 formData.tiers.length > 0 &&
-                formData.models.length > 0 && (
+                formData.modelConfigurations.length > 0 && (
                   <p className="mt-2 text-sm font-medium text-blue-600">
                     Total trials:{' '}
                     {formData.domains.length *
                       formData.tiers.length *
-                      formData.models.length *
+                      formData.modelConfigurations.length *
                       formData.repetitionsPerDomainTier}
                   </p>
                 )}
@@ -722,38 +777,136 @@ export function ExperimentForm() {
 
       {/* Model Selection - Always visible */}
       <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-gray-900">Model Selection</h2>
-        <p className="mt-1 text-sm text-gray-500">
-          Select the LLM models to evaluate in this experiment
-        </p>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">Model Configurations</h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Add and configure the LLM models to evaluate in this experiment
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleAddModel}
+            className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            Add Model
+          </button>
+        </div>
 
-        <div className="mt-6">
-          <label className="block text-sm font-medium text-gray-700">
-            Models <span className="text-red-500">*</span>
-            <span className="ml-2 text-xs text-gray-500">(Select one or more)</span>
-          </label>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            {modelOptions.map((model) => (
-              <label
-                key={model.value}
-                className={`relative flex cursor-pointer items-center rounded-lg border p-3 hover:bg-gray-50 ${
-                  formData.models.includes(model.value)
-                    ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500'
-                    : 'border-gray-300'
-                }`}
+        {formData.modelConfigurations.length === 0 ? (
+          <div className="rounded-lg border-2 border-dashed border-gray-300 p-8 text-center">
+            <svg
+              className="mx-auto h-12 w-12 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+              />
+            </svg>
+            <h3 className="mt-2 text-sm font-medium text-gray-900">No models configured</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              Get started by adding your first model configuration.
+            </p>
+            <button
+              type="button"
+              onClick={handleAddModel}
+              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            >
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
               >
-                <input
-                  type="checkbox"
-                  checked={formData.models.includes(model.value)}
-                  onChange={() => handleArrayToggle('models', model.value)}
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              Add Your First Model
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {formData.modelConfigurations.map((config, index) => (
+              <div
+                key={config.id}
+                className="rounded-lg border border-gray-200 bg-gray-50 p-4 transition-all hover:border-gray-300"
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-700">
+                      {index + 1}
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-900">
+                        {config.provider && config.model
+                          ? `${config.provider} - ${config.model}`
+                          : 'Unconfigured Model'}
+                      </h3>
+                      <p className="text-xs text-gray-500">Model Configuration {index + 1}</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveModel(config.id)}
+                    className="rounded-lg p-1.5 text-gray-400 hover:bg-red-100 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500"
+                    title="Remove this model"
+                  >
+                    <svg
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                  </button>
+                </div>
+
+                <LLMSelector
+                  value={config}
+                  onChange={(newConfig) => handleModelConfigChange(config.id, newConfig)}
+                  errors={{}}
+                  showApiKeyWarning={true}
+                  showAdvancedParams={true}
                 />
-                <span className="ml-3 text-sm font-medium text-gray-900">{model.label}</span>
-              </label>
+                {errors[`model_${index}_provider`] && (
+                  <p className="mt-2 text-sm text-red-600">{errors[`model_${index}_provider`]}</p>
+                )}
+                {errors[`model_${index}_model`] && (
+                  <p className="mt-2 text-sm text-red-600">{errors[`model_${index}_model`]}</p>
+                )}
+              </div>
             ))}
           </div>
-          {errors.models && <p className="mt-1 text-sm text-red-600">{errors.models}</p>}
-        </div>
+        )}
+
+        {errors.models && (
+          <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3">
+            <p className="text-sm text-red-800 flex items-center gap-2">
+              <AlertCircle className="h-4 w-4" />
+              {errors.models}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* API Key Mode - Hidden for now as we're using system keys */}
@@ -778,25 +931,51 @@ export function ExperimentForm() {
       )}
 
       {/* Credit Requirements Info - show when any selections are made */}
-      {formData.domains.length > 0 && formData.tiers.length > 0 && formData.models.length > 0 && (
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-6">
-          <div className="flex items-start gap-3">
-            <div className="rounded-lg bg-blue-100 p-2">
-              <svg
-                className="h-5 w-5 text-blue-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+      {formData.domains.length > 0 &&
+        formData.tiers.length > 0 &&
+        formData.modelConfigurations.length > 0 && (
+          <div className="rounded-lg border border-blue-200 bg-blue-50 p-6">
+            <div className="flex items-start gap-3">
+              <div className="rounded-lg bg-blue-100 p-2">
+                <svg
+                  className="h-5 w-5 text-blue-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-blue-900">Experiment Configuration</h3>
+                <p className="mt-1 text-sm text-blue-800">
+                  This experiment will run{' '}
+                  <strong>
+                    {formData.domains.length *
+                      formData.tiers.length *
+                      formData.modelConfigurations.length *
+                      formData.repetitionsPerDomainTier}
+                  </strong>{' '}
+                  total trials across {formData.domains.length} domain(s), {formData.tiers.length}{' '}
+                  tier(s), and {formData.modelConfigurations.length} model(s).
+                </p>
+                <p className="mt-2 text-xs text-blue-700">
+                  Your balance: {userCredits.toLocaleString()} credits
+                  {userCredits < 100 && (
+                    <span className="ml-2 font-semibold">
+                      • Low balance - consider purchasing more credits
+                    </span>
+                  )}
+                </p>
+              </div>
             </div>
-            <div className="flex-1">
+          </div>
+        )}
               <h3 className="text-sm font-semibold text-blue-900">Experiment Configuration</h3>
               <p className="mt-1 text-sm text-blue-800">
                 This experiment will run{' '}
@@ -821,16 +1000,6 @@ export function ExperimentForm() {
           </div>
         </div>
       )}
-
-      {/* LLM Configuration */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-gray-900">LLM Configuration</h2>
-        <p className="mt-1 text-sm text-gray-500">Select language model and parameters</p>
-
-        <div className="mt-6">
-          <LLMSelector value={formData.llmConfig} onChange={handleLLMChange} errors={errors} />
-        </div>
-      </div>
 
       {/* Tool Configuration */}
       <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
