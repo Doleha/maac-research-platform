@@ -163,34 +163,57 @@ export default function GenerateScenariosPage() {
 
       if (!reader) throw new Error('No response body');
 
+      let buffer = '';
+      
       while (true) {
         const { done, value } = await reader.read();
 
         if (done) break;
 
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n').filter((line) => line.trim());
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        
+        // Keep the last incomplete line in the buffer
+        buffer = lines.pop() || '';
 
         for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = JSON.parse(line.slice(6));
+          const trimmedLine = line.trim();
+          if (!trimmedLine) continue;
+          
+          // Parse SSE data lines (API sends: "event: X\ndata: {...}")
+          if (trimmedLine.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(trimmedLine.slice(6));
 
-            if (data.type === 'progress') {
-              setStreamingText((prev) => prev + data.text);
-            } else if (data.type === 'scenario') {
-              setGeneratedScenarios((prev) => [...prev, data.scenario]);
-              setProgress((prev) => ({
-                ...prev,
-                currentCount: prev.currentCount + 1,
-              }));
-              setStreamingText('');
-            } else if (data.type === 'complete') {
-              setGenerating(false);
-              setPaused(false);
-            } else if (data.type === 'error') {
-              setError(data.message);
-              setGenerating(false);
-              setPaused(false);
+              // Handle different event types from the API
+              // API sends type: 'start', 'progress', 'scenario_complete', 'storing', 'complete', 'error'
+              if (data.type === 'start' || data.type === 'progress') {
+                // Show progress message
+                setStreamingText(data.message || `Generating scenario ${data.current}/${data.total}...`);
+              } else if (data.type === 'scenario_complete') {
+                // A scenario was generated
+                if (data.scenario) {
+                  setGeneratedScenarios((prev) => [...prev, data.scenario]);
+                }
+                setProgress((prev) => ({
+                  ...prev,
+                  currentCount: data.current || prev.currentCount + 1,
+                }));
+                setStreamingText(data.message || `Completed ${data.current}/${data.total}`);
+              } else if (data.type === 'storing') {
+                // Database storage progress
+                setStreamingText(data.message || 'Storing scenarios to database...');
+              } else if (data.type === 'complete') {
+                setStreamingText('');
+                setGenerating(false);
+                setPaused(false);
+              } else if (data.type === 'error') {
+                setError(data.message || data.error || 'Generation failed');
+                setGenerating(false);
+                setPaused(false);
+              }
+            } catch (parseError) {
+              console.warn('Failed to parse SSE data:', trimmedLine, parseError);
             }
           }
         }
