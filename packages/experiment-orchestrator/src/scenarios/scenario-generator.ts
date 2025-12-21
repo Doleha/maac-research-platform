@@ -153,10 +153,10 @@ export class ScenarioGenerator {
     const timestamp = new Date().toISOString();
 
     // Generate trial ID (from n8n "Generate Indexed Experiment")
-    const trialId = `${params.domain}-${params.tier}-${this.config.configId}-rep${params.repetition}-${params.model}`;
+    const trialId = `${params.domain}-${params.tier}-${params.model}-rep${params.repetition}`;
 
     // Generate task ID
-    const taskId = `${params.domain}-${params.tier}-${this.config.configId}-rep${params.repetition}`;
+    const taskId = `${params.domain}-${params.tier}-${params.model}-rep${params.repetition}`;
 
     // Get domain pattern for this scenario (5-pattern cycling)
     const pattern = getPatternForScenario(params.domain, 'control', params.repetition % 5);
@@ -197,7 +197,7 @@ export class ScenarioGenerator {
 
     return {
       // Core identification
-      scenarioId: `${params.domain}-${params.tier}-${params.repetition.toString().padStart(3, '0')}`,
+      scenarioId: `${params.domain}-${params.tier}-${params.model}-rep${params.repetition}`,
       experimentId,
       trialId,
       index: params.index,
