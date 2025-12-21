@@ -1645,6 +1645,38 @@ export async function scenarioRoutes(
       return reply.status(500).send({ error: 'Failed to fetch validation distribution' });
     }
   });
+
+  // ==========================================================================
+  // DELETE ALL SCENARIOS
+  // ==========================================================================
+
+  /**
+   * DELETE /scenarios/all
+   * Delete all scenarios and experiments from the database
+   */
+  fastify.delete('/scenarios/all', async (request, reply) => {
+    try {
+      // Delete all scenarios first (foreign key constraint)
+      const deletedScenarios = await prisma.mAACExperimentScenario.deleteMany({});
+      
+      // Delete all experiments
+      const deletedExperiments = await prisma.mAACExperiment.deleteMany({});
+
+      fastify.log.info(`Deleted ${deletedScenarios.count} scenarios and ${deletedExperiments.count} experiments`);
+
+      return reply.send({
+        success: true,
+        deleted: {
+          scenarios: deletedScenarios.count,
+          experiments: deletedExperiments.count,
+        },
+        message: `Successfully deleted ${deletedScenarios.count} scenarios and ${deletedExperiments.count} experiments`,
+      });
+    } catch (error) {
+      fastify.log.error(error, 'Failed to delete all scenarios');
+      return reply.status(500).send({ error: 'Failed to delete all scenarios' });
+    }
+  });
 }
 
 export default scenarioRoutes;

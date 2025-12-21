@@ -10,6 +10,7 @@ import {
   Clock,
   Target,
   XCircle,
+  Trash2,
 } from 'lucide-react';
 import { useScenariosState } from '@/contexts/DashboardStateContext';
 import { SimpleLLMSelector } from '@/components/llm-selector';
@@ -75,6 +76,37 @@ export default function GenerateScenariosPage() {
   const [generatedScenarios, setGeneratedScenarios] = useState<any[]>([]);
   const [streamingText, setStreamingText] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteSuccess, setDeleteSuccess] = useState<string | null>(null);
+
+  // Handle delete all scenarios
+  const handleDeleteAll = async () => {
+    if (!confirm('Are you sure you want to delete ALL scenarios and experiments? This cannot be undone.')) {
+      return;
+    }
+    
+    setDeleting(true);
+    setDeleteSuccess(null);
+    setError(null);
+    
+    try {
+      const response = await fetch(`${apiUrl}/scenarios/all`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete scenarios');
+      }
+      
+      const result = await response.json();
+      setDeleteSuccess(`Deleted ${result.deleted.scenarios} scenarios and ${result.deleted.experiments} experiments`);
+      setGeneratedScenarios([]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete scenarios');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   // Progress tracking
   const [progress, setProgress] = useState<ProgressState>({
@@ -402,7 +434,29 @@ export default function GenerateScenariosPage() {
                   {totalScenarios} total scenarios
                 </span>
               </div>
+
+              {/* Delete All Button */}
+              <button
+                onClick={handleDeleteAll}
+                disabled={generating || deleting}
+                className="inline-flex items-center gap-2 rounded-lg border border-red-300 bg-white px-4 py-2 text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {deleting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Trash2 className="h-4 w-4" />
+                )}
+                {deleting ? 'Deleting...' : 'Delete All'}
+              </button>
             </div>
+
+            {/* Delete Success Message */}
+            {deleteSuccess && (
+              <div className="mt-4 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-green-700">
+                <CheckCircle className="h-5 w-5" />
+                {deleteSuccess}
+              </div>
+            )}
           </div>
 
           {/* Progress Indicator */}
