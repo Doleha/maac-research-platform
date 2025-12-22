@@ -157,18 +157,6 @@ services:
     ports:
       - '8080:8080'
 
-  # Legacy postgres for other services
-  postgres:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: maac_research
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-    ports:
-      - '5433:5432'
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
   # Redis - Job Queue for BullMQ Experiment Orchestrator
   # Used for: job storage, worker coordination, job persistence, rate limiting
   redis:
@@ -222,6 +210,5 @@ services:
 volumes:
   supabase_db_data:
   supabase_storage_data:
-  postgres_data:
   redis_data:
   neo4j_data:

@@ -34,7 +34,7 @@
 
   "postStartCommand": "docker-compose up -d && sleep 20 && pnpm dev &",
 
-  "forwardPorts": [3001, 3002, 5433, 6379, 7474, 7687, 5678],
+  "forwardPorts": [3001, 3002, 5432, 6379, 7474, 7687, 5678],
 
   "portsAttributes": {
     "3001": {
@@ -47,8 +47,8 @@
       "onAutoForward": "openBrowser",
       "visibility": "public"
     },
-    "5433": {
-      "label": "PostgreSQL"
+    "5432": {
+      "label": "Supabase PostgreSQL"
     },
     "6379": {
       "label": "Redis"
