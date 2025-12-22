@@ -30,20 +30,22 @@
     }
   },
 
-  "postCreateCommand": "npm install -g pnpm@8.15.0",
+  "postCreateCommand": "npm install -g pnpm@8.15.0 && pnpm install",
 
-  "forwardPorts": [3000, 3001, 5432, 6379, 7474, 7687, 5678],
+  "postStartCommand": "docker-compose up -d && sleep 20 && pnpm dev &",
+
+  "forwardPorts": [3001, 3002, 5433, 6379, 7474, 7687, 5678],
 
   "portsAttributes": {
-    "3000": {
+    "3001": {
       "label": "API",
       "onAutoForward": "notify"
     },
-    "3001": {
+    "3002": {
       "label": "Dashboard",
       "onAutoForward": "openBrowser"
     },
-    "5432": {
+    "5433": {
       "label": "PostgreSQL"
     },
     "6379": {

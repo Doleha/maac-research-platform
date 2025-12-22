@@ -1405,7 +1405,7 @@ export async function scenarioRoutes(
    * GET /scenarios/validation/stats
    * Get complexity validation statistics across all scenarios
    */
-  fastify.get('/scenarios/validation/stats', async (request, reply) => {
+  fastify.get('/scenarios/validation/stats', async (_request, reply) => {
     try {
       // Total scenarios
       const totalScenarios = await prisma.mAACExperimentScenario.count();
@@ -1575,7 +1575,7 @@ export async function scenarioRoutes(
    * GET /scenarios/validation/distribution
    * Get complexity score distribution for analysis
    */
-  fastify.get('/scenarios/validation/distribution', async (request, reply) => {
+  fastify.get('/scenarios/validation/distribution', async (_request, reply) => {
     try {
       const scenarios = await prisma.mAACExperimentScenario.findMany({
         where: {
@@ -1654,13 +1654,13 @@ export async function scenarioRoutes(
    * DELETE /scenarios/all
    * Delete all scenarios and experiments from the database
    */
-  fastify.delete('/scenarios/all', async (request, reply) => {
+  fastify.delete('/scenarios/all', async (_request, reply) => {
     try {
       // Delete all scenarios first (foreign key constraint)
       const deletedScenarios = await prisma.mAACExperimentScenario.deleteMany({});
 
       // Delete all experiments
-      const deletedExperiments = await prisma.mAACExperiment.deleteMany({});
+      const deletedExperiments = await prisma.experiment.deleteMany({});
 
       fastify.log.info(
         `Deleted ${deletedScenarios.count} scenarios and ${deletedExperiments.count} experiments`,
