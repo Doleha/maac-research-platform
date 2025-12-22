@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { ExportButtons } from '@/components/export-buttons';
 import { Loader2, Download, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -19,11 +19,7 @@ export default function ExperimentExportPage({ params }: { params: { id: string 
   const [experiment, setExperiment] = useState<ExperimentDetails | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchExperiment();
-  }, [params.id]);
-
-  const fetchExperiment = async () => {
+  const fetchExperiment = useCallback(async () => {
     try {
       const response = await fetch(`${apiUrl}/experiments/${params.id}/status`);
       if (response.ok) {
@@ -35,7 +31,11 @@ export default function ExperimentExportPage({ params }: { params: { id: string 
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiUrl, params.id]);
+
+  useEffect(() => {
+    fetchExperiment();
+  }, [fetchExperiment]);
 
   if (loading) {
     return (

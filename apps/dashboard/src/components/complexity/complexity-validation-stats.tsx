@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   CheckCircle,
   XCircle,
@@ -54,7 +54,7 @@ export function ComplexityValidationStats({
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       setError(null);
       const response = await fetch(`${apiUrl}/scenarios/validation/stats`);
@@ -69,13 +69,13 @@ export function ComplexityValidationStats({
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiUrl]);
 
   useEffect(() => {
     fetchStats();
     const interval = setInterval(fetchStats, refreshInterval);
     return () => clearInterval(interval);
-  }, [apiUrl, refreshInterval]);
+  }, [fetchStats, refreshInterval]);
 
   if (loading && !stats) {
     return (
@@ -105,20 +105,12 @@ export function ComplexityValidationStats({
     );
   }
 
-  const { summary, complexityByTier, tierDistribution, recentFailures } = stats || {
+  const { summary, complexityByTier, tierDistribution: _tierDistribution, recentFailures } = stats || {
     summary: { totalScenarios: 0, validatedCount: 0, validationRate: 0 },
     complexityByTier: [],
     tierDistribution: [],
     recentFailures: [],
   };
-
-  // Get validation rate color
-  const rateColor =
-    summary.validationRate >= 95
-      ? 'text-green-600'
-      : summary.validationRate >= 80
-        ? 'text-yellow-600'
-        : 'text-red-600';
 
   return (
     <div className="space-y-6">

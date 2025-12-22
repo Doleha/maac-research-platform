@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Search, Filter, ChevronDown, ChevronUp, RefreshCw, SlidersHorizontal } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Search, ChevronDown, ChevronUp, RefreshCw, SlidersHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ComplexityBadge, ValidationIndicator, TierPill } from './complexity-badge';
+import { ValidationIndicator, TierPill } from './complexity-badge';
 
 interface ScenarioRow {
   scenarioId: string;
@@ -49,7 +49,7 @@ export function ComplexityScenarioList({
   // Pagination
   const [page, setPage] = useState(0);
 
-  const fetchScenarios = async () => {
+  const fetchScenarios = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -91,11 +91,11 @@ export function ComplexityScenarioList({
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiUrl]);
 
   useEffect(() => {
     fetchScenarios();
-  }, [apiUrl]);
+  }, [fetchScenarios]);
 
   // Apply filters
   const filteredScenarios = scenarios.filter((s) => {

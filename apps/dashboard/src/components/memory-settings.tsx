@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Brain, Save, Loader2, CheckCircle2, XCircle, BarChart3 } from 'lucide-react';
 
 interface MemorySettings {
@@ -25,21 +25,21 @@ export function MemoryServiceSettings() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  useEffect(() => {
-    fetchSettings();
-  }, []);
-
-  const fetchSettings = async () => {
+  const fetchSettings = useCallback(async () => {
     try {
       const response = await fetch('http://localhost:3001/api/settings/memory');
       if (response.ok) {
         const data = await response.json();
-        setSettings(data.settings || settings);
+        setSettings((prev) => data.settings || prev);
       }
     } catch (err) {
       console.error('Failed to fetch memory settings', err);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
 
   const fetchGraphStats = async () => {
     if (!settings.enabled) return;

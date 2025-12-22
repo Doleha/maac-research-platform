@@ -61,7 +61,7 @@ export function DataUpload({ onDataParsed, onClear }: DataUploadProps) {
     return { headers, rows };
   };
 
-  const handleFile = async (file: File) => {
+  const handleFile = useCallback(async (file: File) => {
     setIsProcessing(true);
     setError(null);
 
@@ -93,7 +93,7 @@ export function DataUpload({ onDataParsed, onClear }: DataUploadProps) {
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, [onDataParsed]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -107,7 +107,7 @@ export function DataUpload({ onDataParsed, onClear }: DataUploadProps) {
         setError('Please upload a CSV or JSON file');
       }
     }
-  }, []);
+  }, [handleFile]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();

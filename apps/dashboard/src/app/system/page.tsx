@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   Server,
   Database,
@@ -52,7 +52,7 @@ export default function SystemHealthPage() {
   const [error, setError] = useState<string | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
 
-  const fetchSystemHealth = async () => {
+  const fetchSystemHealth = useCallback(async () => {
     try {
       const [containersRes, servicesRes, metricsRes] = await Promise.all([
         fetch(`${apiUrl}/system/containers`),
@@ -79,7 +79,7 @@ export default function SystemHealthPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiUrl]);
 
   useEffect(() => {
     fetchSystemHealth();
@@ -93,7 +93,7 @@ export default function SystemHealthPage() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [autoRefresh]);
+  }, [autoRefresh, fetchSystemHealth]);
 
   const handleContainerAction = async (
     containerName: string,

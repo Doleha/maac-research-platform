@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Database, CheckCircle2, XCircle, Loader2, RefreshCw } from 'lucide-react';
 
 interface DBConnection {
@@ -21,21 +21,21 @@ export function DatabaseSettings() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchConnections();
-  }, []);
-
-  const fetchConnections = async () => {
+  const fetchConnections = useCallback(async () => {
     try {
       const response = await fetch('http://localhost:3001/api/settings/databases');
       if (response.ok) {
         const data = await response.json();
-        setConnections(data.connections || connections);
+        setConnections((prev) => data.connections || prev);
       }
     } catch (err) {
       console.error('Failed to fetch database connections', err);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchConnections();
+  }, [fetchConnections]);
 
   const testConnection = async (name: string) => {
     setTesting(name);

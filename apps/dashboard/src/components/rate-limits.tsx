@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Settings, Save, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 
 interface RateLimits {
@@ -19,21 +19,21 @@ export function RateLimitControls() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  useEffect(() => {
-    fetchLimits();
-  }, []);
-
-  const fetchLimits = async () => {
+  const fetchLimits = useCallback(async () => {
     try {
       const response = await fetch('http://localhost:3001/api/settings/rate-limits');
       if (response.ok) {
         const data = await response.json();
-        setLimits(data.limits || limits);
+        setLimits((prev) => data.limits || prev);
       }
     } catch (err) {
       console.error('Failed to fetch rate limits', err);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchLimits();
+  }, [fetchLimits]);
 
   const handleSave = async () => {
     setSaving(true);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { RefreshCw, TrendingUp, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -35,7 +35,7 @@ export function ComplexityDistributionChart({
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'tier' | 'domain'>('tier');
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -48,11 +48,11 @@ export function ComplexityDistributionChart({
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiUrl]);
 
   useEffect(() => {
     fetchData();
-  }, [apiUrl]);
+  }, [fetchData]);
 
   if (loading && !data) {
     return (

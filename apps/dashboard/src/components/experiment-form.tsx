@@ -124,6 +124,7 @@ export function ExperimentForm() {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [progress.status]);
 
   const [formData, setFormData] = useState<FormData>({
@@ -919,7 +920,7 @@ export function ExperimentForm() {
               mode={formData.apiKeyMode}
               sessionKeys={formData.sessionKeys}
               userCredits={userCredits}
-              selectedProvider={formData.llmConfig.provider}
+              selectedProvider={formData.modelConfigurations[0]?.provider || 'anthropic'}
               onModeChange={handleAPIKeyModeChange}
               onSessionKeysChange={handleSessionKeysChange}
             />

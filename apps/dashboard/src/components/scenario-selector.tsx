@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Search, CheckSquare, Square, RefreshCw, AlertCircle, Loader2 } from 'lucide-react';
 
 interface Scenario {
@@ -38,7 +38,7 @@ export function ScenarioSelector({
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
   // Fetch scenarios
-  const fetchScenarios = async () => {
+  const fetchScenarios = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`${apiUrl}/scenarios?limit=1000`);
@@ -51,11 +51,11 @@ export function ScenarioSelector({
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiUrl]);
 
   useEffect(() => {
     fetchScenarios();
-  }, []);
+  }, [fetchScenarios]);
 
   // Apply filters
   useEffect(() => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   XCircle,
   RefreshCw,
@@ -41,11 +41,7 @@ export default function ExperimentErrorsPage({ params }: { params: { id: string 
   const [retryingTrials, setRetryingTrials] = useState<Set<string>>(new Set());
   const [batchRetrying, setBatchRetrying] = useState(false);
 
-  useEffect(() => {
-    fetchFailedTrials();
-  }, [params.id]);
-
-  const fetchFailedTrials = async () => {
+  const fetchFailedTrials = useCallback(async () => {
     try {
       const response = await fetch(`${apiUrl}/experiments/${params.id}/errors`);
       if (!response.ok) {
@@ -59,7 +55,11 @@ export default function ExperimentErrorsPage({ params }: { params: { id: string 
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiUrl, params.id]);
+
+  useEffect(() => {
+    fetchFailedTrials();
+  }, [fetchFailedTrials]);
 
   const toggleExpanded = (trialId: string) => {
     const newExpanded = new Set(expandedTrials);

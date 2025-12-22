@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   BarChart3,
@@ -66,17 +66,7 @@ function ComparePageContent() {
   const [comparisonData, setComparisonData] = useState<ExperimentSummary[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    fetchExperiments();
-
-    // Pre-select experiments from URL params
-    const ids = searchParams?.get('ids')?.split(',').filter(Boolean);
-    if (ids?.length) {
-      setSelectedIds(new Set(ids));
-    }
-  }, [searchParams]);
-
-  const fetchExperiments = async () => {
+  const fetchExperiments = useCallback(async () => {
     try {
       const response = await fetch(`${apiUrl}/experiments`);
       if (!response.ok) {
@@ -90,7 +80,17 @@ function ComparePageContent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiUrl]);
+
+  useEffect(() => {
+    fetchExperiments();
+
+    // Pre-select experiments from URL params
+    const ids = searchParams?.get('ids')?.split(',').filter(Boolean);
+    if (ids?.length) {
+      setSelectedIds(new Set(ids));
+    }
+  }, [fetchExperiments, searchParams]);
 
   const toggleSelection = (id: string) => {
     const newSelected = new Set(selectedIds);

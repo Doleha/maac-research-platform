@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Save,
   Loader2,
@@ -43,11 +43,7 @@ export default function SettingsPage() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchCredentials();
-  }, []);
-
-  const fetchCredentials = async () => {
+  const fetchCredentials = useCallback(async () => {
     try {
       const response = await fetch(`${apiUrl}/settings/credentials`);
       if (response.ok) {
@@ -63,7 +59,11 @@ export default function SettingsPage() {
     } catch (err) {
       console.error('Failed to fetch credentials', err);
     }
-  };
+  }, [apiUrl]);
+
+  useEffect(() => {
+    fetchCredentials();
+  }, [fetchCredentials]);
 
   const handleSave = async () => {
     setSaving(true);

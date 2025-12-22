@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   Play,
   Pause,
@@ -49,13 +49,7 @@ export default function ExperimentDetailPage({ params }: { params: { id: string 
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchExperiment();
-    const interval = setInterval(fetchExperiment, 5000); // Poll every 5 seconds
-    return () => clearInterval(interval);
-  }, [params.id]);
-
-  const fetchExperiment = async () => {
+  const fetchExperiment = useCallback(async () => {
     try {
       const response = await fetch(`${apiUrl}/experiments/${params.id}/status`);
       if (!response.ok) {
@@ -69,7 +63,13 @@ export default function ExperimentDetailPage({ params }: { params: { id: string 
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiUrl, params.id]);
+
+  useEffect(() => {
+    fetchExperiment();
+    const interval = setInterval(fetchExperiment, 5000); // Poll every 5 seconds
+    return () => clearInterval(interval);
+  }, [fetchExperiment]);
 
   const handleAction = async (action: 'start' | 'pause' | 'resume' | 'stop') => {
     setActionLoading(action);

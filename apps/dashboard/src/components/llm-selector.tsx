@@ -118,7 +118,7 @@ export function LLMSelector({
   }, [value.provider, providers]);
 
   // Fetch models from actual provider APIs
-  const fetchModels = async (provider: string, forceRefresh: boolean = false) => {
+  const fetchModels = useCallback(async (provider: string, forceRefresh: boolean = false) => {
     if (!provider) {
       setAvailableModels([]);
       return;
@@ -144,7 +144,7 @@ export function LLMSelector({
     } finally {
       setLoadingModels(false);
     }
-  };
+  }, [apiUrl]);
 
   // Fetch models when provider changes
   useEffect(() => {
@@ -153,7 +153,7 @@ export function LLMSelector({
     } else {
       setAvailableModels([]);
     }
-  }, [value.provider]);
+  }, [value.provider, fetchModels]);
 
   const handleProviderChange = (provider: string) => {
     // Reset model when provider changes (will be set after models load)
@@ -165,6 +165,7 @@ export function LLMSelector({
     if (availableModels.length > 0 && !value.model) {
       onChange({ ...value, model: availableModels[0].value });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [availableModels]);
 
   const handleFieldChange = (field: keyof LLMConfig, fieldValue: string | number) => {

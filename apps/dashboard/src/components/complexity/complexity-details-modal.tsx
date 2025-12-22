@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { X, RefreshCw, ExternalLink, Copy, Check, BookOpen } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { X, RefreshCw, Copy, Check, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ComplexityBadge, TierPill } from './complexity-badge';
 
@@ -76,13 +76,7 @@ export function ComplexityDetailsModal({
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    if (isOpen && scenarioId) {
-      fetchDetails();
-    }
-  }, [isOpen, scenarioId]);
-
-  const fetchDetails = async () => {
+  const fetchDetails = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -100,7 +94,13 @@ export function ComplexityDetailsModal({
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiUrl, scenarioId]);
+
+  useEffect(() => {
+    if (isOpen && scenarioId) {
+      fetchDetails();
+    }
+  }, [isOpen, scenarioId, fetchDetails]);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(scenarioId);
