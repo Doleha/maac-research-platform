@@ -39,11 +39,13 @@
   "portsAttributes": {
     "3001": {
       "label": "API",
-      "onAutoForward": "notify"
+      "onAutoForward": "notify",
+      "visibility": "public"
     },
     "3002": {
       "label": "Dashboard",
-      "onAutoForward": "openBrowser"
+      "onAutoForward": "openBrowser",
+      "visibility": "public"
     },
     "5433": {
       "label": "PostgreSQL"
