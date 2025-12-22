@@ -105,7 +105,12 @@ export function ComplexityValidationStats({
     );
   }
 
-  const { summary, complexityByTier, tierDistribution: _tierDistribution, recentFailures } = stats || {
+  const {
+    summary,
+    complexityByTier,
+    tierDistribution: _tierDistribution,
+    recentFailures,
+  } = stats || {
     summary: { totalScenarios: 0, validatedCount: 0, validationRate: 0 },
     complexityByTier: [],
     tierDistribution: [],

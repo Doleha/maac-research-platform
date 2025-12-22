@@ -61,53 +61,59 @@ export function DataUpload({ onDataParsed, onClear }: DataUploadProps) {
     return { headers, rows };
   };
 
-  const handleFile = useCallback(async (file: File) => {
-    setIsProcessing(true);
-    setError(null);
+  const handleFile = useCallback(
+    async (file: File) => {
+      setIsProcessing(true);
+      setError(null);
 
-    try {
-      const text = await file.text();
-      const fileType = file.name.endsWith('.json') ? 'json' : 'csv';
+      try {
+        const text = await file.text();
+        const fileType = file.name.endsWith('.json') ? 'json' : 'csv';
 
-      let parsed;
-      if (fileType === 'json') {
-        parsed = parseJSON(text);
-      } else {
-        parsed = parseCSV(text);
+        let parsed;
+        if (fileType === 'json') {
+          parsed = parseJSON(text);
+        } else {
+          parsed = parseCSV(text);
+        }
+
+        const parsedData: ParsedData = {
+          headers: parsed.headers,
+          rows: parsed.rows,
+          fileName: file.name,
+          fileType,
+          totalRows: parsed.rows.length,
+        };
+
+        setUploadedFile(parsedData);
+        onDataParsed(parsedData);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to parse file';
+        setError(message);
+        console.error('File parsing error:', err);
+      } finally {
+        setIsProcessing(false);
       }
+    },
+    [onDataParsed],
+  );
 
-      const parsedData: ParsedData = {
-        headers: parsed.headers,
-        rows: parsed.rows,
-        fileName: file.name,
-        fileType,
-        totalRows: parsed.rows.length,
-      };
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragging(false);
 
-      setUploadedFile(parsedData);
-      onDataParsed(parsedData);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to parse file';
-      setError(message);
-      console.error('File parsing error:', err);
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [onDataParsed]);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      if (file.name.endsWith('.csv') || file.name.endsWith('.json')) {
-        handleFile(file);
-      } else {
-        setError('Please upload a CSV or JSON file');
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        if (file.name.endsWith('.csv') || file.name.endsWith('.json')) {
+          handleFile(file);
+        } else {
+          setError('Please upload a CSV or JSON file');
+        }
       }
-    }
-  }, [handleFile]);
+    },
+    [handleFile],
+  );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();

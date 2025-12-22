@@ -118,33 +118,36 @@ export function LLMSelector({
   }, [value.provider, providers]);
 
   // Fetch models from actual provider APIs
-  const fetchModels = useCallback(async (provider: string, forceRefresh: boolean = false) => {
-    if (!provider) {
-      setAvailableModels([]);
-      return;
-    }
-
-    setLoadingModels(true);
-    setModelError(null);
-
-    try {
-      const url = `${apiUrl}/api/llm/models?provider=${provider}${forceRefresh ? '&refresh=true' : ''}`;
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch models for ${provider}`);
+  const fetchModels = useCallback(
+    async (provider: string, forceRefresh: boolean = false) => {
+      if (!provider) {
+        setAvailableModels([]);
+        return;
       }
 
-      const data = await response.json();
-      setAvailableModels(data.models || []);
-    } catch (err) {
-      console.error('Error fetching models:', err);
-      setModelError(err instanceof Error ? err.message : 'Failed to load models');
-      setAvailableModels([]);
-    } finally {
-      setLoadingModels(false);
-    }
-  }, [apiUrl]);
+      setLoadingModels(true);
+      setModelError(null);
+
+      try {
+        const url = `${apiUrl}/api/llm/models?provider=${provider}${forceRefresh ? '&refresh=true' : ''}`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch models for ${provider}`);
+        }
+
+        const data = await response.json();
+        setAvailableModels(data.models || []);
+      } catch (err) {
+        console.error('Error fetching models:', err);
+        setModelError(err instanceof Error ? err.message : 'Failed to load models');
+        setAvailableModels([]);
+      } finally {
+        setLoadingModels(false);
+      }
+    },
+    [apiUrl],
+  );
 
   // Fetch models when provider changes
   useEffect(() => {
