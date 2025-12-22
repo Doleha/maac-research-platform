@@ -202,7 +202,7 @@ services:
       GRAPHITI_GROUP_ID: maac-memory
       SEMAPHORE_LIMIT: 10
     ports:
-      - '8090:8000'  # MCP server runs on 8000, map to 8090 externally
+      - '8090:8000' # MCP server runs on 8000, map to 8090 externally
     depends_on:
       - neo4j
     restart: unless-stopped

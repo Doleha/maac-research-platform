@@ -397,6 +397,45 @@ model MAACAcademicReport {
 }
 
 // =============================================================================
+// GENERATION JOB TRACKING
+// Tracks active scenario generation jobs for UI persistence
+// =============================================================================
+
+model GenerationJob {
+  id          String   @id @default(cuid())
+  
+  // Job configuration
+  domains     String[]
+  tiers       String[]
+  repetitions Int
+  provider    String
+  model       String
+  configId    String   @map("config_id")
+  concurrency Int      @default(1)
+  
+  // Progress tracking
+  status           String   @default("running") // running, completed, failed, cancelled
+  totalScenarios   Int      @map("total_scenarios")
+  generatedCount   Int      @default(0) @map("generated_count")
+  storedCount      Int      @default(0) @map("stored_count")
+  failedCount      Int      @default(0) @map("failed_count")
+  
+  // Timing
+  startedAt    DateTime  @default(now()) @map("started_at")
+  completedAt  DateTime? @map("completed_at")
+  
+  // Error info
+  lastError    String?   @map("last_error")
+  
+  // Generated scenario IDs (for reference)
+  experimentId String?   @map("experiment_id")
+  
+  @@index([status])
+  @@index([startedAt])
+  @@map("generation_jobs")
+}
+
+// =============================================================================
 // BILLING & USER MANAGEMENT MODELS
 // =============================================================================
 

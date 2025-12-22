@@ -640,6 +640,21 @@ export async function scenarioRoutes(
       // Store generated scenarios for final database insert
       const generatedScenarios: GeneratedLLMScenario[] = [];
 
+      // Create a generation job record for persistent tracking
+      const generationJob = await prisma.generationJob.create({
+        data: {
+          domains,
+          tiers,
+          repetitions,
+          provider,
+          model,
+          configId,
+          concurrency,
+          totalScenarios,
+          status: 'running',
+        },
+      });
+
       try {
         // Create LLM scenario generator with selected provider
         const generatorConfig: LLMScenarioGeneratorConfig = {
@@ -714,6 +729,12 @@ export async function scenarioRoutes(
             // Track scenarios for database insert
             if (progress.type === 'scenario_complete' && progress.scenario) {
               generatedScenarios.push(progress.scenario);
+              
+              // Update job progress in database (non-blocking)
+              prisma.generationJob.update({
+                where: { id: generationJob.id },
+                data: { generatedCount: generatedScenarios.length },
+              }).catch(err => fastify.log.warn(err, 'Failed to update job progress'));
             }
           },
         });
@@ -782,6 +803,7 @@ export async function scenarioRoutes(
           generationMethod: 'deepseek-llm-streaming',
           totalGenerationTimeMs: totalGenerationTime,
           avgTimePerScenarioMs: Math.round(totalGenerationTime / scenarios.length),
+          jobId: generationJob.id,
           scenarios: scenarios.map((s) => ({
             scenarioId: s.scenarioId,
             domain: s.metadata.business_domain,
@@ -797,10 +819,32 @@ export async function scenarioRoutes(
           },
         });
 
+        // Update job status to completed
+        await prisma.generationJob.update({
+          where: { id: generationJob.id },
+          data: {
+            status: 'completed',
+            storedCount: scenarios.length,
+            generatedCount: scenarios.length,
+            experimentId,
+            completedAt: new Date(),
+          },
+        });
+
         // End the stream
         reply.raw.end();
       } catch (error) {
         fastify.log.error(error);
+
+        // Update job status to failed
+        await prisma.generationJob.update({
+          where: { id: generationJob.id },
+          data: {
+            status: 'failed',
+            lastError: error instanceof Error ? error.message : 'Unknown error',
+            completedAt: new Date(),
+          },
+        }).catch(err => fastify.log.warn(err, 'Failed to update job status'));
 
         // Send error event
         sendEvent('error', {
@@ -808,6 +852,7 @@ export async function scenarioRoutes(
           message: error instanceof Error ? error.message : 'Unknown error',
           hint: 'Check DeepSeek API key and rate limits',
           scenariosGenerated: generatedScenarios.length,
+          jobId: generationJob.id,
         });
 
         reply.raw.end();
@@ -919,6 +964,144 @@ export async function scenarioRoutes(
           offset,
           total,
         },
+      };
+    },
+  );
+
+  // ==========================================================================
+  // GENERATION JOB TRACKING
+  // ==========================================================================
+
+  /**
+   * GET /scenarios/jobs
+   * Get all generation jobs, optionally filtered by status
+   */
+  fastify.get<{
+    Querystring: { status?: string; limit?: number };
+  }>(
+    '/scenarios/jobs',
+    {
+      schema: {
+        querystring: {
+          type: 'object',
+          properties: {
+            status: { type: 'string', enum: ['running', 'completed', 'failed', 'cancelled'] },
+            limit: { type: 'integer', minimum: 1, maximum: 100, default: 20 },
+          },
+        },
+      },
+    },
+    async (request, _reply) => {
+      const { status, limit = 20 } = request.query;
+
+      const where: Record<string, unknown> = {};
+      if (status) where.status = status;
+
+      const jobs = await prisma.generationJob.findMany({
+        where,
+        orderBy: { startedAt: 'desc' },
+        take: limit,
+      });
+
+      return { jobs };
+    },
+  );
+
+  /**
+   * GET /scenarios/jobs/active
+   * Get currently running generation jobs
+   */
+  fastify.get('/scenarios/jobs/active', async (_request, _reply) => {
+    const activeJobs = await prisma.generationJob.findMany({
+      where: { status: 'running' },
+      orderBy: { startedAt: 'desc' },
+    });
+
+    return {
+      jobs: activeJobs,
+      count: activeJobs.length,
+    };
+  });
+
+  /**
+   * GET /scenarios/jobs/:jobId
+   * Get a specific generation job by ID
+   */
+  fastify.get<{ Params: { jobId: string } }>(
+    '/scenarios/jobs/:jobId',
+    {
+      schema: {
+        params: {
+          type: 'object',
+          required: ['jobId'],
+          properties: {
+            jobId: { type: 'string' },
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      const { jobId } = request.params;
+
+      const job = await prisma.generationJob.findUnique({
+        where: { id: jobId },
+      });
+
+      if (!job) {
+        return reply.code(404).send({ error: 'Job not found', jobId });
+      }
+
+      return job;
+    },
+  );
+
+  /**
+   * POST /scenarios/jobs/:jobId/cancel
+   * Cancel a running generation job
+   */
+  fastify.post<{ Params: { jobId: string } }>(
+    '/scenarios/jobs/:jobId/cancel',
+    {
+      schema: {
+        params: {
+          type: 'object',
+          required: ['jobId'],
+          properties: {
+            jobId: { type: 'string' },
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      const { jobId } = request.params;
+
+      const job = await prisma.generationJob.findUnique({
+        where: { id: jobId },
+      });
+
+      if (!job) {
+        return reply.code(404).send({ error: 'Job not found', jobId });
+      }
+
+      if (job.status !== 'running') {
+        return reply.code(400).send({
+          error: 'Cannot cancel job',
+          message: `Job is ${job.status}, not running`,
+        });
+      }
+
+      // Mark job as cancelled
+      const updatedJob = await prisma.generationJob.update({
+        where: { id: jobId },
+        data: {
+          status: 'cancelled',
+          completedAt: new Date(),
+        },
+      });
+
+      return {
+        message: 'Job cancelled',
+        job: updatedJob,
       };
     },
   );

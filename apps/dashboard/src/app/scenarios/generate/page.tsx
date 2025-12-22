@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Wand2,
   Loader2,
@@ -11,6 +11,7 @@ import {
   Target,
   XCircle,
   Trash2,
+  RefreshCw,
 } from 'lucide-react';
 import { useScenariosState } from '@/contexts/DashboardStateContext';
 import { SimpleLLMSelector } from '@/components/llm-selector';
@@ -32,6 +33,26 @@ interface ProgressState {
   elapsedSeconds: number;
 }
 
+interface ActiveJob {
+  id: string;
+  domains: string[];
+  tiers: string[];
+  repetitions: number;
+  provider: string;
+  model: string;
+  configId: string;
+  concurrency: number;
+  status: 'running' | 'completed' | 'failed' | 'cancelled';
+  totalScenarios: number;
+  generatedCount: number;
+  storedCount: number;
+  failedCount: number;
+  startedAt: string;
+  completedAt: string | null;
+  lastError: string | null;
+  experimentId: string | null;
+}
+
 // Helper function to format time
 function formatTime(seconds: number): string {
   if (seconds < 60) return `${Math.round(seconds)}s`;
@@ -48,6 +69,10 @@ export default function GenerateScenariosPage() {
 
   // Use persisted state for form data
   const { generateForm, setGenerateForm } = useScenariosState();
+  
+  // Active jobs from backend
+  const [activeJobs, setActiveJobs] = useState<ActiveJob[]>([]);
+  const [loadingJobs, setLoadingJobs] = useState(true);
 
   const [formData, setFormData] = useState<GenerationRequest>({
     domains: generateForm.domains.length > 0 ? generateForm.domains : ['analytical'],
@@ -123,6 +148,28 @@ export default function GenerateScenariosPage() {
   });
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Fetch active jobs from backend
+  const fetchActiveJobs = useCallback(async () => {
+    try {
+      const response = await fetch(`${apiUrl}/scenarios/jobs/active`);
+      if (response.ok) {
+        const data = await response.json();
+        setActiveJobs(data.jobs || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch active jobs:', err);
+    } finally {
+      setLoadingJobs(false);
+    }
+  }, [apiUrl]);
+
+  // Poll for active jobs on mount and periodically
+  useEffect(() => {
+    fetchActiveJobs();
+    const pollInterval = setInterval(fetchActiveJobs, 5000); // Poll every 5 seconds
+    return () => clearInterval(pollInterval);
+  }, [fetchActiveJobs]);
 
   // Update elapsed time while generating (but not when paused)
   useEffect(() => {
@@ -252,6 +299,8 @@ export default function GenerateScenariosPage() {
                 setStreamingText('');
                 setGenerating(false);
                 setPaused(false);
+                // Refresh active jobs list
+                fetchActiveJobs();
               } else if (data.type === 'error') {
                 setError(data.message || data.error || 'Generation failed');
                 setGenerating(false);
@@ -285,6 +334,58 @@ export default function GenerateScenariosPage() {
             Use AI to automatically generate experiment scenarios
           </p>
         </div>
+
+        {/* Active Jobs Banner */}
+        {!loadingJobs && activeJobs.length > 0 && !generating && (
+          <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <RefreshCw className="h-5 w-5 text-blue-600 animate-spin" />
+                <div>
+                  <h3 className="font-medium text-blue-900">
+                    {activeJobs.length} Active Generation Job{activeJobs.length > 1 ? 's' : ''}
+                  </h3>
+                  <p className="text-sm text-blue-700">
+                    {activeJobs.map((job) => (
+                      <span key={job.id}>
+                        {job.generatedCount}/{job.totalScenarios} scenarios ({job.provider}/{job.model})
+                      </span>
+                    ))}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={fetchActiveJobs}
+                className="flex items-center gap-1 rounded-md bg-blue-100 px-3 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-200"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Refresh
+              </button>
+            </div>
+            {/* Progress bar for active job */}
+            {activeJobs[0] && (
+              <div className="mt-3">
+                <div className="flex justify-between text-xs text-blue-700 mb-1">
+                  <span>Progress</span>
+                  <span>
+                    {Math.round((activeJobs[0].generatedCount / activeJobs[0].totalScenarios) * 100)}%
+                  </span>
+                </div>
+                <div className="h-2 rounded-full bg-blue-200 overflow-hidden">
+                  <div
+                    className="h-full bg-blue-600 transition-all duration-500"
+                    style={{
+                      width: `${(activeJobs[0].generatedCount / activeJobs[0].totalScenarios) * 100}%`,
+                    }}
+                  />
+                </div>
+                <p className="mt-1 text-xs text-blue-600">
+                  Started {new Date(activeJobs[0].startedAt).toLocaleTimeString()}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Generation Form */}
         <div className="space-y-6">
